@@ -1,15 +1,18 @@
 /**
- * Hero Jump - Lógica do Jogo e Integração com Ranking MySQL (Laragon)
+ * Hero Jump - Lógica do Jogo e Integração com Ranking MySQL
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     // Elementos do Jogo
     const hero = document.querySelector('.hero');
     const pipe = document.querySelector('.pipe');
+    const collectibleSprites = JSON.parse(document.getElementById('collectible-sprites').textContent);
     const gameBoard = document.getElementById('game-board');
     const hudPlayerName = document.getElementById('hud-player-name');
     const scoreDisplay = document.getElementById('score-display');
     const speedDisplay = document.getElementById('speed-display');
+    const collectDisplay = document.getElementById('collect-display');
+    const collectFeedback = document.getElementById('collect-feedback');
     const jumpTip = document.getElementById('jump-tip');
 
     // Modais e Telas
@@ -36,6 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const FPS_REFERENCIA = 60;
     const PONTOS_POR_SEGUNDO_BASE = 10; // pontos/segundo na velocidade inicial (1 ponto a cada 100ms)
 
+    // Cada coleta soma ao mesmo total usado pelo placar e pelo ranking.
+    const PONTOS_POR_ITEM = 50;
+
     // Variáveis de Estado
     let currentPlayer = '';
     let currentCharacter = null;
@@ -48,6 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let pontosExatos = 0;
     let ultimoTickPontos = 0;
     let animacaoObstaculo = null;
+    let coletavel = null;
+    let itensColetados = 0;
+    let proximoItemEm = 0;
+    let ultimoTickItem = 0;
+    let feedbackTimeout = null;
 
     /**
      * Lê o personagem marcado na tela de início
@@ -57,10 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!selected) return null;
         return {
             id: selected.value,
-            name: selected.dataset.name,
+            coleta: selected.dataset.coleta,
             run: selected.dataset.run,
             dead: selected.dataset.dead,
             cenario: selected.dataset.cenario,
+            coletaSprite: selected.dataset.coletaSprite,
             obstaculo: selected.dataset.obstaculo
         };
     }
@@ -77,6 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Pré-carrega as imagens de "Game Over", cenário e obstáculo para a troca ser instantânea
     characterInputs.forEach((input) => {
+        const imgColeta = new Image();
+        imgColeta.src = collectibleSprites[input.dataset.coletaSprite]?.image || input.dataset.coleta;
+
         const imgDead = new Image();
         imgDead.src = input.dataset.dead;
 
@@ -210,6 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
         inicioPartida = performance.now();
         multiplicadorVelocidade = 1;
         speedDisplay.textContent = '1.0x';
+        ultimoTickItem = inicioPartida;
+        proximoItemEm = inicioPartida;
         animacaoObstaculo = obterAnimacaoDoObstaculo();
 
         // Loop de pontuação: 10 pts/s na velocidade inicial, e cresce junto com a velocidade (como a distância no Dino)
@@ -229,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameLoop = setInterval(() => {
             atualizarVelocidade();
             checkCollision();
+            atualizarColetaveis();
         }, 10);
     }
 
@@ -266,7 +284,113 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
+    function removerColetavel() {
+        if (!coletavel) return;
+        coletavel.elemento.remove();
+        coletavel = null;
+    }
+
+    function limparColetaveis() {
+        removerColetavel();
+        clearTimeout(feedbackTimeout);
+        collectFeedback.textContent = '';
+    }
+
+    function criarColetavel() {
+        const sprite = collectibleSprites[currentCharacter.coletaSprite] || null;
+        const elemento = document.createElement(sprite ? 'span' : 'img');
+        elemento.className = 'collectible';
+        elemento.dataset.character = currentCharacter.id;
+        elemento.setAttribute('aria-hidden', 'true');
+        let visual = null;
+        if (sprite) {
+            visual = document.createElement('span');
+            visual.className = 'collectible-visual';
+            visual.style.backgroundImage = `url('${sprite.image}')`;
+            elemento.appendChild(visual);
+        } else {
+            // Sonic já possui um GIF animado próprio.
+            elemento.src = currentCharacter.coleta;
+            elemento.alt = '';
+            elemento.draggable = false;
+        }
+        elemento.style.bottom = `${Math.max(110, hero.offsetHeight + 15) + Math.random() * 25}px`;
+        gameBoard.appendChild(elemento);
+        const largura = elemento.offsetWidth;
+        coletavel = { elemento, visual, sprite, largura,
+            x: gameBoard.clientWidth + largura, inicio: performance.now(), quadro: -1, altura: 0 };
+        elemento.style.transform = `translateX(${coletavel.x}px)`;
+        atualizarQuadroColetavel();
+    }
+
+    function atualizarQuadroColetavel() {
+        if (!coletavel?.sprite) return;
+        const { sprite, elemento, visual } = coletavel;
+        const indice = Math.floor((performance.now() - coletavel.inicio) / 1000
+            * sprite.fps * Math.sqrt(multiplicadorVelocidade)) % sprite.frames.length;
+        if (indice === coletavel.quadro && coletavel.altura === elemento.offsetHeight) return;
+        const quadro = sprite.frames[indice];
+        const escala = elemento.offsetHeight / sprite.maxHeight;
+        visual.style.width = `${quadro.w * escala}px`;
+        visual.style.height = `${quadro.h * escala}px`;
+        visual.style.backgroundSize = `${sprite.width * escala}px ${sprite.height * escala}px`;
+        visual.style.backgroundPosition = `${-quadro.x * escala}px ${-quadro.y * escala}px`;
+        visual.style.clipPath = quadro.clip;
+        visual.dataset.frame = indice;
+        coletavel.quadro = indice;
+        coletavel.altura = elemento.offsetHeight;
+    }
+
+    function atualizarColetaveis() {
+        if (!isPlaying || !currentCharacter) return;
+        const agora = performance.now();
+        const segundos = Math.min((agora - ultimoTickItem) / 1000, 0.1);
+        ultimoTickItem = agora;
+        if (!coletavel) {
+            if (agora >= proximoItemEm) criarColetavel();
+            return;
+        }
+
+        atualizarQuadroColetavel();
+
+        // Mesma distância e duração base da animação do obstáculo.
+        const pixelsPorSegundo = (gameBoard.clientWidth + 150) / 1.6;
+        coletavel.x -= pixelsPorSegundo * multiplicadorVelocidade * segundos;
+        coletavel.elemento.style.transform = `translateX(${coletavel.x}px)`;
+        const item = coletavel.elemento.getBoundingClientRect();
+        const personagem = hero.getBoundingClientRect();
+        // Margens evitam coletar apenas por encostar no espaço vazio do GIF.
+        const margemX = personagem.width * 0.18;
+        const margemY = personagem.height * 0.12;
+        const margemItemX = item.width * (currentCharacter.id === 'bart' ? 0.25 : 0.1);
+        const margemItemY = item.height * 0.08;
+        const tocou = personagem.right - margemX > item.left + margemItemX
+            && personagem.left + margemX < item.right - margemItemX
+            && personagem.bottom - margemY > item.top + margemItemY
+            && personagem.top + margemY < item.bottom - margemItemY;
+
+        if (tocou) {
+            pontosExatos += PONTOS_POR_ITEM;
+            score = Math.floor(pontosExatos);
+            scoreDisplay.textContent = score;
+            itensColetados++;
+            collectDisplay.textContent = itensColetados;
+            collectFeedback.textContent = `+${PONTOS_POR_ITEM} pontos!`;
+            clearTimeout(feedbackTimeout);
+            feedbackTimeout = setTimeout(() => { collectFeedback.textContent = ''; }, 800);
+            removerColetavel();
+            proximoItemEm = agora + 700 + Math.random() * 800;
+        } else if (coletavel.x < -coletavel.largura) {
+            // Item perdido não rende pontos e não encerra a partida.
+            removerColetavel();
+            proximoItemEm = agora + 700 + Math.random() * 800;
+        }
+    }
+
     function resetElements() {
+        limparColetaveis();
+        itensColetados = 0;
+        collectDisplay.textContent = '0';
         // Reseta obstáculo
         pipe.style.animation = '';
         pipe.style.left = '';
@@ -302,19 +426,23 @@ document.addEventListener('DOMContentLoaded', () => {
     function checkCollision() {
         if (!isPlaying) return;
 
-        const pipePosition = pipe.offsetLeft;
-        const heroPosition = +window.getComputedStyle(hero).bottom.replace('px', '');
-
-        // Tolerância de colisão: quando o obstáculo está na faixa de contato com o personagem.
-        // A altura que o herói precisa alcançar acompanha o tamanho do obstáculo (80% da altura dele).
-        const alturaColisao = pipe.offsetHeight * 0.8;
-        if (pipePosition <= 120 && pipePosition > 0 && heroPosition < alturaColisao) {
-            triggerGameOver(pipePosition, heroPosition);
+        const personagem = hero.getBoundingClientRect();
+        const obstaculo = pipe.getBoundingClientRect();
+        const margemHeroi = personagem.width * 0.18;
+        const margemObstaculo = obstaculo.width * 0.1;
+        const tocou = personagem.right - margemHeroi > obstaculo.left + margemObstaculo
+            && personagem.left + margemHeroi < obstaculo.right - margemObstaculo
+            && personagem.bottom > obstaculo.top + obstaculo.height * 0.2
+            && personagem.top + personagem.height * 0.12 < obstaculo.bottom;
+        if (tocou) {
+            const heroPosition = parseFloat(window.getComputedStyle(hero).bottom);
+            triggerGameOver(pipe.offsetLeft, heroPosition);
         }
     }
 
     function triggerGameOver(pipePosition, heroPosition) {
         isPlaying = false;
+        limparColetaveis();
         clearInterval(gameLoop);
         clearInterval(scoreLoop);
 
@@ -371,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(err => {
             console.error('Erro na requisição:', err);
-            saveStatusMsg.textContent = '⚠️ Erro ao conectar ao servidor Laragon.';
+            saveStatusMsg.textContent = '⚠️ Erro ao conectar ao servidor.';
             saveStatusMsg.style.color = '#ef4444';
         });
     }

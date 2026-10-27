@@ -1,7 +1,6 @@
 /* Paleta Midnight Glacier: azul profundo, azul-lavanda e roxo frio */
 :root {
     --bg: #0C1022;
-    --panel: #202641;
     --panel-dark: #0C1022;
     --line: #849BFF;
     --pink: #B8A3FF;
@@ -49,11 +48,13 @@ body {
     padding: 12px 24px;
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
     align-items: center;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
-.player-info, .speed-info, .score-info {
+.player-info, .speed-info, .collect-info, .score-info {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -73,7 +74,7 @@ body {
     text-shadow: 2px 2px #000;
 }
 
-/* Tabuleiro do Jogo: cidade à noite */
+/* Tabuleiro do jogo */
 .game-board {
     width: 100%;
     height: 480px;
@@ -101,47 +102,6 @@ body {
     box-shadow: 0 0 12px var(--teal);
     pointer-events: none;
     z-index: 5;
-}
-
-/* Camadas do cenário */
-.sky-stars {
-    position: absolute;
-    inset: 0 0 40% 0;
-    display: none;
-}
-
-.moon {
-    display: none;
-}
-
-.city {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-repeat: repeat-x;
-    background-position: 0 100%;
-    animation-play-state: paused;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-}
-
-.city-far {
-    display: none;
-    height: 230px;
-    background-image: url('../assets/city-far.svg');
-    background-size: 900px 230px;
-    animation-name: city-far-scroll;
-    animation-duration: 40s;
-}
-
-.city-near {
-    display: none;
-    height: 170px;
-    background-image: url('../assets/city-near.svg');
-    background-size: 900px 170px;
-    animation-name: city-near-scroll;
-    animation-duration: 12s;
 }
 
 /* Elementos do Jogo */
@@ -185,10 +145,6 @@ body {
     animation: pipe-animation 1.6s infinite linear;
 }
 
-.game-board.running .city {
-    animation-play-state: running;
-}
-
 .jump {
     animation: jump-animation 500ms ease-out;
 }
@@ -215,16 +171,6 @@ body {
     100% {
         bottom: 0;
     }
-}
-
-@keyframes city-far-scroll {
-    from { background-position-x: 0; }
-    to   { background-position-x: -900px; }
-}
-
-@keyframes city-near-scroll {
-    from { background-position-x: 0; }
-    to   { background-position-x: -900px; }
 }
 
 /* Modais / Telas Sobrepostas */
@@ -387,10 +333,6 @@ body {
     box-shadow: 0 0 12px rgba(132, 155, 255, 0.35);
 }
 
-.character-card input:checked + .card-body .card-name {
-    color: #E8ECFF;
-}
-
 .character-card input:focus-visible + .card-body {
     outline: 3px solid var(--gold);
     outline-offset: 2px;
@@ -439,17 +381,12 @@ body {
     border-bottom: 4px solid #202641;
 }
 
-.btn-secondary:hover {
-    background: #202641;
-    color: #E8ECFF;
-}
-
 .btn:focus-visible {
     outline: 3px solid var(--gold);
     outline-offset: 2px;
 }
 
-/* Status do Laragon */
+/* Status da conexão */
 .server-status {
     margin-top: 20px;
     font-size: 11px;
@@ -469,11 +406,6 @@ body {
 }
 
 .status-dot.online {
-    background: #849BFF;
-    box-shadow: 0 0 8px #849BFF;
-}
-
-.status-dot.offline {
     background: #849BFF;
     box-shadow: 0 0 8px #849BFF;
 }
@@ -615,14 +547,10 @@ body {
     .pipe {
         height: 72px;
     }
-    .moon {
-        width: 100px;
-        right: 30px;
-    }
     .hud-bar {
         padding: 10px 14px;
     }
-    .player-info, .speed-info, .score-info {
+    .player-info, .speed-info, .collect-info, .score-info {
         gap: 6px;
     }
     .label {
@@ -643,13 +571,6 @@ body {
     }
     .character-select {
         grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Respeita quem prefere menos movimento: o cenário fica parado */
-@media (prefers-reduced-motion: reduce) {
-    .game-board.running .city {
-        animation-play-state: paused;
     }
 }
 
@@ -813,4 +734,64 @@ body {
     .splash.active {
         animation: none;
     }
+}
+
+/* Itens coletáveis: posição e deslocamento controlados pelo JavaScript. */
+.collectible {
+    position: absolute;
+    left: 0;
+    width: 62px;
+    height: 62px;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+    z-index: 9;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.85))
+            drop-shadow(0 0 5px rgba(255, 220, 80, 0.55));
+}
+
+.collect-feedback {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ffe077;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 12px;
+    text-shadow: 2px 2px #000;
+    pointer-events: none;
+    z-index: 12;
+}
+
+/* Compensa as margens transparentes dos PNGs sem aumentar os obstáculos. */
+.collectible[data-character="bart"] { width: 66px; height: 66px; }
+.collectible[data-character="sasuke"] { width: 66px; height: 66px; }
+.collectible[data-character="sonic"] { width: 52px; height: 60px; }
+
+.collect-feedback:not(:empty) {
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 224, 119, 0.65);
+    border-radius: 20px;
+    background: rgba(12, 16, 34, 0.88);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .collectible { width: 54px; height: 54px; }
+    .collectible[data-character="bart"] { width: 58px; height: 58px; }
+    .collectible[data-character="sasuke"] { width: 58px; height: 58px; }
+    .collectible[data-character="sonic"] { width: 46px; height: 54px; }
+    .collect-feedback { font-size: 10px; }
+}
+
+/* Apenas os coletáveis reproduzem os quadros das folhas de sprites. */
+.collectible-visual {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background-repeat: no-repeat;
+    pointer-events: none;
 }

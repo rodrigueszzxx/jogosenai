@@ -8,13 +8,16 @@ require_once 'conexao.php';
  *  - 'run'  = imagem do personagem correndo (PNG, GIF ou SVG)
  *  - 'dead' = imagem do personagem quando perde (Game Over)
  *  - 'cenario' = imagem de fundo do jogo desse personagem
+ *  - 'coleta' = imagem do item que concede pontos ao personagem
  *  - 'obstaculo' = imagem do obstáculo desse personagem
  */
+$spritesColetaveis = json_decode(file_get_contents(__DIR__ . '/assets/collectibles/frames.json'), true, 512, JSON_THROW_ON_ERROR);
+
 $personagens = [
-    ['id' => 'pikachu', 'nome' => 'Pikachu', 'run' => 'assets/characters/pikachu.gif', 'dead' => 'assets/characters/pikachu.gif', 'cenario' => 'assets/cenario-pikachu.jpg', 'obstaculo' => 'assets/obstaculo-pikachu.png'],
-    ['id' => 'bart', 'nome' => 'Bart', 'run' => 'assets/characters/bart.gif', 'dead' => 'assets/characters/bart.gif', 'cenario' => 'assets/cenario-bart.png', 'obstaculo' => 'assets/obstaculo-bart.png'],
-    ['id' => 'sasuke', 'nome' => 'Sasuke', 'run' => 'assets/characters/sasuke.gif', 'dead' => 'assets/characters/sasuke.gif', 'cenario' => 'assets/cenario-sasuke.png', 'obstaculo' => 'assets/obstaculo-sasuke.png'],
-    ['id' => 'sonic', 'nome' => 'Sonic', 'run' => 'assets/characters/sonic.gif', 'dead' => 'assets/characters/sonic.gif', 'cenario' => 'assets/cenario-sonic.jpg', 'obstaculo' => 'assets/obstaculo-sonic.png'],
+    ['id' => 'pikachu', 'coleta_sprite' => 'pikachu', 'coleta' => 'assets/collectibles/pikachu.png', 'nome' => 'Pikachu', 'run' => 'assets/characters/pikachu.gif', 'dead' => 'assets/characters/pikachu.gif', 'cenario' => 'assets/cenario-pikachu.jpg', 'obstaculo' => 'assets/obstaculo-pikachu.png'],
+    ['id' => 'bart', 'coleta_sprite' => 'bart', 'coleta' => 'assets/collectibles/bart.png', 'nome' => 'Bart', 'run' => 'assets/characters/bart.gif', 'dead' => 'assets/characters/bart.gif', 'cenario' => 'assets/cenario-bart.png', 'obstaculo' => 'assets/obstaculo-bart.png'],
+    ['id' => 'sasuke', 'coleta_sprite' => 'sasuke', 'coleta' => 'assets/collectibles/sasuke.png', 'nome' => 'Sasuke', 'run' => 'assets/characters/sasuke.gif', 'dead' => 'assets/characters/sasuke.gif', 'cenario' => 'assets/cenario-sasuke.png', 'obstaculo' => 'assets/obstaculo-sasuke.png'],
+    ['id' => 'sonic', 'coleta' => 'assets/collectibles/sonic.gif', 'nome' => 'Sonic', 'run' => 'assets/characters/sonic.gif', 'dead' => 'assets/characters/sonic.gif', 'cenario' => 'assets/cenario-sonic.jpg', 'obstaculo' => 'assets/obstaculo-sonic.png'],
 ];
 
 // Busca inicial do ranking para carregar rápido na primeira abertura
@@ -28,7 +31,7 @@ try {
     ");
     $rankingInicial = $stmt->fetchAll();
 } catch (Exception $e) {
-    // Caso o banco ainda não possua registros
+    // Mantém a tela disponível se a consulta falhar (ranking vazio não lança exceção).
     $rankingInicial = [];
 }
 
@@ -46,7 +49,7 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=coleta-sprites-2">
 </head>
 <body>
 
@@ -61,6 +64,10 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
                 <span class="label">VEL:</span>
                 <span class="value" id="speed-display">1.0x</span>
             </div>
+            <div class="collect-info">
+                <span class="label">ITENS:</span>
+                <span class="value" id="collect-display">0</span>
+            </div>
             <div class="score-info">
                 <span class="label">PONTOS:</span>
                 <span class="value" id="score-display">0</span>
@@ -72,6 +79,7 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
 
             <img src="<?= htmlspecialchars($personagens[0]['run']) ?>" class="hero" alt="Personagem">
             <img src="<?= htmlspecialchars($personagens[0]['obstaculo']) ?>" class="pipe" alt="Obstáculo">
+            <div class="collect-feedback" id="collect-feedback" role="status" aria-live="polite"></div>
             <span class="jump-tip" id="jump-tip">Pressione ESPAÇO ou clique para pular</span>
         </main>
     </div>
@@ -105,7 +113,7 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
                 </li>
                 <li>
                     <span class="howto-label">PONTUAR</span>
-                    <span>Quanto mais tempo você sobreviver, mais pontos faz.</span>
+                    <span>Quanto mais tempo você sobreviver, mais pontos faz. Colete os itens do seu personagem para ganhar 50 pontos extras por item.</span>
                 </li>
                 <li>
                     <span class="howto-label">RANKING</span>
@@ -150,10 +158,11 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
                                     type="radio"
                                     name="character"
                                     value="<?= htmlspecialchars($p['id']) ?>"
-                                    data-name="<?= htmlspecialchars($p['nome']) ?>"
+                                    data-coleta="<?= htmlspecialchars($p['coleta']) ?>"
                                     data-run="<?= htmlspecialchars($p['run']) ?>"
                                     data-dead="<?= htmlspecialchars($p['dead']) ?>"
                                     data-cenario="<?= htmlspecialchars($p['cenario']) ?>"
+                                    data-coleta-sprite="<?= htmlspecialchars($p['coleta_sprite'] ?? '') ?>"
                                     data-obstaculo="<?= htmlspecialchars($p['obstaculo']) ?>"
                                     <?= $i === 0 ? 'checked' : '' ?>
                                 >
@@ -167,12 +176,12 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
                 </div>
 
                 <div class="modal-actions">
-                    <button type="submit" class="btn btn-primary" id="btn-start">INICIAR JOGO</button>
+                    <button type="submit" class="btn btn-primary">INICIAR JOGO</button>
                     <button type="button" class="btn btn-secondary" id="btn-view-ranking">VER RANKING</button>
                 </div>
             </form>
 
-            <div class="server-status" id="server-status">
+            <div class="server-status">
                 <span class="status-dot online"></span> Conectado ao MySQL
             </div>
         </div>
@@ -232,6 +241,7 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
     </div>
 
    
-    <script src="js/script.js" defer></script>
+    <script type="application/json" id="collectible-sprites"><?= json_encode($spritesColetaveis, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
+    <script src="js/script.js?v=coleta-sprites-2" defer></script>
 </body>
 </html>

@@ -19,6 +19,21 @@ HTML, CSS e JavaScript puro no front-end; PHP com PDO e MySQL no back-end.
 
 O banco `hero_jump` e a tabela `ranking` são criados automaticamente na primeira abertura (veja `conexao.php`; ajuste usuário e senha se o seu MySQL for diferente).
 
+## Itens coletáveis
+
+Durante a partida, aparecem itens associados ao personagem escolhido:
+
+| Personagem | Item | Arquivo |
+|---|---|---|
+| Pikachu | Doce | `assets/collectibles/pikachu.png` |
+| Bart | Lata | `assets/collectibles/bart.png` |
+| Sasuke | Pergaminho | `assets/collectibles/sasuke.png` |
+| Sonic | Anel | `assets/collectibles/sonic.gif` |
+
+Pule para coletar. Cada item desaparece ao ser coletado e concede **50 pontos** extras, além dos pontos de sobrevivência. O painel mostra a quantidade de itens e o total de pontos em tempo real. Itens perdidos saem da tela sem penalidade. O bônus faz parte da pontuação final salva no ranking; uma nova rodada zera o contador.
+
+Os PNGs usados no jogo estão recortados com transparência real em `assets/collectibles/`. O GIF animado do Sonic foi preservado. Todos os coletáveis ficam em `assets/collectibles/`; não há cópias na raiz. Os itens têm escala específica por formato e tamanhos menores no celular, sempre inferiores aos obstáculos. A largura real do CSS é usada pelo movimento e pela remoção do item. Para mudar o bônus, ajuste `PONTOS_POR_ITEM` em `js/script.js`.
+
 ## Controles
 
 - **Espaço**, **seta para cima** ou **clique/toque no cenário** para pular.
@@ -45,3 +60,13 @@ O banco `hero_jump` e a tabela `ranking` são criados automaticamente na primeir
 ```
 
 Pronto: o card aparece na tela de início e o JavaScript já usa as imagens. Se a lista passar de 4 personagens, ajuste `grid-template-columns` em `.character-select` no CSS.
+
+## Coletáveis animados e obstáculos
+
+Doce, lata e pergaminho são exclusivamente coletáveis: valem 50 pontos e desaparecem ao serem coletados. Suas folhas animadas (12 quadros para Pikachu e Bart; 18 para Sasuke) ficam em `assets/collectibles/sprites/`. O mapeamento de quadros fica em `assets/collectibles/frames.json`. A folha original de Bart está em `assets/collectibles/originals/`; o jogo usa a versão com transparência. Sonic mantém seu anel animado em GIF.
+
+Os obstáculos usam apenas as imagens `assets/obstaculo-*.png` e encerram a partida na colisão. Eles atravessam o cenário como antes, sem reproduzir as rotações dos coletáveis. A coleta e o fim da partida usam verificações separadas.
+
+### Validação da correção
+
+Testes no Chromium em 1280px e 390px, para os quatro personagens: referência correta ao obstáculo original, animação do coletável, coleta por pulo com bônus de 50 pontos, preservação do bônus, item perdido, colisão com obstáculo, ranking e reinício. A coleta foi isolada do obstáculo para verificar o bônus; depois, foi provocada colisão para validar Game Over. Os registros de teste foram removidos. Sintaxe PHP/JavaScript e integridade do ZIP verificadas.
