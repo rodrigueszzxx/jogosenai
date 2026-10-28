@@ -1,6 +1,12 @@
 <?php
 
-require_once 'conexao.php';
+require_once __DIR__ . '/config/database.php';
+try { $pdo = conectarBanco(); } catch (Throwable $e) {
+    http_response_code(503);
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Hero Jump</title><p>Não foi possível conectar ao banco do jogo. Tente novamente mais tarde.</p><a href="pages/sobre-nos.php">Conheça a VORTEX</a></html>';
+    exit;
+}
 
 /**
  * Lista de personagens jogáveis.
@@ -44,12 +50,12 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hero Jump - Jogo com Ranking MySQL</title>
+    <title>Hero Jump | VORTEX</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=coleta-sprites-2">
+    <link rel="stylesheet" href="css/styles.css?v=vortex-2">
 </head>
 <body>
 
@@ -89,11 +95,16 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
         <div class="splash-bg" aria-hidden="true"></div>
 
         <div class="splash-content">
+            <div class="studio-signature" aria-label="VORTEX apresenta">
+                <span class="vortex-mark"><img src="assets/brand/vortex.jpg" alt="Logotipo VORTEX" width="2814" height="1536"></span>
+                <span class="studio-name">VORTEX<span class="studio-caption">APRESENTA</span></span>
+            </div>
             <h1 class="splash-title">HERO<br>JUMP</h1>
 
             <p class="splash-record">🏆 RECORDE: <span id="splash-record-text"><?= $recorde ? htmlspecialchars($recorde['nome']) . ' - ' . (int)$recorde['pontos'] . ' PTS' : '---' ?></span></p>
 
             <button type="button" class="btn btn-primary splash-play" id="btn-splash-play">INICIAR JOGO</button>
+            <a class="about-link" href="pages/sobre-nos.php">Sobre nós <span aria-hidden="true">→</span></a>
         </div>
     </div>
 
@@ -242,6 +253,6 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
 
    
     <script type="application/json" id="collectible-sprites"><?= json_encode($spritesColetaveis, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
-    <script src="js/script.js?v=coleta-sprites-2" defer></script>
+    <script src="js/script.js?v=vortex-2" defer></script>
 </body>
 </html>

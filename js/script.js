@@ -156,6 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.addEventListener('keydown', (e) => {
             if (!splash.classList.contains('active') || e.repeat) return;
+            // Links e botões mantêm sua ativação nativa por teclado.
+            if (e.target.closest('a, button, input, select, textarea')) return;
             if (e.code === 'Enter' || e.code === 'Space' || e.key === ' ') {
                 e.preventDefault();
                 irParaComoJogar();
@@ -474,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function saveScore(playerName, finalScore) {
-        fetch('salvar_ranking.php', {
+        fetch('api/salvar-ranking.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -508,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Busca o ranking atualizado no banco
      */
     function fetchRanking() {
-        fetch('obter_ranking.php')
+        fetch('api/obter-ranking.php')
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success' && data.ranking) {

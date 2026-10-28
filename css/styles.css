@@ -795,3 +795,71 @@ body {
     background-repeat: no-repeat;
     pointer-events: none;
 }
+
+/* VORTEX: assinatura do estúdio e apresentação institucional. */
+.studio-signature {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 8px 22px 8px 8px;
+    border: 1px solid rgba(184, 163, 255, 0.3);
+    border-radius: 22px;
+    background: rgba(12, 16, 34, 0.88);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+.vortex-mark {
+    position: relative;
+    display: block;
+    width: 80px;
+    height: 80px;
+    overflow: hidden;
+    border-radius: 16px;
+    flex-shrink: 0;
+    background: #101429;
+}
+.vortex-mark img {
+    position: absolute;
+    width: auto;
+    max-width: none;
+    height: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.studio-name {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: #c9c1ff;
+}
+.studio-caption {
+    display: block;
+    margin-top: 11px;
+    color: #a8caff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 4px;
+}
+.about-link {
+    color: #d7ceff;
+    text-decoration: underline;
+    text-underline-offset: 5px;
+    font-weight: 600;
+}
+.about-link {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: rgba(12, 16, 34, 0.85);
+    font-size: 14px;
+}
+.about-link:hover { color: #fff; }
+.about-link:focus-visible {
+    outline: 3px solid #a8caff;
+    outline-offset: 6px;
+}
+@media (max-width: 600px) {
+    .studio-signature { gap: 12px; }
+    .vortex-mark { width: 64px; height: 64px; }
+    .studio-name { font-size: 15px; }
+    .studio-caption { letter-spacing: 3px; }
+}
