@@ -270,6 +270,6 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
 
    
     <script type="application/json" id="collectible-sprites"><?= json_encode($spritesColetaveis, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
-    <script src="js/script.js?v=vortex-apresentacao-1" defer></script>
+    <script src="js/script.js?v=hitbox-obstaculos-1" defer></script>
 </body>
 </html>

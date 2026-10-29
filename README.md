@@ -39,6 +39,8 @@ Não há pasta `api`, `database`, `config` ou `docs`, nem formulário, JavaScrip
 
 Escolha um dos quatro personagens e pule com Espaço, seta para cima ou toque no cenário. Evite os obstáculos e colete itens: cada coleta concede 50 pontos, além da pontuação por sobrevivência. O contador é zerado em cada nova partida.
 
+A colisão dos obstáculos desconsidera 18% de cada lateral, 30% do topo e 5% da base da imagem. Isso reduz a área anterior de colisão em 20% na largura e aproximadamente 19% na altura, tolerando raspadas nas bordas. O ajuste vale para os quatro personagens e Raichu em todos os níveis, sem modificar o tamanho visual ou a coleta de itens. As margens ficam em `HITBOX_OBSTACULO`, em `js/script.js`.
+
 ## Níveis de dificuldade
 
 O nível atual aparece na barra superior e muda automaticamente pelo tempo efetivo de sobrevivência. A barra mostra jogador, nível, itens e pontos; a velocidade é controlada internamente e não possui indicador na interface. Coletar itens não antecipa a mudança de nível, e os 1,2 segundo da evolução do Pikachu não contam como tempo jogado.

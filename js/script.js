@@ -85,6 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const TEMPO_VELOCIDADE_MAXIMA = 90;
     const PONTOS_POR_SEGUNDO_BASE = 10;
     const VELOCIDADE_CENARIO_BASE = 32; // pixels por segundo; mais lento que os obstáculos
+    // Ignora as bordas do desenho para tolerar raspadas durante o salto.
+    const HITBOX_OBSTACULO = { lateral: 0.18, superior: 0.30, inferior: 0.05 };
 
     // Cada coleta soma ao mesmo total usado pelo placar e pelo ranking.
     const PONTOS_POR_ITEM = 50;
@@ -673,11 +675,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const personagem = hero.getBoundingClientRect();
         const obstaculo = pipe.getBoundingClientRect();
         const margemHeroi = personagem.width * 0.18;
-        const margemObstaculo = obstaculo.width * 0.1;
+        const margemObstaculo = obstaculo.width * HITBOX_OBSTACULO.lateral;
+        const topoObstaculo = obstaculo.top + obstaculo.height * HITBOX_OBSTACULO.superior;
+        const baseObstaculo = obstaculo.bottom - obstaculo.height * HITBOX_OBSTACULO.inferior;
         const tocou = personagem.right - margemHeroi > obstaculo.left + margemObstaculo
             && personagem.left + margemHeroi < obstaculo.right - margemObstaculo
-            && personagem.bottom > obstaculo.top + obstaculo.height * 0.2
-            && personagem.top + personagem.height * 0.12 < obstaculo.bottom;
+            && personagem.bottom > topoObstaculo
+            && personagem.top + personagem.height * 0.12 < baseObstaculo;
         if (tocou) {
             const heroPosition = parseFloat(window.getComputedStyle(hero).bottom);
             triggerGameOver(pipe.offsetLeft, heroPosition);
