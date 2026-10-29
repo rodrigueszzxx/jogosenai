@@ -72,7 +72,7 @@ Doce, lata e pergaminho são coletáveis animados com folhas em `assets/collecti
 
 ## Sobre nós
 
-A página reúne a origem fictícia da VORTEX, sua especialidade e serviços, a história do Hero Jump, seu público-alvo, proposta e objetivo. Mantém duas seções principais e não inclui catálogo de jogos, equipe ou contato. Edite os textos diretamente em `pages/sobre-nos.php`. O logotipo fica em `assets/brand/vortex.jpg`.
+A página reúne a origem fictícia da VORTEX, sua especialidade e serviços, a história do Hero Jump, seu público-alvo, proposta e objetivo. A terceira seção contém uma tabela com 11 requisitos funcionais (RF01 a RF11) e quatro requisitos não funcionais (RNF01 a RNF04), com código, descrição e tipo. O atalho “Ver tabela de requisitos” leva diretamente à seção; também é possível abrir `pages/sobre-nos.php#requisitos`. Não há catálogo de jogos, equipe ou contato. Edite os textos diretamente em `pages/sobre-nos.php`. O logotipo fica em `assets/brand/vortex.jpg`.
 
 ## Atualizar uma versão antiga
 
