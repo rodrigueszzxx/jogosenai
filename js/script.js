@@ -91,9 +91,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cada coleta soma ao mesmo total usado pelo placar e pelo ranking.
     const PONTOS_POR_ITEM = 50;
     const PONTOS_PARA_EVOLUIR = 100;
-    const RAICHU_IMAGE = 'assets/characters/raichu.gif';
-    const raichuImage = new Image();
-    raichuImage.src = RAICHU_IMAGE;
+    const RAICHU_FRAMES = [1, 2, 3].map((numero) =>
+        `assets/characters/raichu/corrida-0${numero}.png`
+    );
+    const RAICHU_SEQUENCE = [0, 1, 2, 1];
+    const RAICHU_FRAME_MS = 100;
+    const RAICHU_IMAGE = RAICHU_FRAMES[0];
+    const raichuFrameImages = RAICHU_FRAMES.map((src) => {
+        const imagem = new Image();
+        imagem.src = src;
+        return imagem;
+    });
+    const raichuImage = raichuFrameImages[0];
     const thunderstoneImage = new Image();
     thunderstoneImage.src = collectibleSprites.thunderstone.image;
 
@@ -120,6 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let feedbackTimeout = null;
     let pedraLiberada = false;
     let evoluiuParaRaichu = false;
+    let inicioAnimacaoRaichu = 0;
+    let quadroRaichu = 0;
     let evolutionTimeout = null;
     let evolutionFrameTimers = [];
     let evolutionCleanupTimeout = null;
@@ -323,6 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
             atualizarVelocidade();
             checkCollision();
             if (!isPlaying) return;
+            atualizarAnimacaoRaichu();
             atualizarCenario();
             atualizarColetaveis();
         }, 10);
@@ -440,6 +452,17 @@ document.addEventListener('DOMContentLoaded', () => {
         hero.src = RAICHU_IMAGE;
         hero.classList.add('is-evolved');
         hero.alt = 'Raichu';
+        quadroRaichu = 0;
+        inicioAnimacaoRaichu = performance.now();
+    }
+
+    function atualizarAnimacaoRaichu() {
+        if (!evoluiuParaRaichu || !hero.classList.contains('is-evolved')) return;
+        const passo = Math.floor((performance.now() - inicioAnimacaoRaichu) / RAICHU_FRAME_MS);
+        const quadro = RAICHU_SEQUENCE[passo % RAICHU_SEQUENCE.length];
+        if (quadro === quadroRaichu) return;
+        hero.src = RAICHU_FRAMES[quadro];
+        quadroRaichu = quadro;
     }
 
     function agendarFimDoPulo(duracao) {
@@ -462,6 +485,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ultimoTickItem = agora;
         ultimoTickPontos = agora;
         ultimoTickCenario = agora;
+        // A corrida começa quando a partida retoma, mantendo o personagem parado nos raios.
+        inicioAnimacaoRaichu = agora;
         isEvolutionAnimating = false;
         gameBoard.classList.remove('evolving');
         if (isPlaying && hero.classList.contains('jump')) {
@@ -535,7 +560,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const agora = performance.now();
         // O gatilho depende da pontuação real, nunca do texto exibido no painel.
         if (currentCharacter.id === 'pikachu' && !pedraLiberada && !evoluiuParaRaichu
-            && score >= PONTOS_PARA_EVOLUIR && raichuImage.complete && raichuImage.naturalWidth > 0
+            && score >= PONTOS_PARA_EVOLUIR
+            && raichuFrameImages.every((imagem) => imagem.complete && imagem.naturalWidth > 0)
             && thunderstoneImage.complete && thunderstoneImage.naturalWidth > 0) {
             pedraLiberada = true;
             removerColetavel();
@@ -629,6 +655,8 @@ document.addEventListener('DOMContentLoaded', () => {
         tempoRestantePulo = 0;
         pedraLiberada = false;
         evoluiuParaRaichu = false;
+        quadroRaichu = 0;
+        inicioAnimacaoRaichu = 0;
         isEvolutionAnimating = false;
         clearTimeout(evolutionTimeout);
         limparAnimacaoEvolucao();
