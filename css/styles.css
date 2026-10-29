@@ -54,11 +54,32 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
-.player-info, .speed-info, .collect-info, .score-info {
+.player-info, .level-info, .speed-info, .collect-info, .score-info {
     display: flex;
     align-items: center;
     gap: 10px;
 }
+.player-info {
+    min-width: 0;
+    max-width: 100%;
+}
+.player-info .value {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.level-info .level-badge {
+    font-size: 10px;
+    padding: 9px 10px;
+    border: 1px solid currentColor;
+    border-radius: 7px;
+    background: #0c1022;
+    white-space: nowrap;
+}
+.level-info[data-level="1"] .level-badge { color: #9de4c4; }
+.level-info[data-level="2"] .level-badge { color: #ffe09a; }
+.level-info[data-level="3"] .level-badge { color: #ffabab; }
 
 .label {
     font-family: 'Press Start 2P', 'Courier New', monospace;
@@ -85,9 +106,52 @@ body {
     margin: 0 auto;
     position: relative;
     overflow: hidden;
-    background: #849BFF url('../assets/cenario-pikachu.jpg') center bottom / cover no-repeat;
+    background: #849BFF;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     cursor: pointer;
+}
+
+/* Três painéis alternados permitem rolagem contínua sem saltos no reinício. */
+.scenery-track {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform;
+}
+.scenery-panel {
+    flex: 0 0 100%;
+    height: 100%;
+    background-position: center bottom;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+.scenery-panel:nth-child(even) {
+    transform: scaleX(-1);
+}
+.level-notice {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 13;
+    max-width: calc(100% - 24px);
+    padding: 15px 20px;
+    border: 1px solid #ffe09a;
+    border-radius: 10px;
+    background: rgba(12, 16, 34, 0.92);
+    color: #ffe09a;
+    font: 10px/1.8 'Press Start 2P', monospace;
+    text-align: center;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 5px 20px #0005;
+}
+.level-notice[hidden] { display: none; }
+.game-board[data-level="3"] .level-notice {
+    color: #ffabab;
+    border-color: #ffabab;
 }
 
 /* Linha de neon no chão */
@@ -550,7 +614,7 @@ body {
     .hud-bar {
         padding: 10px 14px;
     }
-    .player-info, .speed-info, .collect-info, .score-info {
+    .player-info, .level-info, .speed-info, .collect-info, .score-info {
         gap: 6px;
     }
     .label {
@@ -559,6 +623,7 @@ body {
     .value {
         font-size: 11px;
     }
+    .level-info .level-badge { font-size: 9px; padding: 7px 8px; }
     .game-title {
         font-size: 16px;
     }

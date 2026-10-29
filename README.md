@@ -21,7 +21,34 @@ Não há pasta `api`, `database`, `config` ou `docs`, nem formulário, JavaScrip
 
 ## Jogo
 
-Escolha um dos quatro personagens e pule com Espaço, seta para cima ou toque no cenário. Evite os obstáculos e colete itens: cada coleta concede 50 pontos, além da pontuação por sobrevivência. O contador é zerado em cada nova partida. A velocidade aumenta progressivamente; ainda não existem três níveis nomeados.
+Escolha um dos quatro personagens e pule com Espaço, seta para cima ou toque no cenário. Evite os obstáculos e colete itens: cada coleta concede 50 pontos, além da pontuação por sobrevivência. O contador é zerado em cada nova partida.
+
+## Níveis de dificuldade
+
+O nível atual aparece na barra superior e muda automaticamente pelo tempo efetivo de sobrevivência. Coletar itens não antecipa a mudança de nível, e os 1,2 segundo da evolução do Pikachu não contam como tempo jogado.
+
+| Nível | Tempo de partida ativa | Velocidade |
+| --- | --- | --- |
+| 1 — Fácil | 0 a menos de 20 segundos | 0,8x até 1,15x |
+| 2 — Médio | 20 a menos de 45 segundos | 1,15x até 1,6x |
+| 3 — Difícil | A partir de 45 segundos | 1,6x até o limite de 2,0x aos 90 segundos |
+
+A aceleração é contínua, inclusive na passagem entre níveis. Obstáculos e coletáveis acompanham a mesma velocidade. O cenário rola mais devagar, mas também acelera com o nível; painéis alternados e espelhados permitem repetir as imagens existentes sem corte na volta do ciclo. A opção de movimento reduzido mantém o cenário parado e conserva as regras de dificuldade.
+
+Ao perder, a rolagem para. Ao reiniciar, nível, velocidade e posição do cenário voltam ao início. Os tempos e velocidades podem ser ajustados na constante `NIVEIS`, em `js/script.js`; o limite final está em `VELOCIDADE_MAXIMA` e `TEMPO_VELOCIDADE_MAXIMA`.
+
+### Validação dos níveis
+
+Verificação em Chromium com relógio simulado, usando os quatro personagens nas larguras de 1280 e 390 px. As chamadas de ranking foram simuladas neste teste de interface; o código de banco não foi alterado.
+
+| Caso | Resultado |
+| --- | --- |
+| Antes de 20 s, aos 20 s e aos 45 s | Fácil, Médio e Difícil exibidos nos limites previstos |
+| Aceleração dos obstáculos e rolagem do cenário | Velocidade progressiva; limite de 2,0x mantido após 90 s |
+| Cinco coletas no início com Sonic | +250 pontos, sem antecipar a passagem de nível |
+| Evolução iniciada 0,5 s antes de cada transição | Cenário, pontos e velocidade pausados; transição apenas após completar o tempo ativo |
+| Pulo, colisão e reinício após chegar ao Difícil | Partida encerra, cenário para e reinício volta ao Fácil em 0,8x |
+| Movimento reduzido e tela de 320 px | Cenário parado, níveis ativos e interface sem rolagem horizontal |
 
 Doce, lata e pergaminho são coletáveis animados com folhas em `assets/collectibles/sprites/` e mapeamento em `assets/collectibles/frames.json`. Sonic usa um anel em GIF. Os PNGs de referência/fallback permanecem em `assets/collectibles/`. Obstáculos usam apenas as imagens `assets/obstaculo-*.png`.
 

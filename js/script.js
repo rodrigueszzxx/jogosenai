@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const hudPlayerName = document.getElementById('hud-player-name');
     const scoreDisplay = document.getElementById('score-display');
     const speedDisplay = document.getElementById('speed-display');
+    const levelDisplay = document.getElementById('level-display');
+    const levelInfo = document.getElementById('level-info');
+    const levelNotice = document.getElementById('level-notice');
+    const sceneryTrack = document.getElementById('scenery-track');
+    const sceneryPanels = sceneryTrack.querySelectorAll('.scenery-panel');
     const collectDisplay = document.getElementById('collect-display');
     const collectFeedback = document.getElementById('collect-feedback');
     const jumpTip = document.getElementById('jump-tip');
@@ -70,15 +75,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnRestart = document.getElementById('btn-restart');
     const btnChangePlayer = document.getElementById('btn-change-player');
 
-    // ===== Sistema de velocidade (baseado no Dino Runner do Google/Chrome) =====
-    // No Dino: a velocidade começa em 6, soma 0.001 a cada frame (60 FPS) e para em 13.
-    // Aqui o 6 equivale à velocidade normal do obstáculo (1.0x) e o 13 a ~2.17x.
-    // Para o jogo acelerar mais rápido/devagar, mexa em ACELERACAO; para limitar, em VELOCIDADE_MAXIMA.
-    const VELOCIDADE_INICIAL = 6;
-    const VELOCIDADE_MAXIMA = 13;
-    const ACELERACAO = 0.001;           // somada a cada frame
-    const FPS_REFERENCIA = 60;
-    const PONTOS_POR_SEGUNDO_BASE = 10; // pontos/segundo na velocidade inicial (1 ponto a cada 100ms)
+    // Tempo em segundos de partida ativa: a pausa da evolução é descontada.
+    // A velocidade interpola entre os níveis, sem saltos nos obstáculos.
+    const NIVEIS = [
+        { numero: 1, nome: 'Fácil', inicio: 0, velocidade: 0.8 },
+        { numero: 2, nome: 'Médio', inicio: 20, velocidade: 1.15 },
+        { numero: 3, nome: 'Difícil', inicio: 45, velocidade: 1.6 }
+    ];
+    const VELOCIDADE_MAXIMA = 2;
+    const TEMPO_VELOCIDADE_MAXIMA = 90;
+    const PONTOS_POR_SEGUNDO_BASE = 10;
+    const VELOCIDADE_CENARIO_BASE = 32; // pixels por segundo; mais lento que os obstáculos
 
     // Cada coleta soma ao mesmo total usado pelo placar e pelo ranking.
     const PONTOS_POR_ITEM = 50;
@@ -96,7 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let isPlaying = false;
     let gameLoop = null;
     let scoreLoop = null;
-    let multiplicadorVelocidade = 1;    // 1 = velocidade inicial, ~2.17 = máxima
+    let multiplicadorVelocidade = NIVEIS[0].velocidade;
+    let nivelAtual = NIVEIS[0];
+    let avisoNivelTimeout = null;
+    let deslocamentoCenario = 0;
+    let ultimoTickCenario = 0;
     let inicioPartida = 0;
     let pontosExatos = 0;
     let ultimoTickPontos = 0;
@@ -142,7 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentCharacter) return;
         hero.src = currentCharacter.run;
         pipe.src = currentCharacter.obstaculo;
-        gameBoard.style.backgroundImage = `url('${currentCharacter.cenario}')`;
+        sceneryPanels.forEach((panel) => {
+            panel.style.backgroundImage = `url('${currentCharacter.cenario}')`;
+        });
     }
 
     // Pré-carrega as imagens de "Game Over", cenário e obstáculo para a troca ser instantânea
@@ -281,15 +294,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ativa animações CSS do jogo
         gameBoard.classList.add('running');
 
-        // Velocidade volta ao normal a cada partida
+        // Toda nova partida começa no Fácil, em 0.8x.
         inicioPartida = performance.now();
-        multiplicadorVelocidade = 1;
-        speedDisplay.textContent = '1.0x';
+        ultimoTickCenario = inicioPartida;
         ultimoTickItem = inicioPartida;
         proximoItemEm = inicioPartida;
         animacaoObstaculo = obterAnimacaoDoObstaculo();
+        atualizarVelocidade();
 
-        // Loop de pontuação: 10 pts/s na velocidade inicial, e cresce junto com a velocidade (como a distância no Dino)
+        // A pontuação por sobrevivência acompanha a velocidade; cada item soma 50.
         pontosExatos = 0;
         ultimoTickPontos = performance.now();
         scoreLoop = setInterval(() => {
@@ -308,6 +321,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isPlaying || isEvolutionAnimating) return;
             atualizarVelocidade();
             checkCollision();
+            if (!isPlaying) return;
+            atualizarCenario();
             atualizarColetaveis();
         }, 10);
     }
@@ -321,18 +336,49 @@ document.addEventListener('DOMContentLoaded', () => {
         return animacoes.find((a) => a.animationName === 'pipe-animation') || animacoes[0] || null;
     }
 
-    /**
-     * Velocidade no estilo Dino: sobe com o tempo (60 "frames" por segundo) até o máximo.
-     * Devolve um multiplicador: 1.0 = velocidade inicial.
-     */
-    function calcularMultiplicador(msDecorridos) {
-        const frames = (msDecorridos / 1000) * FPS_REFERENCIA;
-        const velocidade = Math.min(VELOCIDADE_INICIAL + ACELERACAO * frames, VELOCIDADE_MAXIMA);
-        return velocidade / VELOCIDADE_INICIAL;
+    function obterDificuldade(msDecorridos) {
+        const segundos = Math.max(0, msDecorridos / 1000);
+        let indice = 0;
+        for (let i = 1; i < NIVEIS.length; i++) {
+            if (segundos >= NIVEIS[i].inicio) indice = i;
+        }
+        const nivel = NIVEIS[indice];
+        const seguinte = NIVEIS[indice + 1];
+        const fim = seguinte ? seguinte.inicio : TEMPO_VELOCIDADE_MAXIMA;
+        const velocidadeFinal = seguinte ? seguinte.velocidade : VELOCIDADE_MAXIMA;
+        const progresso = Math.min(1, (segundos - nivel.inicio) / (fim - nivel.inicio));
+        return {
+            nivel,
+            multiplicador: nivel.velocidade + (velocidadeFinal - nivel.velocidade) * progresso
+        };
+    }
+
+    function limparAvisoNivel() {
+        clearTimeout(avisoNivelTimeout);
+        avisoNivelTimeout = null;
+        levelNotice.hidden = true;
+        levelNotice.textContent = '';
+    }
+
+    function mostrarNivel(nivel, avisar = false) {
+        nivelAtual = nivel;
+        levelDisplay.textContent = `${nivel.numero} — ${nivel.nome.toUpperCase()}`;
+        levelInfo.dataset.level = nivel.numero;
+        gameBoard.dataset.level = nivel.numero;
+        if (avisar) {
+            limparAvisoNivel();
+            levelNotice.textContent = `NÍVEL ${nivel.numero} — ${nivel.nome.toUpperCase()}`;
+            levelNotice.hidden = false;
+            avisoNivelTimeout = setTimeout(limparAvisoNivel, 2200);
+        }
     }
 
     function atualizarVelocidade() {
-        multiplicadorVelocidade = calcularMultiplicador(performance.now() - inicioPartida);
+        const dificuldade = obterDificuldade(performance.now() - inicioPartida);
+        multiplicadorVelocidade = dificuldade.multiplicador;
+        if (dificuldade.nivel.numero !== nivelAtual.numero) {
+            mostrarNivel(dificuldade.nivel, true);
+        }
 
         // playbackRate muda a velocidade da animação mantendo a posição atual (sem saltos)
         if (animacaoObstaculo) {
@@ -345,8 +391,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
-
+    function atualizarCenario() {
+        const agora = performance.now();
+        const segundos = Math.min((agora - ultimoTickCenario) / 1000, 0.1);
+        ultimoTickCenario = agora;
+        if (motionPreference.matches) return;
+        const ciclo = gameBoard.clientWidth * 2;
+        if (!ciclo) return;
+        deslocamentoCenario = (deslocamentoCenario
+            + VELOCIDADE_CENARIO_BASE * multiplicadorVelocidade * segundos) % ciclo;
+        sceneryTrack.style.transform = `translate3d(${-deslocamentoCenario}px, 0, 0)`;
+    }
     // Os quadros de Evolution Thunder cobrem a viewport inteira.
     // O preto das imagens desaparece pelo modo de mesclagem "screen" no CSS.
     function limparAnimacaoEvolucao() {
@@ -410,6 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (coletavel) coletavel.inicio += pausa;
         ultimoTickItem = agora;
         ultimoTickPontos = agora;
+        ultimoTickCenario = agora;
         isEvolutionAnimating = false;
         gameBoard.classList.remove('evolving');
         if (isPlaying && hero.classList.contains('jump')) {
@@ -565,6 +621,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetElements() {
+        limparAvisoNivel();
+        mostrarNivel(NIVEIS[0]);
+        multiplicadorVelocidade = NIVEIS[0].velocidade;
+        speedDisplay.textContent = multiplicadorVelocidade.toFixed(1) + 'x';
+        deslocamentoCenario = 0;
+        ultimoTickCenario = performance.now();
+        sceneryTrack.style.transform = 'translate3d(0, 0, 0)';
         clearTimeout(jumpTimeout);
         jumpTimeout = null;
         fimDoPulo = 0;
@@ -630,6 +693,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function triggerGameOver(pipePosition, heroPosition) {
         isPlaying = false;
+        limparAvisoNivel();
         clearTimeout(jumpTimeout);
         jumpTimeout = null;
         limparColetaveis();
