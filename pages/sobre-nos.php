@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/styles.css?v=fundo-limpeza-1">
+    <link rel="stylesheet" href="../css/styles.css?v=fundo-pontos-2">
 </head>
 <body class="story-page">
     <div class="story-shell">
@@ -91,7 +91,7 @@
                             </tr>
                             <tr>
                                 <th scope="row">RF04</th>
-                                <td>Fazer os itens aparecerem durante a partida, acrescentar 50 pontos por coleta e remover o item coletado da tela.</td>
+                                <td>Fazer os itens aparecerem durante a partida, acrescentar 30 pontos por coleta e remover o item coletado da tela.</td>
                                 <td class="requirements-type">Funcional</td>
                             </tr>
                             <tr>
@@ -106,7 +106,7 @@
                             </tr>
                             <tr>
                                 <th scope="row">RF07</th>
-                                <td>Liberar a Pedra do Trovão para Pikachu a partir de 100 pontos. Ao coletá-la, evoluir para Raichu, mostrar os raios e pausar a partida por 1,2 segundo, descontando essa pausa do tempo dos níveis.</td>
+                                <td>Liberar a Pedra do Trovão para Pikachu a partir de 1.500 pontos. Ao coletá-la, evoluir para Raichu, mostrar os raios e pausar a partida por 1,2 segundo, descontando essa pausa do tempo dos níveis.</td>
                                 <td class="requirements-type">Funcional</td>
                             </tr>
                             <tr>
