@@ -1,5 +1,21 @@
 # VORTEX · Hero Jump
 
+## Apresentação da empresa
+
+<img src="assets/brand/vortex.jpg" alt="Logotipo da VORTEX" width="240">
+
+**Nome:** VORTEX, empresa fictícia de desenvolvimento de jogos digitais para navegador, criada em 2026 pelo fundador fictício Rafael Azevedo.
+
+**Descrição e serviços:** criação de jogos web com partidas rápidas e controles simples. Os serviços incluem desenvolvimento de mecânicas, interfaces, personalização de personagens, cenários e obstáculos, testes de jogabilidade e adaptação para computador e celular.
+
+**Jogo desenvolvido:** Hero Jump, um arcade de corrida automática com quatro personagens selecionáveis, itens temáticos e três níveis progressivos de dificuldade.
+
+**Público-alvo:** jogadores casuais, estudantes e iniciantes que procuram partidas rápidas no navegador, usando teclado ou toque.
+
+**Proposta e objetivo:** sobreviver pelo maior tempo possível, saltar para desviar dos obstáculos e coletar itens, acumular pontos e disputar uma posição no ranking das dez melhores pontuações.
+
+A apresentação e a história também estão disponíveis em `pages/sobre-nos.php`. Empresa, fundador e história de origem são fictícios e fazem parte de um projeto acadêmico individual.
+
 ## Executar
 
 No Laragon, copie a pasta `jogosenai` para `www`, inicie PHP e MySQL e abra `http://localhost/jogosenai/`. PHP precisa de PDO MySQL e mbstring.
@@ -9,7 +25,7 @@ Ajuste a conexão em `php/conexao.php` se necessário. Também são aceitas as v
 ## Pastas usadas
 
 - `index.php`: jogo e abertura com a marca VORTEX.
-- `pages/sobre-nos.php`: história da empresa e do jogo; não depende de banco ou JavaScript.
+- `pages/sobre-nos.php`: apresentação e história da empresa e do jogo; não depende de banco ou JavaScript.
 - `php/conexao.php`: conexão e criação da estrutura do ranking.
 - `php/obter-ranking.php`: consulta das dez maiores pontuações.
 - `php/salvar-ranking.php`: gravação da pontuação ao encerrar uma partida.
@@ -25,7 +41,7 @@ Escolha um dos quatro personagens e pule com Espaço, seta para cima ou toque no
 
 ## Níveis de dificuldade
 
-O nível atual aparece na barra superior e muda automaticamente pelo tempo efetivo de sobrevivência. Coletar itens não antecipa a mudança de nível, e os 1,2 segundo da evolução do Pikachu não contam como tempo jogado.
+O nível atual aparece na barra superior e muda automaticamente pelo tempo efetivo de sobrevivência. A barra mostra jogador, nível, itens e pontos; a velocidade é controlada internamente e não possui indicador na interface. Coletar itens não antecipa a mudança de nível, e os 1,2 segundo da evolução do Pikachu não contam como tempo jogado.
 
 | Nível | Tempo de partida ativa | Velocidade |
 | --- | --- | --- |
@@ -54,7 +70,7 @@ Doce, lata e pergaminho são coletáveis animados com folhas em `assets/collecti
 
 ## Sobre nós
 
-A página contém somente a origem fictícia da VORTEX e a evolução do Hero Jump. Edite os textos diretamente em `pages/sobre-nos.php`. O logotipo fica em `assets/brand/vortex.jpg`.
+A página reúne a origem fictícia da VORTEX, sua especialidade e serviços, a história do Hero Jump, seu público-alvo, proposta e objetivo. Mantém duas seções principais e não inclui catálogo de jogos, equipe ou contato. Edite os textos diretamente em `pages/sobre-nos.php`. O logotipo fica em `assets/brand/vortex.jpg`.
 
 ## Atualizar uma versão antiga
 

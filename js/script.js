@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameBoard = document.getElementById('game-board');
     const hudPlayerName = document.getElementById('hud-player-name');
     const scoreDisplay = document.getElementById('score-display');
-    const speedDisplay = document.getElementById('speed-display');
     const levelDisplay = document.getElementById('level-display');
     const levelInfo = document.getElementById('level-info');
     const levelNotice = document.getElementById('level-notice');
@@ -384,11 +383,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (animacaoObstaculo) {
             animacaoObstaculo.playbackRate = multiplicadorVelocidade;
         }
-
-        const texto = multiplicadorVelocidade.toFixed(1) + 'x';
-        if (speedDisplay.textContent !== texto) {
-            speedDisplay.textContent = texto;
-        }
     }
 
     function atualizarCenario() {
@@ -624,7 +618,6 @@ document.addEventListener('DOMContentLoaded', () => {
         limparAvisoNivel();
         mostrarNivel(NIVEIS[0]);
         multiplicadorVelocidade = NIVEIS[0].velocidade;
-        speedDisplay.textContent = multiplicadorVelocidade.toFixed(1) + 'x';
         deslocamentoCenario = 0;
         ultimoTickCenario = performance.now();
         sceneryTrack.style.transform = 'translate3d(0, 0, 0)';

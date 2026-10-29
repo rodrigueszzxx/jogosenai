@@ -55,7 +55,7 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=niveis-1">
+    <link rel="stylesheet" href="css/styles.css?v=vortex-apresentacao-1">
 </head>
 <body>
 
@@ -69,10 +69,6 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
             <div class="level-info" id="level-info" data-level="1">
                 <span class="label">NÍVEL:</span>
                 <span class="value level-badge" id="level-display" role="status" aria-live="polite">1 — FÁCIL</span>
-            </div>
-            <div class="speed-info">
-                <span class="label">VEL:</span>
-                <span class="value" id="speed-display">0.8x</span>
             </div>
             <div class="collect-info">
                 <span class="label">ITENS:</span>
@@ -274,6 +270,6 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
 
    
     <script type="application/json" id="collectible-sprites"><?= json_encode($spritesColetaveis, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
-    <script src="js/script.js?v=niveis-1" defer></script>
+    <script src="js/script.js?v=vortex-apresentacao-1" defer></script>
 </body>
 </html>

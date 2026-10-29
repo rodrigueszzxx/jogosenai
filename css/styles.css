@@ -54,7 +54,7 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
-.player-info, .level-info, .speed-info, .collect-info, .score-info {
+.player-info, .level-info, .collect-info, .score-info {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -614,7 +614,7 @@ body {
     .hud-bar {
         padding: 10px 14px;
     }
-    .player-info, .level-info, .speed-info, .collect-info, .score-info {
+    .player-info, .level-info, .collect-info, .score-info {
         gap: 6px;
     }
     .label {
@@ -929,7 +929,7 @@ body {
     .studio-caption { letter-spacing: 3px; }
 }
 
-/* Sobre nós: somente a história da VORTEX e do Hero Jump. */
+/* Sobre nós: apresentação e história da VORTEX e do Hero Jump. */
 .story-page { display: block; user-select: text; background: radial-gradient(ellipse at top, #251e3e, #0c1022 65%); }
 .story-shell { width: min(100%, 900px); margin: 0 auto; padding: 0 28px; }
 .story-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 28px 0; border-bottom: 1px solid #b8a3ff30; }
@@ -948,6 +948,12 @@ body {
 .story-chapter p { color: #c2c7db; font-size: 14px; line-height: 1.95; margin-bottom: 18px; }
 .story-chapter p:last-child { margin-bottom: 0; }
 .story-chapter strong { color: #e6d7ff; }
+.story-chapter h3 { margin: 26px 0 12px; color: #e6d7ff; font-size: 17px; }
+.story-facts { margin-top: 26px; padding: 6px 22px; border: 1px solid #b8a3ff30; border-radius: 14px; background: #15192c; }
+.story-facts > div { padding: 17px 0; }
+.story-facts > div + div { border-top: 1px solid #b8a3ff25; }
+.story-facts dt { margin-bottom: 7px; font-size: 13px; font-weight: 700; color: #e6d7ff; }
+.story-facts dd { color: #c2c7db; font-size: 14px; line-height: 1.8; }
 .story-footer { padding: 30px 0; text-align: center; color: #b0a5c9; font-size: 12px; line-height: 1.9; }
 .story-footer span { font-size: 10px; color: #929bb7; }
 @media (max-width: 600px) {
@@ -961,6 +967,8 @@ body {
     .story-chapter { padding: 25px 0; }
     .story-chapter h2 { font-size: 22px; }
     .story-chapter p { font-size: 13px; }
+    .story-facts { padding: 4px 17px; }
+    .story-facts dd { font-size: 13px; }
 }
 
 /* Evolução do Pikachu: a pedra usa exatamente o deslocamento dos demais itens. */
