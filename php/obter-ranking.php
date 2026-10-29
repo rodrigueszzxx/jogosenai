@@ -3,7 +3,12 @@
  * Endpoint para obter o TOP 10 do ranking
  */
 header('Content-Type: application/json; charset=utf-8');
-require_once 'conexao.php';
+require_once __DIR__ . '/conexao.php';
+try { $pdo = conectarBanco(); } catch (PDOException $e) {
+    http_response_code(503);
+    echo json_encode(['status' => 'error', 'message' => 'Banco de dados temporariamente indisponível.']);
+    exit;
+}
 
 try {
     $stmt = $pdo->prepare("

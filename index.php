@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/php/conexao.php';
 try { $pdo = conectarBanco(); } catch (Throwable $e) {
     http_response_code(503);
     header('Content-Type: text/html; charset=utf-8');
@@ -55,7 +55,7 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=vortex-2">
+    <link rel="stylesheet" href="css/styles.css?v=raichu-tamanho-3">
 </head>
 <body>
 
@@ -89,6 +89,14 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
             <span class="jump-tip" id="jump-tip">Pressione ESPAÇO ou clique para pular</span>
         </main>
     </div>
+
+    <!-- Quadros da evolução: overlay independente para cobrir a viewport inteira -->
+            <div class="raios-evolucao" id="raios-evolucao" hidden aria-hidden="true">
+                <img src="assets/effects/evolution-thunder-1.jpg" alt="" hidden>
+                <img src="assets/effects/evolution-thunder-2.jpg" alt="" hidden>
+                <img src="assets/effects/evolution-thunder-3.jpg" alt="" hidden>
+                <img src="assets/effects/evolution-thunder-4.jpg" alt="" hidden>
+            </div>
 
     <!-- 0. TELA INICIAL (aparece ao entrar no site e ao clicar em "Voltar à tela inicial") -->
     <div class="splash active" id="splash-screen" role="dialog" aria-label="Hero Jump - tela inicial">
@@ -124,7 +132,7 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
                 </li>
                 <li>
                     <span class="howto-label">PONTUAR</span>
-                    <span>Quanto mais tempo você sobreviver, mais pontos faz. Colete os itens do seu personagem para ganhar 50 pontos extras por item.</span>
+                    <span>Quanto mais tempo você sobreviver, mais pontos faz. Colete os itens do seu personagem para ganhar 50 pontos extras por item. Com Pikachu, ao chegar a 100 pontos, a Pedra do Trovão pode surgir para evoluir para Raichu.</span>
                 </li>
                 <li>
                     <span class="howto-label">RANKING</span>
@@ -253,6 +261,6 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
 
    
     <script type="application/json" id="collectible-sprites"><?= json_encode($spritesColetaveis, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
-    <script src="js/script.js?v=vortex-2" defer></script>
+    <script src="js/script.js?v=raichu-tamanho-3" defer></script>
 </body>
 </html>

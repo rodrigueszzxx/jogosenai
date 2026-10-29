@@ -1,18 +1,42 @@
 # VORTEX · Hero Jump
 
-Jogo arcade em HTML, CSS, JavaScript, PHP e MySQL/MariaDB. Abra `index.php` por um servidor PHP com banco ativo. No Laragon, copie a pasta `jogosenai` para `www`, inicie os serviços e acesse o projeto pelo navegador.
+## Executar
 
-- **Jogo:** `index.php`.
-- **Sobre nós e contato:** `pages/sobre-nos.php`.
-- **Configuração do banco:** `config/database.php` (preserve seus ajustes locais ao atualizar).
-- **Fundador e contatos editáveis:** `config/company.php`.
-- **API de ranking e contato:** `api/`.
-- **SQL da estrutura:** `database/jogosenai.sql`.
-- **Documentação:** `docs/README.md`.
-- **Imagens:** `assets/`, com subpastas para marca, personagens e coletáveis.
+No Laragon, copie a pasta `jogosenai` para `www`, inicie PHP e MySQL e abra `http://localhost/jogosenai/`. PHP precisa de PDO MySQL e mbstring.
 
-O banco `hero_jump` e a tabela `ranking` são criados na primeira conexão; `mensagens_contato` é criada no primeiro envio válido do formulário. O SQL permite criar ambas manualmente. PHP precisa de PDO MySQL e mbstring.
+Ajuste a conexão em `php/conexao.php` se necessário. Também são aceitas as variáveis DB_HOST, DB_PORT, DB_USER, DB_PASSWORD e DB_NAME. O banco `hero_jump` e a tabela `ranking` são criados automaticamente na primeira conexão. Por padrão, a conexão usa `root` sem senha; configure a senha do seu ambiente em `DB_PASSWORD` ou no arquivo de conexão.
 
-A empresa, equipe, depoimentos e conceito de próximo jogo são fictícios. Os números de partidas e o recorde são consultados no banco atual, sem estatísticas inventadas. Os contatos iniciais são ilustrativos. O formulário grava em `mensagens_contato`; não envia e-mail. Consulte as mensagens pelo administrador local do MySQL. Não há painel público de leitura de mensagens.
+## Pastas usadas
 
-Atualize a pasta inteira: os antigos endpoints da raiz foram movidos para `api/`. Não misture JavaScript antigo com esta estrutura nova. Credenciais podem ser configuradas em `config/database.php` ou nas variáveis DB_HOST, DB_PORT, DB_USER, DB_PASSWORD e DB_NAME.
+- `index.php`: jogo e abertura com a marca VORTEX.
+- `pages/sobre-nos.php`: história da empresa e do jogo; não depende de banco ou JavaScript.
+- `php/conexao.php`: conexão e criação da estrutura do ranking.
+- `php/obter-ranking.php`: consulta das dez maiores pontuações.
+- `php/salvar-ranking.php`: gravação da pontuação ao encerrar uma partida.
+- `js/script.js`: controles, animação dos coletáveis, pontuação e chamadas do ranking.
+- `css/styles.css`: estilos do jogo, da abertura e da história.
+- `assets/`: cenários, obstáculos, marca, personagens e coletáveis.
+
+Não há pasta `api`, `database`, `config` ou `docs`, nem formulário, JavaScript de contato ou CSS separado do Sobre nós. A documentação está neste README.
+
+## Jogo
+
+Escolha um dos quatro personagens e pule com Espaço, seta para cima ou toque no cenário. Evite os obstáculos e colete itens: cada coleta concede 50 pontos, além da pontuação por sobrevivência. O contador é zerado em cada nova partida. A velocidade aumenta progressivamente; ainda não existem três níveis nomeados.
+
+Doce, lata e pergaminho são coletáveis animados com folhas em `assets/collectibles/sprites/` e mapeamento em `assets/collectibles/frames.json`. Sonic usa um anel em GIF. Os PNGs de referência/fallback permanecem em `assets/collectibles/`. Obstáculos usam apenas as imagens `assets/obstaculo-*.png`.
+
+## Sobre nós
+
+A página contém somente a origem fictícia da VORTEX e a evolução do Hero Jump. Edite os textos diretamente em `pages/sobre-nos.php`. O logotipo fica em `assets/brand/vortex.jpg`.
+
+## Atualizar uma versão antiga
+
+Extraia este ZIP em uma pasta nova. Extrair por cima da pasta anterior não remove arquivos antigos. Preserve seus ajustes de conexão, aplicando-os ao novo `php/conexao.php`. Nenhuma pontuação ou mensagem já gravada no banco é apagada por esta atualização.
+
+## Easter egg: Pikachu e Raichu
+
+Somente o Pikachu pode evoluir. Ao alcançar pelo menos 100 pontos reais da partida, uma Pedra do Trovão substitui o próximo coletável. Ela usa a folha de 20 quadros em `assets/collectibles/sprites/thunderstone.png`, recortada na exibição pelo mapeamento em `assets/collectibles/frames.json`.
+
+Coletar a pedra concede os 50 pontos do item e transforma o personagem em Raichu, usando o GIF original em `assets/characters/raichu.gif`. Cenário, obstáculos, velocidade e pontuação continuam na mesma partida. Raichu usa sua proporção original, com largura de 125 px no computador e 118 px no celular. A evolução preserva o progresso do pulo e a posição dos pés. Se perder a pedra, ela reaparece até ser coletada. Depois da evolução, os coletáveis normais retornam. Cada nova partida começa como Pikachu; o evento não se aplica aos outros três personagens.
+
+A evolução também apresenta os quatro quadros `assets/effects/evolution-thunder-1.jpg` a `evolution-thunder-4.jpg` como efeito animado elétrico sobre a tela inteira. O fundo preto desaparece pela mistura de cores no CSS. Durante os 1,2 segundo do efeito, pontuação, aceleração, obstáculos, itens e pulo são pausados. Depois, a partida retoma do mesmo ponto. Com movimento reduzido, um quadro estático dos raios aparece com entrada e saída suaves. Para testar no seu computador, abra o projeto no Laragon e jogue com Pikachu até atingir 100 pontos. Se a pedra passar, ela voltará a aparecer até ser coletada.

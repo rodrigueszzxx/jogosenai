@@ -14,6 +14,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const collectDisplay = document.getElementById('collect-display');
     const collectFeedback = document.getElementById('collect-feedback');
     const jumpTip = document.getElementById('jump-tip');
+    // O efeito configura seu próprio visual para não depender de CSS antigo em cache.
+    const estiloEvolucao = document.createElement('style');
+    estiloEvolucao.textContent = `
+        #raios-evolucao {
+            position: fixed; inset: 0; width: 100%; height: 100%;
+            z-index: 99999; pointer-events: none; mix-blend-mode: screen;
+            opacity: 0; transition: opacity 240ms ease-out;
+        }
+        #raios-evolucao[hidden], #raios-evolucao img[hidden] { display: none !important; }
+        #raios-evolucao:not([hidden]) { display: block !important; }
+        #raios-evolucao img {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            object-fit: fill; image-rendering: pixelated;
+        }
+        #raios-evolucao.active { opacity: 0.95; }
+        #raios-evolucao.finishing { opacity: 0; }
+        #game-board.evolving .pipe, #game-board.evolving .hero {
+            animation-play-state: paused !important;
+        }
+    `;
+    document.head.appendChild(estiloEvolucao);
+
+    const evolutionOverlay = document.getElementById('raios-evolucao') || document.createElement('div');
+    evolutionOverlay.id = 'raios-evolucao';
+    evolutionOverlay.className = 'raios-evolucao';
+    evolutionOverlay.hidden = true;
+    evolutionOverlay.setAttribute('aria-hidden', 'true');
+    evolutionOverlay.replaceChildren();
+    document.body.appendChild(evolutionOverlay);
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const evolutionFrames = [1, 2, 3, 4].map((numero) => {
+        const imagem = new Image();
+        imagem.src = `assets/effects/evolution-thunder-${numero}.jpg`;
+        imagem.alt = '';
+        imagem.hidden = true;
+        // Erros deixam uma mensagem útil no console, em vez de falhar silenciosamente.
+        imagem.addEventListener('error', () => console.error('Não foi possível carregar o raio:', imagem.src));
+        evolutionOverlay.appendChild(imagem);
+        return imagem;
+    });
+    const DURACAO_EVOLUCAO = 1200;
 
     // Modais e Telas
     const startModal = document.getElementById('start-modal');
@@ -41,6 +82,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Cada coleta soma ao mesmo total usado pelo placar e pelo ranking.
     const PONTOS_POR_ITEM = 50;
+    const PONTOS_PARA_EVOLUIR = 100;
+    const RAICHU_IMAGE = 'assets/characters/raichu.gif';
+    const raichuImage = new Image();
+    raichuImage.src = RAICHU_IMAGE;
+    const thunderstoneImage = new Image();
+    thunderstoneImage.src = collectibleSprites.thunderstone.image;
 
     // Variáveis de Estado
     let currentPlayer = '';
@@ -59,6 +106,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let proximoItemEm = 0;
     let ultimoTickItem = 0;
     let feedbackTimeout = null;
+    let pedraLiberada = false;
+    let evoluiuParaRaichu = false;
+    let evolutionTimeout = null;
+    let evolutionFrameTimers = [];
+    let evolutionCleanupTimeout = null;
+    let evolutionSwapTimeout = null;
+    let evolutionStartTime = 0;
+    let isEvolutionAnimating = false;
+    let jumpTimeout = null;
+    let fimDoPulo = 0;
+    let tempoRestantePulo = 0;
 
     /**
      * Lê o personagem marcado na tela de início
@@ -237,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scoreLoop = setInterval(() => {
             if (!isPlaying) return;
             const agora = performance.now();
+            if (isEvolutionAnimating) { ultimoTickPontos = agora; return; }
             const segundos = (agora - ultimoTickPontos) / 1000;
             ultimoTickPontos = agora;
             pontosExatos += PONTOS_POR_SEGUNDO_BASE * multiplicadorVelocidade * segundos;
@@ -246,6 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Loop principal: acelera o jogo e checa colisão
         gameLoop = setInterval(() => {
+            if (!isPlaying || isEvolutionAnimating) return;
             atualizarVelocidade();
             checkCollision();
             atualizarColetaveis();
@@ -286,6 +346,78 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
+
+    // Os quadros de Evolution Thunder cobrem a viewport inteira.
+    // O preto das imagens desaparece pelo modo de mesclagem "screen" no CSS.
+    function limparAnimacaoEvolucao() {
+        evolutionFrameTimers.forEach(clearTimeout);
+        evolutionFrameTimers = [];
+        clearTimeout(evolutionCleanupTimeout);
+        clearTimeout(evolutionSwapTimeout);
+        clearTimeout(evolutionTimeout);
+        evolutionCleanupTimeout = null;
+        evolutionSwapTimeout = null;
+        evolutionTimeout = null;
+        evolutionOverlay.classList.remove('active', 'finishing');
+        evolutionOverlay.hidden = true;
+        evolutionFrames.forEach((frame) => { frame.hidden = true; });
+    }
+
+    function tocarAnimacaoEvolucao() {
+        limparAnimacaoEvolucao();
+        // Movimento reduzido mantém um raio estático com entrada e saída suaves.
+        const sequencia = motionPreference.matches ? [0] : [0, 1, 2, 3];
+        evolutionFrames[0].hidden = false;
+        evolutionOverlay.hidden = false;
+        // Registra o estado inicial antes de iniciar a transição de opacidade.
+        void evolutionOverlay.offsetWidth;
+        evolutionOverlay.classList.add('active');
+        sequencia.slice(1).forEach((indice, passo) => {
+            evolutionFrameTimers.push(setTimeout(() => {
+                evolutionFrames.forEach((frame, atual) => { frame.hidden = atual !== indice; });
+            }, (passo + 1) * 210));
+        });
+        evolutionCleanupTimeout = setTimeout(() => {
+            evolutionOverlay.classList.add('finishing');
+        }, DURACAO_EVOLUCAO - 240);
+    }
+
+    function trocarSpriteParaRaichu() {
+        if (!isPlaying || !evoluiuParaRaichu) return;
+        // Usa a proporção do Raichu, sem comprimi-lo na caixa do Pikachu.
+        hero.style.aspectRatio = `${raichuImage.naturalWidth} / ${raichuImage.naturalHeight}`;
+        hero.src = RAICHU_IMAGE;
+        hero.classList.add('is-evolved');
+        hero.alt = 'Raichu';
+    }
+
+    function agendarFimDoPulo(duracao) {
+        clearTimeout(jumpTimeout);
+        fimDoPulo = performance.now() + duracao;
+        jumpTimeout = setTimeout(() => {
+            hero.classList.remove('jump');
+            jumpTimeout = null;
+            fimDoPulo = 0;
+        }, duracao);
+    }
+
+    function finalizarAnimacaoEvolucao() {
+        const agora = performance.now();
+        const pausa = isEvolutionAnimating ? agora - evolutionStartTime : 0;
+        limparAnimacaoEvolucao();
+        inicioPartida += pausa;
+        proximoItemEm += pausa;
+        if (coletavel) coletavel.inicio += pausa;
+        ultimoTickItem = agora;
+        ultimoTickPontos = agora;
+        isEvolutionAnimating = false;
+        gameBoard.classList.remove('evolving');
+        if (isPlaying && hero.classList.contains('jump')) {
+            agendarFimDoPulo(tempoRestantePulo);
+        }
+        tempoRestantePulo = 0;
+    }
+
     function removerColetavel() {
         if (!coletavel) return;
         coletavel.elemento.remove();
@@ -296,13 +428,16 @@ document.addEventListener('DOMContentLoaded', () => {
         removerColetavel();
         clearTimeout(feedbackTimeout);
         collectFeedback.textContent = '';
+        delete collectFeedback.dataset.kind;
     }
 
     function criarColetavel() {
-        const sprite = collectibleSprites[currentCharacter.coletaSprite] || null;
+        const especial = pedraLiberada && !evoluiuParaRaichu;
+        const sprite = collectibleSprites[especial ? 'thunderstone' : currentCharacter.coletaSprite] || null;
         const elemento = document.createElement(sprite ? 'span' : 'img');
         elemento.className = 'collectible';
         elemento.dataset.character = currentCharacter.id;
+        elemento.dataset.kind = especial ? 'evolution' : 'normal';
         elemento.setAttribute('aria-hidden', 'true');
         let visual = null;
         if (sprite) {
@@ -319,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elemento.style.bottom = `${Math.max(110, hero.offsetHeight + 15) + Math.random() * 25}px`;
         gameBoard.appendChild(elemento);
         const largura = elemento.offsetWidth;
-        coletavel = { elemento, visual, sprite, largura,
+        coletavel = { elemento, visual, sprite, largura, especial,
             x: gameBoard.clientWidth + largura, inicio: performance.now(), quadro: -1, altura: 0 };
         elemento.style.transform = `translateX(${coletavel.x}px)`;
         atualizarQuadroColetavel();
@@ -344,8 +479,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function atualizarColetaveis() {
-        if (!isPlaying || !currentCharacter) return;
+        if (!isPlaying || isEvolutionAnimating || !currentCharacter) return;
         const agora = performance.now();
+        // O gatilho depende da pontuação real, nunca do texto exibido no painel.
+        if (currentCharacter.id === 'pikachu' && !pedraLiberada && !evoluiuParaRaichu
+            && score >= PONTOS_PARA_EVOLUIR && raichuImage.complete && raichuImage.naturalWidth > 0
+            && thunderstoneImage.complete && thunderstoneImage.naturalWidth > 0) {
+            pedraLiberada = true;
+            removerColetavel();
+            proximoItemEm = agora;
+            clearTimeout(feedbackTimeout);
+            collectFeedback.dataset.kind = 'evolution';
+            collectFeedback.textContent = 'A Pedra do Trovão apareceu!';
+            feedbackTimeout = setTimeout(() => { collectFeedback.textContent = ''; }, 1600);
+        }
         const segundos = Math.min((agora - ultimoTickItem) / 1000, 0.1);
         ultimoTickItem = agora;
         if (!coletavel) {
@@ -377,9 +524,14 @@ document.addEventListener('DOMContentLoaded', () => {
             scoreDisplay.textContent = score;
             itensColetados++;
             collectDisplay.textContent = itensColetados;
-            collectFeedback.textContent = `+${PONTOS_POR_ITEM} pontos!`;
             clearTimeout(feedbackTimeout);
-            feedbackTimeout = setTimeout(() => { collectFeedback.textContent = ''; }, 800);
+            if (coletavel.especial) {
+                evoluirParaRaichu();
+            } else {
+                collectFeedback.dataset.kind = 'normal';
+                collectFeedback.textContent = `+${PONTOS_POR_ITEM} pontos!`;
+                feedbackTimeout = setTimeout(() => { collectFeedback.textContent = ''; }, 800);
+            }
             removerColetavel();
             proximoItemEm = agora + 700 + Math.random() * 800;
         } else if (coletavel.x < -coletavel.largura) {
@@ -389,7 +541,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function evoluirParaRaichu() {
+        if (currentCharacter.id !== 'pikachu' || evoluiuParaRaichu) return;
+        evoluiuParaRaichu = true;
+        pedraLiberada = false;
+        clearTimeout(evolutionTimeout);
+        clearTimeout(feedbackTimeout);
+        collectFeedback.dataset.kind = 'evolution';
+        collectFeedback.textContent = 'PIKACHU EVOLUIU PARA RAICHU!';
+        feedbackTimeout = setTimeout(() => { collectFeedback.textContent = ''; }, 2800);
+
+        // Pausa pontuação, colisões, aceleração, itens, obstáculo e pulo.
+        evolutionStartTime = performance.now();
+        isEvolutionAnimating = true;
+        tempoRestantePulo = hero.classList.contains('jump')
+            ? Math.max(0, fimDoPulo - evolutionStartTime) : 0;
+        clearTimeout(jumpTimeout);
+        jumpTimeout = null;
+        gameBoard.classList.add('evolving');
+        tocarAnimacaoEvolucao();
+        evolutionSwapTimeout = setTimeout(trocarSpriteParaRaichu, 600);
+        evolutionTimeout = setTimeout(finalizarAnimacaoEvolucao, DURACAO_EVOLUCAO);
+    }
+
     function resetElements() {
+        clearTimeout(jumpTimeout);
+        jumpTimeout = null;
+        fimDoPulo = 0;
+        tempoRestantePulo = 0;
+        pedraLiberada = false;
+        evoluiuParaRaichu = false;
+        isEvolutionAnimating = false;
+        clearTimeout(evolutionTimeout);
+        limparAnimacaoEvolucao();
+        gameBoard.classList.remove('evolving');
+        hero.classList.remove('is-evolved');
+        hero.style.aspectRatio = '';
+        hero.alt = 'Personagem';
         limparColetaveis();
         itensColetados = 0;
         collectDisplay.textContent = '0';
@@ -411,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function jump() {
-        if (!isPlaying) return;
+        if (!isPlaying || isEvolutionAnimating) return;
         if (hero.classList.contains('jump')) return;
 
         hero.classList.add('jump');
@@ -420,13 +608,11 @@ document.addEventListener('DOMContentLoaded', () => {
             jumpTip.style.opacity = '0';
         }
 
-        setTimeout(() => {
-            hero.classList.remove('jump');
-        }, 500);
+        agendarFimDoPulo(500);
     }
 
     function checkCollision() {
-        if (!isPlaying) return;
+        if (!isPlaying || isEvolutionAnimating) return;
 
         const personagem = hero.getBoundingClientRect();
         const obstaculo = pipe.getBoundingClientRect();
@@ -444,6 +630,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function triggerGameOver(pipePosition, heroPosition) {
         isPlaying = false;
+        clearTimeout(jumpTimeout);
+        jumpTimeout = null;
         limparColetaveis();
         clearInterval(gameLoop);
         clearInterval(scoreLoop);
@@ -459,8 +647,12 @@ document.addEventListener('DOMContentLoaded', () => {
         hero.style.animation = 'none';
         hero.style.bottom = `${heroPosition}px`;
         if (currentCharacter) {
-            hero.src = currentCharacter.dead;
+            hero.src = evoluiuParaRaichu ? RAICHU_IMAGE : currentCharacter.dead;
         }
+        clearTimeout(evolutionTimeout);
+        limparAnimacaoEvolucao();
+        isEvolutionAnimating = false;
+        gameBoard.classList.remove('evolving');
 
         // Atualiza modal de Game Over
         finalScoreValue.textContent = score;
@@ -476,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function saveScore(playerName, finalScore) {
-        fetch('api/salvar-ranking.php', {
+        fetch('php/salvar-ranking.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -510,7 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Busca o ranking atualizado no banco
      */
     function fetchRanking() {
-        fetch('api/obter-ranking.php')
+        fetch('php/obter-ranking.php')
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success' && data.ranking) {

@@ -3,7 +3,7 @@
  * Endpoint para salvar a pontuação do jogador no banco de dados
  */
 header('Content-Type: application/json; charset=utf-8');
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/conexao.php';
 try { $pdo = conectarBanco(); } catch (PDOException $e) {
     http_response_code(503);
     echo json_encode(['status' => 'error', 'message' => 'Banco de dados temporariamente indisponível.']);
