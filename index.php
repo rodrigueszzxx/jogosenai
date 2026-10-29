@@ -55,9 +55,9 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=audio-1">
+    <link rel="stylesheet" href="css/styles.css?v=fundo-limpeza-1">
 </head>
-<body>
+<body class="game-page">
     <button type="button" class="audio-toggle" id="audio-toggle" aria-label="Silenciar áudio" aria-pressed="false">Som: ligado</button>
 
     <div class="game-container">
@@ -97,12 +97,12 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
     </div>
 
     <!-- Quadros da evolução: overlay independente para cobrir a viewport inteira -->
-            <div class="raios-evolucao" id="raios-evolucao" hidden aria-hidden="true">
-                <img src="assets/effects/evolution-thunder-1.jpg" alt="" hidden>
-                <img src="assets/effects/evolution-thunder-2.jpg" alt="" hidden>
-                <img src="assets/effects/evolution-thunder-3.jpg" alt="" hidden>
-                <img src="assets/effects/evolution-thunder-4.jpg" alt="" hidden>
-            </div>
+    <div class="raios-evolucao" id="raios-evolucao" hidden aria-hidden="true">
+        <img src="assets/effects/evolution-thunder-1.jpg" alt="" hidden>
+        <img src="assets/effects/evolution-thunder-2.jpg" alt="" hidden>
+        <img src="assets/effects/evolution-thunder-3.jpg" alt="" hidden>
+        <img src="assets/effects/evolution-thunder-4.jpg" alt="" hidden>
+    </div>
 
     <!-- 0. TELA INICIAL (aparece ao entrar no site e ao clicar em "Voltar à tela inicial") -->
     <div class="splash active" id="splash-screen" role="dialog" aria-label="Hero Jump - tela inicial">
@@ -272,6 +272,6 @@ $recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
    
     <script type="application/json" id="collectible-sprites"><?= json_encode($spritesColetaveis, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
     <script src="js/audio.js?v=audio-1" defer></script>
-    <script src="js/script.js?v=audio-1" defer></script>
+    <script src="js/script.js?v=fundo-limpeza-1" defer></script>
 </body>
 </html>

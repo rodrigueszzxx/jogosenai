@@ -40,6 +40,10 @@ Não há pasta `api`, `database`, `config` ou `docs`, nem formulário, JavaScrip
 
 Escolha um dos quatro personagens e pule com Espaço, seta para cima ou toque no cenário. Evite os obstáculos e colete itens: cada coleta concede 50 pontos, além da pontuação por sobrevivência. O contador é zerado em cada nova partida.
 
+O GIF `assets/fundo-inicio.gif` também aparece no fundo da página de gameplay, ao redor do tabuleiro, com 12% de opacidade. O valor pode ser ajustado em `--game-background-opacity`, na classe `.game-page` do CSS. A preferência de movimento reduzido oculta esse fundo decorativo. A página Sobre nós mantém seu fundo próprio.
+
+O fundo e os raios foram verificados em 1280, 390 e 320 px, com movimento normal e reduzido. A revisão também conferiu evolução, alinhamento dos quadros do Raichu, áudio, Game Over e reinício. A análise de referências preservou as classes de estados dinâmicos e as imagens alternativas dos coletáveis.
+
 A colisão dos obstáculos desconsidera 18% de cada lateral, 30% do topo e 5% da base da imagem. Isso reduz a área anterior de colisão em 20% na largura e aproximadamente 19% na altura, tolerando raspadas nas bordas. O ajuste vale para os quatro personagens e Raichu em todos os níveis, sem modificar o tamanho visual ou a coleta de itens. As margens ficam em `HITBOX_OBSTACULO`, em `js/script.js`.
 
 ## Sons
@@ -93,6 +97,10 @@ A página reúne a origem fictícia da VORTEX, sua especialidade e serviços, a 
 ## Atualizar uma versão antiga
 
 Extraia este ZIP em uma pasta nova. Extrair por cima da pasta anterior não remove arquivos antigos. Preserve seus ajustes de conexão, aplicando-os ao novo `php/conexao.php`. Nenhuma pontuação ou mensagem já gravada no banco é apagada por esta atualização.
+
+O antigo `assets/characters/raichu.gif` foi substituído pelos três quadros PNG e não faz parte da versão atual. Se ele ainda existir na sua pasta local, pode removê-lo. Os PNGs estáticos dos coletáveis continuam sendo referências alternativas usadas pela configuração do jogo.
+
+Os estilos dos raios estão centralizados em `css/styles.css`; o JavaScript controla apenas a sequência e a duração. A camada dos quatro quadros é definida uma única vez no HTML. Foram retirados o pré-carregamento repetido dos GIFs dos personagens, um atributo de depuração dos quadros e cancelamentos duplicados do temporizador da evolução.
 
 ## Easter egg: Pikachu e Raichu
 

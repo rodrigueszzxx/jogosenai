@@ -19,45 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const collectDisplay = document.getElementById('collect-display');
     const collectFeedback = document.getElementById('collect-feedback');
     const jumpTip = document.getElementById('jump-tip');
-    // O efeito configura seu próprio visual para não depender de CSS antigo em cache.
-    const estiloEvolucao = document.createElement('style');
-    estiloEvolucao.textContent = `
-        #raios-evolucao {
-            position: fixed; inset: 0; width: 100%; height: 100%;
-            z-index: 99999; pointer-events: none; mix-blend-mode: screen;
-            opacity: 0; transition: opacity 240ms ease-out;
-        }
-        #raios-evolucao[hidden], #raios-evolucao img[hidden] { display: none !important; }
-        #raios-evolucao:not([hidden]) { display: block !important; }
-        #raios-evolucao img {
-            position: absolute; inset: 0; width: 100%; height: 100%;
-            object-fit: fill; image-rendering: pixelated;
-        }
-        #raios-evolucao.active { opacity: 0.95; }
-        #raios-evolucao.finishing { opacity: 0; }
-        #game-board.evolving .pipe, #game-board.evolving .hero {
-            animation-play-state: paused !important;
-        }
-    `;
-    document.head.appendChild(estiloEvolucao);
-
-    const evolutionOverlay = document.getElementById('raios-evolucao') || document.createElement('div');
-    evolutionOverlay.id = 'raios-evolucao';
-    evolutionOverlay.className = 'raios-evolucao';
-    evolutionOverlay.hidden = true;
-    evolutionOverlay.setAttribute('aria-hidden', 'true');
-    evolutionOverlay.replaceChildren();
-    document.body.appendChild(evolutionOverlay);
+    const evolutionOverlay = document.getElementById('raios-evolucao');
+    const evolutionFrames = Array.from(evolutionOverlay.querySelectorAll('img'));
     const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const evolutionFrames = [1, 2, 3, 4].map((numero) => {
-        const imagem = new Image();
-        imagem.src = `assets/effects/evolution-thunder-${numero}.jpg`;
-        imagem.alt = '';
-        imagem.hidden = true;
-        // Erros deixam uma mensagem útil no console, em vez de falhar silenciosamente.
+    evolutionFrames.forEach((imagem) => {
         imagem.addEventListener('error', () => console.error('Não foi possível carregar o raio:', imagem.src));
-        evolutionOverlay.appendChild(imagem);
-        return imagem;
     });
     const DURACAO_EVOLUCAO = 1200;
 
@@ -171,13 +137,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Pré-carrega as imagens de "Game Over", cenário e obstáculo para a troca ser instantânea
+    // Os GIFs dos personagens já são carregados pelos cards de seleção.
+    // Pré-carrega os cenários, obstáculos e coletáveis para a troca ser instantânea.
     characterInputs.forEach((input) => {
         const imgColeta = new Image();
         imgColeta.src = collectibleSprites[input.dataset.coletaSprite]?.image || input.dataset.coleta;
-
-        const imgDead = new Image();
-        imgDead.src = input.dataset.dead;
 
         const imgCenario = new Image();
         imgCenario.src = input.dataset.cenario;
@@ -551,7 +515,6 @@ document.addEventListener('DOMContentLoaded', () => {
         visual.style.backgroundSize = `${sprite.width * escala}px ${sprite.height * escala}px`;
         visual.style.backgroundPosition = `${-quadro.x * escala}px ${-quadro.y * escala}px`;
         visual.style.clipPath = quadro.clip;
-        visual.dataset.frame = indice;
         coletavel.quadro = indice;
         coletavel.altura = elemento.offsetHeight;
     }
@@ -625,7 +588,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentCharacter.id !== 'pikachu' || evoluiuParaRaichu) return;
         evoluiuParaRaichu = true;
         pedraLiberada = false;
-        clearTimeout(evolutionTimeout);
         clearTimeout(feedbackTimeout);
         collectFeedback.dataset.kind = 'evolution';
         collectFeedback.textContent = 'PIKACHU EVOLUIU PARA RAICHU!';
@@ -662,7 +624,6 @@ document.addEventListener('DOMContentLoaded', () => {
         quadroRaichu = 0;
         inicioAnimacaoRaichu = 0;
         isEvolutionAnimating = false;
-        clearTimeout(evolutionTimeout);
         limparAnimacaoEvolucao();
         gameBoard.classList.remove('evolving');
         hero.classList.remove('is-evolved');
@@ -745,7 +706,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentCharacter) {
             hero.src = evoluiuParaRaichu ? RAICHU_IMAGE : currentCharacter.dead;
         }
-        clearTimeout(evolutionTimeout);
         limparAnimacaoEvolucao();
         isEvolutionAnimating = false;
         gameBoard.classList.remove('evolving');

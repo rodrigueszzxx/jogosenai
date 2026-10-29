@@ -29,6 +29,21 @@ body {
     user-select: none;
 }
 
+/* O GIF da abertura fica discreto ao redor do tabuleiro durante a partida. */
+.game-page {
+    --game-background-opacity: 0.12;
+    isolation: isolate;
+}
+.game-page::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: url('../assets/fundo-inicio.gif') center / cover no-repeat;
+    opacity: var(--game-background-opacity);
+    pointer-events: none;
+}
+
 .game-container {
     width: 100%;
     max-width: 900px;
@@ -928,8 +943,6 @@ body {
     text-decoration: underline;
     text-underline-offset: 5px;
     font-weight: 600;
-}
-.about-link {
     padding: 8px 16px;
     border-radius: 8px;
     background: rgba(12, 16, 34, 0.85);
@@ -1042,8 +1055,9 @@ body {
     line-height: 1.8;
     color: #fff0ad;
 }
-.game-board.evolving .pipe {
-    animation-play-state: paused;
+.game-board.evolving .pipe,
+.game-board.evolving .hero {
+    animation-play-state: paused !important;
 }
 .game-board.evolving::before {
     content: '';
@@ -1052,7 +1066,7 @@ body {
     z-index: 14;
     pointer-events: none;
     background: radial-gradient(circle at 18% 65%, rgba(255, 231, 137, 0.65), rgba(255, 204, 92, 0.18) 36%, transparent 75%);
-    animation: evolution-glow 1080ms ease-out forwards;
+    animation: evolution-glow 1200ms ease-out forwards;
 }
 @keyframes evolution-glow { from { opacity: 1; } to { opacity: 0; } }
 @media (max-width: 600px) {
@@ -1064,15 +1078,15 @@ body {
 .raios-evolucao {
     position: fixed;
     inset: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 9999;
+    width: 100%;
+    height: 100%;
+    z-index: 99999;
     pointer-events: none;
     mix-blend-mode: screen;
     opacity: 0;
-    transition: opacity 170ms ease-out;
+    transition: opacity 240ms ease-out;
 }
-.raios-evolucao.active { opacity: 0.96; }
+.raios-evolucao.active { opacity: 0.95; }
 .raios-evolucao.finishing { opacity: 0; }
 .raios-evolucao[hidden],
 .raios-evolucao img[hidden] { display: none; }
@@ -1081,11 +1095,11 @@ body {
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: fill;
     image-rendering: pixelated;
 }
 @media (prefers-reduced-motion: reduce) {
-    .raios-evolucao { display: none; }
+    .game-page::before { display: none; }
     .game-board.evolving::before { animation: none; opacity: 0; }
     .collectible[data-kind="evolution"] { animation: none; }
 }
