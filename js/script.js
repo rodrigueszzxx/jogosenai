@@ -3,6 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    const audio = window.HeroJumpAudio;
     // Elementos do Jogo
     const hero = document.querySelector('.hero');
     const pipe = document.querySelector('.pipe');
@@ -602,6 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
             scoreDisplay.textContent = score;
             itensColetados++;
             collectDisplay.textContent = itensColetados;
+            audio?.tocar('coleta');
             clearTimeout(feedbackTimeout);
             if (coletavel.especial) {
                 evoluirParaRaichu();
@@ -638,11 +640,13 @@ document.addEventListener('DOMContentLoaded', () => {
         jumpTimeout = null;
         gameBoard.classList.add('evolving');
         tocarAnimacaoEvolucao();
+        audio?.tocar('evolucao');
         evolutionSwapTimeout = setTimeout(trocarSpriteParaRaichu, 600);
         evolutionTimeout = setTimeout(finalizarAnimacaoEvolucao, DURACAO_EVOLUCAO);
     }
 
     function resetElements() {
+        audio?.pararEfeitos();
         limparAvisoNivel();
         mostrarNivel(NIVEIS[0]);
         multiplicadorVelocidade = NIVEIS[0].velocidade;
@@ -717,7 +721,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function triggerGameOver(pipePosition, heroPosition) {
+        if (!isPlaying) return;
         isPlaying = false;
+        audio?.pararEfeitos();
+        audio?.tocar('gameover');
         limparAvisoNivel();
         clearTimeout(jumpTimeout);
         jumpTimeout = null;

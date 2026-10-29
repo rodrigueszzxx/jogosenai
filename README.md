@@ -30,6 +30,7 @@ Ajuste a conexão em `php/conexao.php` se necessário. Também são aceitas as v
 - `php/obter-ranking.php`: consulta das dez maiores pontuações.
 - `php/salvar-ranking.php`: gravação da pontuação ao encerrar uma partida.
 - `js/script.js`: controles, animação dos coletáveis, pontuação e chamadas do ranking.
+- `js/audio.js`: música, efeitos, volume e preferência de som.
 - `css/styles.css`: estilos do jogo, da abertura e da história.
 - `assets/`: cenários, obstáculos, marca, personagens e coletáveis.
 
@@ -40,6 +41,21 @@ Não há pasta `api`, `database`, `config` ou `docs`, nem formulário, JavaScrip
 Escolha um dos quatro personagens e pule com Espaço, seta para cima ou toque no cenário. Evite os obstáculos e colete itens: cada coleta concede 50 pontos, além da pontuação por sobrevivência. O contador é zerado em cada nova partida.
 
 A colisão dos obstáculos desconsidera 18% de cada lateral, 30% do topo e 5% da base da imagem. Isso reduz a área anterior de colisão em 20% na largura e aproximadamente 19% na altura, tolerando raspadas nas bordas. O ajuste vale para os quatro personagens e Raichu em todos os níveis, sem modificar o tamanho visual ou a coleta de itens. As margens ficam em `HITBOX_OBSTACULO`, em `js/script.js`.
+
+## Sons
+
+Os quatro MP3s enviados ficam em `assets/audio/`:
+
+- `background.mp3`: música em loop na abertura, instruções, seleção, partida e Game Over.
+- `collect.mp3`: efeito a cada coleta, inclusive ao pegar a Pedra do Trovão.
+- `game-over.mp3`: efeito ao colidir e encerrar a rodada.
+- `evolution.mp3`: efeito iniciado junto dos raios e da pausa da transformação.
+
+A música começa no primeiro clique ou tecla, respeitando o bloqueio de reprodução automática dos navegadores. O botão “Som: ligado/desligado” silencia música e efeitos e guarda a preferência para as próximas visitas. A música fica mais baixa enquanto o Game Over ou a transformação tocam. O áudio completo de transformação dura cerca de quatro segundos; a pausa da partida permanece em 1,2 segundo. Reiniciar ou trocar de tela no jogo interrompe os efeitos anteriores sem duplicar a música. Ao ocultar a aba, o áudio é suspenso.
+
+O módulo de áudio é carregado somente em `index.php`. A página Sobre nós não inicia música, não carrega os MP3s e não possui botão de áudio.
+
+Validação em Chromium, com MP3s reais decodificados e interações de navegador nas larguras de 1280 e 390 px: início da música após gesto, três coletas seguidas, Game Over único, início do som junto da pausa de evolução, redução do volume da música, reinício sem duplicar a faixa e navegação para Sobre nós sem áudio. A preferência salva e o início silencioso também foram conferidos em 320 px. As respostas do ranking foram simuladas nesses testes de interface.
 
 ## Níveis de dificuldade
 
@@ -72,7 +88,7 @@ Doce, lata e pergaminho são coletáveis animados com folhas em `assets/collecti
 
 ## Sobre nós
 
-A página reúne a origem fictícia da VORTEX, sua especialidade e serviços, a história do Hero Jump, seu público-alvo, proposta e objetivo. A terceira seção contém uma tabela com 11 requisitos funcionais (RF01 a RF11) e quatro requisitos não funcionais (RNF01 a RNF04), com código, descrição e tipo. O atalho “Ver tabela de requisitos” leva diretamente à seção; também é possível abrir `pages/sobre-nos.php#requisitos`. Não há catálogo de jogos, equipe ou contato. Edite os textos diretamente em `pages/sobre-nos.php`. O logotipo fica em `assets/brand/vortex.jpg`.
+A página reúne a origem fictícia da VORTEX, sua especialidade e serviços, a história do Hero Jump, seu público-alvo, proposta e objetivo. A terceira seção contém uma tabela com 13 requisitos funcionais (RF01 a RF13) e quatro requisitos não funcionais (RNF01 a RNF04), com código, descrição e tipo. O atalho “Ver tabela de requisitos” leva diretamente à seção; também é possível abrir `pages/sobre-nos.php#requisitos`. Não há catálogo de jogos, equipe ou contato. Edite os textos diretamente em `pages/sobre-nos.php`. O logotipo fica em `assets/brand/vortex.jpg`.
 
 ## Atualizar uma versão antiga
 

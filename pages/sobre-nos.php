@@ -129,6 +129,16 @@
                                 <td>Informar o andamento do salvamento da pontuação e apresentar uma mensagem de sucesso ou erro ao jogador.</td>
                                 <td class="requirements-type">Funcional</td>
                             </tr>
+                            <tr>
+                                <th scope="row">RF12</th>
+                                <td>Reproduzir música de fundo após a interação do jogador, exceto no Sobre nós, e permitir silenciar ou ativar o áudio, mantendo a preferência nas próximas visitas.</td>
+                                <td class="requirements-type">Funcional</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">RF13</th>
+                                <td>Reproduzir os efeitos de coleta, Game Over e transformação de Pikachu nos respectivos eventos, destacando os sons de Game Over e evolução sobre a música.</td>
+                                <td class="requirements-type">Funcional</td>
+                            </tr>
                             <tr class="requirements-nonfunctional">
                                 <th scope="row">RNF01</th>
                                 <td>Adaptar a interface para computador e celular, mantendo textos, controles e informações do jogo legíveis.</td>
