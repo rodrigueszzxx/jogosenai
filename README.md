@@ -32,9 +32,11 @@ Ao ocultar a aba, o jogo pausa automaticamente. O retorno exige Continuar, evita
 | Sonic            | Floresta com rolagem        | Esfera de espinhos       | Argola                 |
 | Shadow           | Mesma floresta do Sonic     | Mesma esfera de espinhos | Mesma argola           |
 
-As argolas valem 30 pontos. Personagens preservam a proporção, com obstáculos de aproximadamente metade da altura do herói e coletáveis menores. Todos compartilham salto e hitbox; a aparência não altera a dificuldade. O Sonic reaproveita seu GIF original de oito quadros; o Shadow usa seis poses em atlas transparente, a 70 ms por quadro. O fundo usa três painéis alternados (normal / espelhado / normal), evitando emendas abruptas; acompanha a partida a 32 px/s de base e congela ao pausar, perder ou evoluir. O vídeo permanece exclusivo do Mago.
+As argolas valem 30 pontos. Personagens preservam a proporção, com obstáculos de aproximadamente metade da altura do herói e coletáveis menores. Todos compartilham salto e hitbox; a aparência não altera a dificuldade. O Sonic reaproveita seu GIF original de oito quadros; o Shadow usa seis poses em atlas transparente, a 70 ms por quadro. O fundo usa três painéis alternados (normal / espelhado / normal), evitando emendas abruptas; acompanha a partida a 80 px/s de base e congela ao pausar, perder ou evoluir. O vídeo permanece exclusivo do Mago.
 
-A travessia recupera a referência do Hero Jump: percurso base de 1,6 segundo, com multiplicador de 0,8 no início, 1,15 aos 20 s, 1,6 aos 45 s e limite de 2 aos 90 s. A interpolação é contínua e depende de tempo ativo; não há saltos de posição ao mudar de nível. O intervalo entre obstáculos respeita um mínimo de 1,05 s para permitir aterrissagem e novo salto. O ritmo do boss permanece ajustado ao desvio de ataques altos e baixos.
+O ritmo foi ajustado com referência em runners como o Dino: velocidade inicial de aproximadamente 350–410 px/s no celular e 860 px/s no tabuleiro de 900 px. A aceleração é contínua, com fatores de 1 no início, 1,2 aos 20 s, 1,4 aos 45 s e limite de 1,6 aos 90 s ativos. Os obstáculos chegam em intervalos de aproximadamente 1,1–1,4 s no início, com mínimo de 0,75 s entre spawns nas dificuldades maiores. A pontuação por coleta continua em 30.
+
+O salto tem ápice de até 110 px e dura aproximadamente 0,53 s em uma área de jogo normal, com gravidade de 2.600 px/s² na subida e 3.900 px/s² na queda. Em telas baixas, a altura é limitada ao espaço disponível. A integração divide o instante do ápice para conservar o mesmo arco em 30, 60 e 120 Hz. Não há salto duplo nem sustentação no ar ao segurar a tecla. O ritmo é igual para os quatro personagens e o Raichu. Os projéteis do boss também ficaram mais rápidos; a trajetória alta foi elevada para continuar exigindo atenção ao tipo de ataque.
 
 ## Evolução do Pikachu
 
@@ -131,4 +133,4 @@ A revisão visual também conferiu as telas de 1280 × 800, 390 × 844, 320 × 5
 
 A verificação de sintaxe foi feita com PHP e Node. Também foi executada uma partida no navegador sem interceptar o JavaScript ou o ranking: as três colisões encerraram a rodada, a pontuação foi salva no MariaDB, apareceu no ranking e o reinício funcionou. O registro exclusivo de teste foi removido depois. Confira suas credenciais ao configurar o banco no computador de apresentação.
 
-O teste `tests/characters.cjs` valida os quatro personagens em computador, celular e paisagem: cenários, itens, coleta de 30 pontos, perda de coração, animação do Shadow, pausa da rolagem, preferência salva e saltos possíveis nos quatro marcos de velocidade do Hero Jump.
+O teste `tests/characters.cjs` valida os quatro personagens em computador, celular e paisagem: cenários, itens, coleta de 30 pontos, perda de coração, animação do Shadow, pausa da rolagem, preferência salva e saltos possíveis nos quatro marcos de velocidade do runner. Também compara o arco em 30/60/120 Hz, impede salto duplo e confirma aterrissagem antes de 0,6 s.

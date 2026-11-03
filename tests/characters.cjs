@@ -3,7 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const assert = require("node:assert/strict");
 const source = fs.readFileSync(path.join(__dirname, "../js/script.js"), "utf8");
-const hook = `window.__characters={get state(){return state},get objects(){return objects},get heroSize(){return heroSize},start,jump,pause,resume,openSelection,makeCollectible,makeSprite,heroBox,render,speedMultiplier,worldSpeed,tick(seconds){while(seconds>0&&state?.status==='playing'){const dt=Math.min(.008,seconds);update(dt);seconds-=dt;}render();}};`;
+const hook = `window.__characters={get state(){return state},get objects(){return objects},get heroSize(){return heroSize},start,jump,pause,resume,openSelection,makeCollectible,makeSprite,heroBox,render,speedMultiplier,worldSpeed,step(dt){update(dt);render()},tick(seconds){while(seconds>0&&state?.status==='playing'){const dt=Math.min(.008,seconds);update(dt);seconds-=dt;}render();}};`;
 
 (async () => {
   const browser = await chromium.launch({
@@ -167,25 +167,60 @@ const hook = `window.__characters={get state(){return state},get objects(){retur
             "pause freezes scene",
           );
           t.resume();
+          // Compare the physical arc at real frame intervals, including 30 Hz.
+          const arcs = [];
+          for (const hz of [30, 60, 120]) {
+            t.start();
+            t.state.spawn = t.state.crystalAt = 100;
+            t.jump();
+            const samples = [];
+            let elapsed = 0,
+              peak = 0,
+              apexAt = 0;
+            for (const target of [0.2, 0.4, 0.6]) {
+              while (elapsed < target - 1e-9) {
+                const dt = Math.min(1 / hz, target - elapsed);
+                t.step(dt);
+                elapsed += dt;
+                if (t.state.y > peak) {
+                  peak = t.state.y;
+                  apexAt = elapsed;
+                }
+              }
+              samples.push(t.state.y);
+              if (target === 0.2) {
+                const velocity = t.state.vy;
+                t.jump();
+                ok(t.state.vy === velocity, "no midair double jump");
+              }
+            }
+            ok(peak >= 50 && peak <= 111, "bounded jump height");
+            ok(apexAt <= 0.3, "quick takeoff");
+            ok(t.state.y === 0 && t.state.vy === 0, "landed before .6 seconds");
+            arcs.push(samples);
+          }
+          for (let i = 1; i < arcs.length; i++) {
+            ok(
+              arcs[i].every((y, j) => Math.abs(y - arcs[0][j]) < 0.001),
+              "same jump at 30/60/120 Hz",
+            );
+          }
           // A jump must clear each character's obstacle at every difficulty.
           for (const [time, speed] of [
-            [0, 0.8],
-            [20, 1.15],
-            [45, 1.6],
-            [90, 2],
+            [0, 1],
+            [20, 1.2],
+            [45, 1.4],
+            [90, 1.6],
           ]) {
             t.start();
             t.state.spawn = t.state.crystalAt = 100;
             t.state.elapsed = time;
             ok(
               Math.abs(t.speedMultiplier() - speed) < 0.000001,
-              "reference speed",
+              "runner speed",
             );
             const hb = t.heroBox();
-            const size =
-              character === "wizard"
-                ? 60
-                : Math.max(44, Math.min(70, t.heroSize * 0.48));
+            const size = obstacle.size;
             t.makeSprite("rock", size, hb.x + hb.w + t.worldSpeed() * 0.2, 0);
             t.jump();
             t.tick(0.65);

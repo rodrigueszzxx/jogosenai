@@ -52,7 +52,7 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
           "poison projectile",
           44,
           b.x - 1,
-          high ? d.heroSize * 0.84 : 2,
+          high ? d.heroSize * 0.84 + 25 : 2,
         );
         o.high = high;
       };
@@ -92,7 +92,7 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
           (o) =>
             !o.high &&
             o.x > b.x + b.w &&
-            (o.x - b.x - b.w) / Math.max(145, d.width * 0.3) < 0.28,
+            (o.x - b.x - b.w) / Math.max(240, d.width * 0.45) < 0.2,
         );
         if (threat) t.jump();
         t.tick(0.016);

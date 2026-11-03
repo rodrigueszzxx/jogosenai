@@ -37,10 +37,13 @@
   const TRANSITION_DURATION = 2.4;
   const BOSS_DURATION = 20;
   const GROUND = 43;
+  const JUMP_HEIGHT = 110;
+  const RISE_GRAVITY = 2600;
+  const FALL_GRAVITY = 3900;
   const LEVELS = [
-    { name: "Fácil", start: 0, speed: 0.8 },
-    { name: "Médio", start: 20, speed: 1.15 },
-    { name: "Difícil", start: 45, speed: 1.6 },
+    { name: "Fácil", start: 0, speed: 1 },
+    { name: "Médio", start: 20, speed: 1.2 },
+    { name: "Difícil", start: 45, speed: 1.4 },
   ];
   let width = board.clientWidth;
   let heroSize, bossSize, heroX, bossX;
@@ -314,7 +317,7 @@
       y: 0,
       vy: 0,
       hurtUntil: 0,
-      spawn: 1.4,
+      spawn: 1,
       crystalAt: 1,
       attackAt: 1.8,
       attackCount: 0,
@@ -357,7 +360,11 @@
       state.y > 0.1
     )
       return;
-    state.vy = 455;
+    // A short arc with stronger falling gravity, rather than a long float.
+    // Reserve room for Raichu too, keeping the same jump for every hero.
+    const headroom = board.clientHeight - GROUND - heroSize * 1.15 - 12;
+    const height = Math.max(52, Math.min(JUMP_HEIGHT, headroom));
+    state.vy = Math.sqrt(2 * RISE_GRAVITY * height);
   }
 
   function beginTransition(target) {
@@ -378,7 +385,7 @@
   function finishTransition() {
     state.mode = state.transitionTo;
     state.phaseTime = 0;
-    state.spawn = 1.4;
+    state.spawn = 1;
     state.crystalAt = 1;
     if (state.mode === "boss") {
       state.attackAt = 1.7;
@@ -420,7 +427,7 @@
             ? Math.max(60, Math.min(96, width * 0.105))
             : Math.max(44, Math.min(70, heroSize * 0.48));
         makeSprite("rock", size, width + size, 0);
-        state.spawn = Math.max(1.05, 1.65 / speed) + Math.random() * 0.45;
+        state.spawn = Math.max(0.75, 1.1 / speed) + Math.random() * 0.3;
       }
       state.crystalAt -= dt;
       if (state.crystalAt <= 0) {
@@ -560,7 +567,7 @@
         "poison projectile",
         size,
         bossX + bossSize * 0.2,
-        high ? heroSize * 0.84 : 2,
+        high ? highAttackY() : 2,
       );
       shot.high = high;
       state.pendingAttack = null;
@@ -571,7 +578,7 @@
     }
     for (const o of objects) {
       if (o.kind !== "poison projectile") continue;
-      o.x -= Math.max(145, width * 0.3) * dt;
+      o.x -= projectileSpeed() * dt;
       const hit = {
         x: o.x + o.size * 0.12,
         y: o.y + o.size * 0.05,
@@ -602,7 +609,7 @@
     $("lane-warning").hidden = !attack;
     if (attack)
       $("lane-warning").style.bottom =
-        `${GROUND + (attack.high ? heroSize * 0.84 : 0)}px`;
+        `${GROUND + (attack.high ? highAttackY() : 0)}px`;
   }
 
   function levelIndex() {
@@ -613,11 +620,11 @@
     return index;
   }
 
-  // Hero Jump reference: 1.6 s traversal at 1x; smooth 0.8 → 1.15 → 1.6 → 2.
+  // A brisk starting pace with continuous, bounded runner acceleration.
   function speedMultiplier() {
     const index = levelIndex();
     const level = LEVELS[index];
-    const next = LEVELS[index + 1] || { start: 90, speed: 2 };
+    const next = LEVELS[index + 1] || { start: 90, speed: 1.6 };
     const progress = Math.min(
       1,
       Math.max(0, (state.elapsed - level.start) / (next.start - level.start)),
@@ -626,7 +633,29 @@
   }
 
   function worldSpeed() {
-    return ((width + 150) / 1.6) * speedMultiplier();
+    return Math.max(350, (width + 120) * 0.85) * speedMultiplier();
+  }
+
+  function projectileSpeed() {
+    return Math.max(240, width * 0.45);
+  }
+
+  function highAttackY() {
+    return heroSize * 0.84 + 25;
+  }
+
+  function updateJump(dt) {
+    if (state.y <= 0 && state.vy <= 0) return;
+    // Split the apex inside the frame so 30/60/120 Hz share the same arc.
+    if (state.vy > 0) {
+      const rising = Math.min(dt, state.vy / RISE_GRAVITY);
+      state.y += state.vy * rising - 0.5 * RISE_GRAVITY * rising ** 2;
+      state.vy = Math.max(0, state.vy - RISE_GRAVITY * rising);
+      dt -= rising;
+    }
+    state.y += state.vy * dt - 0.5 * FALL_GRAVITY * dt ** 2;
+    state.vy -= FALL_GRAVITY * dt;
+    if (state.y <= 0) state.y = state.vy = 0;
   }
 
   function update(dt) {
@@ -635,14 +664,10 @@
       state.elapsed += dt;
       state.score += dt * 10;
       state.sceneryOffset =
-        (state.sceneryOffset + 32 * speedMultiplier() * dt) % (width * 2);
+        (state.sceneryOffset + 80 * speedMultiplier() * dt) % (width * 2);
     }
     state.phaseTime += dt;
-    if (state.y > 0 || state.vy > 0) {
-      state.vy -= 1100 * dt;
-      state.y = Math.max(0, state.y + state.vy * dt);
-      if (!state.y) state.vy = 0;
-    }
+    updateJump(dt);
     if (state.mode === "run") updateRun(dt);
     else if (state.mode === "boss") updateBoss(dt);
     else if (state.phaseTime >= TRANSITION_DURATION) finishTransition();
