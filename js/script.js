@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const atlas = JSON.parse($("sprite-data").textContent);
+  const sprites = JSON.parse($("sprite-data").textContent);
   const audio = window.ArcaneAudio;
   const board = $("game-board");
   const world = $("world");
@@ -12,6 +12,7 @@
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const RUN_DURATION = 24;
   const TRANSITION_DURATION = 2.4;
+  const BOSS_DURATION = 20;
   const GROUND = 43;
   const LEVELS = [
     { name: "Fácil", start: 0, speed: 1 },
@@ -43,15 +44,19 @@
   };
   $("player-name").value = readStorage("mario_final_player");
 
-  function paintSprite(node, index, size) {
-    const f = atlas.frames[index];
-    const scale = size / atlas.cell;
+  function paintSprite(node, kind, size, frame = 0) {
+    const sheet = kind === "hero" ? sprites.hero : sprites.world;
+    const f = kind === "hero" ? sheet.frames[frame] : sheet.frames[kind];
+    const scale = size / sheet.cell;
     const art = node.querySelector(".sprite-art");
+    const anchor = f.anchorX ?? f.x + f.w / 2;
     node.style.width = `${size}px`;
     node.style.height = `${size}px`;
+    art.style.backgroundImage = `url('${sheet.image}')`;
+    art.style.left = `${size / 2 - (anchor - f.x) * scale}px`;
     art.style.width = `${f.w * scale}px`;
     art.style.height = `${f.h * scale}px`;
-    art.style.backgroundSize = `${atlas.width * scale}px ${atlas.height * scale}px`;
+    art.style.backgroundSize = `${sheet.width * scale}px ${sheet.height * scale}px`;
     art.style.backgroundPosition = `${-f.x * scale}px ${-f.y * scale}px`;
   }
 
@@ -62,26 +67,32 @@
   function resize() {
     const oldWidth = width;
     width = board.clientWidth;
-    heroSize = Math.max(112, Math.min(170, width * 0.18));
-    bossSize = Math.max(130, Math.min(235, width * 0.25));
+    heroSize = Math.max(
+      88,
+      Math.min(170, Math.max(112, width * 0.18), board.clientHeight * 0.4),
+    );
+    bossSize = Math.max(
+      130,
+      Math.min(235, width * 0.25, board.clientHeight * 0.65),
+    );
     heroX = width * 0.045;
     bossX = width - bossSize - width * 0.025;
     objects.forEach((o) => {
       o.x *= width / oldWidth;
     });
-    paintSprite(hero, 0, heroSize);
-    paintSprite(boss, 9, bossSize);
+    paintSprite(hero, "hero", heroSize);
+    paintSprite(boss, "boss", bossSize);
     render();
   }
 
-  function makeSprite(kind, index, size, x, y) {
+  function makeSprite(kind, size, x, y) {
     const el = document.createElement("div");
     el.className = `actor ${kind}`;
     const art = document.createElement("span");
     art.className = "sprite-art";
     el.append(art);
     world.append(el);
-    paintSprite(el, index, size);
+    paintSprite(el, kind.split(" ")[0], size);
     position(el, x, y);
     const object = { kind, el, x, y, size, dead: false };
     objects.push(object);
@@ -133,16 +144,9 @@
       hurtUntil: 0,
       spawn: 1.4,
       crystalAt: 1,
-      castUntil: 0,
-      castReady: 0,
-      spellPending: false,
-      castRelease: 0,
-      bossHP: 12,
-      bossMax: 12,
       attackAt: 1.8,
       attackCount: 0,
       pendingAttack: null,
-      bossHitUntil: 0,
       transitionTo: null,
     };
     $("hud-player").textContent = name;
@@ -150,15 +154,13 @@
     world.hidden = false;
     $("over-screen").hidden = true;
     $("pause-screen").hidden = true;
-    $("boss-hud").hidden = true;
-    $("attack-cue").hidden = true;
     $("lane-warning").hidden = true;
     boss.hidden = true;
     hero.classList.remove("hurt");
     $("pause-button").disabled = false;
-    $("jump-button").disabled = false;
     previous = performance.now();
-    showNotice("Sala 1 · A travessia começa", 2.4);
+    $("notice").hidden = true;
+    board.focus({ preventScroll: true });
     scenePlayback();
     updateHud();
     render();
@@ -174,40 +176,19 @@
     state.vy = 455;
   }
 
-  function cast() {
-    if (
-      state?.status !== "playing" ||
-      state.mode !== "boss" ||
-      state.time < state.castReady
-    )
-      return;
-    state.castReady = state.time + 0.8;
-    state.castUntil = state.time + 0.4;
-    state.castRelease = state.time + 0.12;
-    state.spellPending = true;
-  }
-
   function beginTransition(target) {
     state.mode = "transition";
     state.phaseTime = 0;
     state.transitionTo = target;
     state.pendingAttack = null;
-    state.spellPending = false;
     state.y = 0;
     state.vy = 0;
     clearObjects();
     boss.classList.remove("charging");
-    $("attack-cue").hidden = true;
     $("lane-warning").hidden = true;
-    $("boss-hud").hidden = true;
     boss.hidden = true;
-    if (target === "boss")
-      showNotice("BOSS À FRENTE · Prepare seus feitiços!", TRANSITION_DURATION);
-    else
-      showNotice(
-        `BOSS DERROTADO! +300 · Sala ${state.round} a seguir`,
-        TRANSITION_DURATION,
-      );
+    if (target === "boss") showNotice("REI DO LODO", TRANSITION_DURATION);
+    else showNotice(`TRAVESSIA · SALA ${state.round}`, TRANSITION_DURATION);
   }
 
   function finishTransition() {
@@ -216,15 +197,10 @@
     state.spawn = 1.4;
     state.crystalAt = 1;
     if (state.mode === "boss") {
-      state.bossMax = Math.min(20, 12 + (state.round - 1) * 2);
-      state.bossHP = state.bossMax;
       state.attackAt = 1.7;
       state.attackCount = 0;
-      state.castReady = state.time;
       boss.hidden = false;
-      $("boss-hud").hidden = false;
-      showNotice("REI DO LODO · J ou X para atacar", 2.5);
-    } else showNotice(`Sala ${state.round} · De volta aos obstáculos`, 2.5);
+    }
   }
 
   function hurt(object) {
@@ -233,7 +209,6 @@
     state.lives--;
     state.hurtUntil = state.time + 1.4;
     if (state.lives <= 0) endGame();
-    else showNotice("Você foi atingido · Proteção por um instante", 1.3);
   }
 
   function intersects(a, b) {
@@ -243,9 +218,9 @@
   }
   function heroBox() {
     return {
-      x: heroX + heroSize * 0.24,
+      x: heroX + heroSize * 0.28,
       y: state.y + 4,
-      w: heroSize * 0.39,
+      w: heroSize * 0.4,
       h: heroSize * 0.67,
     };
   }
@@ -257,7 +232,7 @@
       state.spawn -= dt;
       if (state.spawn <= 0) {
         const size = Math.max(60, Math.min(96, width * 0.105));
-        makeSprite("rock", 8, size, width + size, 0);
+        makeSprite("rock", size, width + size, 0);
         state.spawn = 1.65 / speed + Math.random() * 0.45;
       }
       state.crystalAt -= dt;
@@ -280,7 +255,7 @@
       state.phaseTime >= RUN_DURATION - 3 &&
       state.phaseTime - dt < RUN_DURATION - 3
     ) {
-      showNotice("O boss se aproxima · Troca em 3 segundos", 3);
+      showNotice("O BOSS SE APROXIMA", 3);
     }
     if (state.phaseTime >= RUN_DURATION) {
       beginTransition("boss");
@@ -312,23 +287,17 @@
 
   function updateBoss(dt) {
     if (!state.pendingAttack && state.phaseTime >= state.attackAt) {
-      const high = state.attackCount % 3 === 2;
-      state.pendingAttack = { release: state.phaseTime + 0.85, high };
+      state.pendingAttack = {
+        release: state.phaseTime + 0.85,
+        high: state.attackCount % 3 === 2,
+      };
       boss.classList.add("charging");
-      $("attack-cue").textContent = high
-        ? "ATAQUE ALTO · Fique no chão!"
-        : "ATAQUE BAIXO · Prepare-se para pular!";
-      $("attack-cue").hidden = false;
-      $("lane-warning").hidden = false;
-      $("lane-warning").style.bottom =
-        `${GROUND + (high ? heroSize * 0.84 : 0)}px`;
     }
     if (state.pendingAttack && state.phaseTime >= state.pendingAttack.release) {
       const high = state.pendingAttack.high;
       const size = Math.max(44, Math.min(66, width * 0.07));
       const shot = makeSprite(
         "poison projectile",
-        10,
         size,
         bossX + bossSize * 0.2,
         high ? heroSize * 0.84 : 2,
@@ -340,80 +309,34 @@
         state.phaseTime + Math.max(1.3, 2.05 - state.round * 0.08);
       boss.classList.remove("charging");
     }
-    if (state.spellPending && state.time >= state.castRelease) {
-      makeSprite(
-        "spell projectile",
-        11,
-        Math.max(49, heroSize * 0.48),
-        heroX + heroSize * 0.72,
-        state.y + heroSize * 0.34,
-      );
-      state.spellPending = false;
-    }
-    const body = {
-      x: bossX + bossSize * 0.2,
-      y: 0,
-      w: bossSize * 0.64,
-      h: bossSize * 0.72,
-    };
     for (const o of objects) {
-      if (o.kind.startsWith("poison")) {
-        o.x -= Math.max(105, width * 0.3) * dt;
-        const hit = {
-          x: o.x + o.size * 0.12,
-          y: o.y + o.size * 0.05,
-          w: o.size * 0.46,
-          h: o.size * 0.34,
-        };
-        if (intersects(heroBox(), hit)) hurt(o);
-      } else {
-        o.x += Math.max(270, width * 0.75) * dt;
-        if (
-          intersects(body, {
-            x: o.x,
-            y: o.y,
-            w: o.size * 0.72,
-            h: o.size * 0.63,
-          })
-        ) {
-          o.dead = true;
-          state.bossHP--;
-          state.bossHitUntil = state.time + 0.15;
-          if (state.bossHP <= 0) {
-            state.score += 300;
-            state.bosses++;
-            state.round++;
-            audio?.tocar("coleta");
-            beginTransition("run");
-            return;
-          }
-        }
-      }
-      if (o.x < -o.size || o.x > width + o.size) o.dead = true;
-      if (state.status !== "playing") break;
+      o.x -= Math.max(145, width * 0.3) * dt;
+      const hit = {
+        x: o.x + o.size * 0.12,
+        y: o.y + o.size * 0.05,
+        w: o.size * 0.46,
+        h: o.size * 0.34,
+      };
+      if (intersects(heroBox(), hit)) hurt(o);
+      if (o.x < -o.size) o.dead = true;
+      if (state.status !== "playing") return;
+    }
+    if (state.phaseTime >= BOSS_DURATION) {
+      state.score += 300;
+      state.bosses++;
+      state.round++;
+      audio?.tocar("coleta");
+      beginTransition("run");
+      return;
     }
     const threat = objects
-      .filter(
-        (o) =>
-          o.kind.startsWith("poison") && !o.dead && o.x + o.size > heroBox().x,
-      )
+      .filter((o) => !o.dead && o.x + o.size > heroBox().x)
       .sort((a, b) => a.x - b.x)[0];
     const attack = threat || state.pendingAttack;
-    $("attack-cue").hidden = !attack;
     $("lane-warning").hidden = !attack;
-    if (attack) {
-      const near =
-        threat &&
-        (threat.x - (heroBox().x + heroBox().w)) / Math.max(105, width * 0.3) <
-          0.48;
-      $("attack-cue").textContent = attack.high
-        ? "ATAQUE ALTO · Fique no chão!"
-        : near
-          ? "ATAQUE BAIXO · Pule agora!"
-          : "ATAQUE BAIXO · Prepare-se para pular!";
+    if (attack)
       $("lane-warning").style.bottom =
         `${GROUND + (attack.high ? heroSize * 0.84 : 0)}px`;
-    }
   }
 
   function levelIndex() {
@@ -445,12 +368,6 @@
 
   function updateHud() {
     const index = levelIndex();
-    $("hud-phase").textContent =
-      state.mode === "boss"
-        ? "Boss"
-        : state.mode === "transition"
-          ? "Transição"
-          : "Travessia";
     $("hud-level").textContent = `${index + 1} · ${LEVELS[index].name}`;
     $("hud-score").textContent = Math.floor(state.score)
       .toString()
@@ -459,37 +376,20 @@
       "◆ ".repeat(Math.max(0, state.lives)) +
       "◇ ".repeat(3 - Math.max(0, state.lives));
     $("hud-lives").setAttribute("aria-label", `${state.lives} vidas`);
-    $("boss-health").max = state.bossMax;
-    $("boss-health").value = state.bossHP;
-    $("boss-health-text").textContent =
-      `${Math.max(0, state.bossHP)}/${state.bossMax}`;
-    $("spell-button").disabled =
-      state.status !== "playing" ||
-      state.mode !== "boss" ||
-      state.time < state.castReady;
-    $("jump-button").disabled =
-      state.status !== "playing" || state.mode === "transition";
-    $("phase-tip").textContent =
-      state.mode === "boss"
-        ? "Pule o veneno baixo. Fique no chão contra o alto. Use J / X para atacar."
-        : state.mode === "transition"
-          ? "Prepare-se: a próxima etapa começa em instantes."
-          : "Desvie das pedras e colete cristais. Cada cristal vale 30 pontos.";
   }
 
   function render() {
     const time = state?.time || 0;
-    let frame = motion.matches ? 0 : Math.floor(time / 0.13) % 6;
-    if (state && time < state.castUntil)
-      frame = time < state.castRelease ? 6 : 7;
-    paintSprite(hero, frame, heroSize);
+    const frame = motion.matches
+      ? 0
+      : Math.floor(time / 0.13) % sprites.hero.frames.length;
+    paintSprite(hero, "hero", heroSize, frame);
     position(hero, heroX, state?.y || 0);
     hero.classList.toggle(
       "hurt",
       !!state && time < state.hurtUntil && Math.floor(time * 8) % 2 === 0,
     );
     position(boss, bossX, motion.matches ? 0 : Math.sin(time * 3) * 3 + 3);
-    boss.classList.toggle("hit", !!state && time < state.bossHitUntil);
     objects.forEach((o) => {
       if (o.kind === "crystal") {
         o.el.style.left = `${o.x}px`;
@@ -502,8 +402,6 @@
     if (state?.status !== "playing") return;
     state.status = "paused";
     $("pause-screen").hidden = false;
-    $("spell-button").disabled = true;
-    $("jump-button").disabled = true;
     audio?.pararEfeitos();
     scenePlayback();
     $("resume-button").focus();
@@ -524,11 +422,9 @@
     scenePlayback();
     $("over-screen").hidden = false;
     $("pause-button").disabled = true;
-    $("spell-button").disabled = true;
-    $("jump-button").disabled = true;
     $("final-score").textContent = Math.floor(state.score);
     $("final-detail").textContent =
-      `${state.crystals} cristais · ${state.bosses} bosses derrotados · Sala ${state.round}`;
+      `${state.crystals} cristais · ${state.bosses} confrontos superados · Sala ${state.round}`;
     $("save-status").textContent = "Registrando pontuação…";
     const version = ++requestVersion;
     try {
@@ -590,9 +486,7 @@
     clearObjects();
     state = null;
     boss.hidden = true;
-    $("boss-hud").hidden = true;
     $("notice").hidden = true;
-    $("attack-cue").hidden = true;
     $("lane-warning").hidden = true;
     $("over-screen").hidden = true;
     $("menu-screen").hidden = false;
@@ -600,24 +494,11 @@
     audio?.pararEfeitos();
     render();
   });
-  $("jump-button").addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    jump();
-  });
-  $("spell-button").addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    cast();
-  });
-  // Keyboard-generated click keeps the mobile controls accessible.
-  $("jump-button").addEventListener("click", (e) => {
-    if (e.detail === 0) jump();
-  });
-  $("spell-button").addEventListener("click", (e) => {
-    if (e.detail === 0) cast();
-  });
   $("pause-button").addEventListener("click", pause);
   $("resume-button").addEventListener("click", resume);
-  $("ranking-refresh").addEventListener("click", loadRanking);
+  $("ranking-details").addEventListener("toggle", () => {
+    if ($("ranking-details").open) loadRanking();
+  });
   board.addEventListener("pointerdown", (e) => {
     if (!e.target.closest("button,input,a,form,.screen")) jump();
   });
@@ -633,13 +514,12 @@
       if (state?.status === "paused") resume();
       else pause();
     } else if (
-      ["Space", "ArrowUp", "KeyJ", "KeyX"].includes(e.code) &&
+      ["Space", "ArrowUp"].includes(e.code) &&
       state?.status === "playing"
     ) {
       e.preventDefault();
       if (e.repeat) return;
-      if (e.code === "Space" || e.code === "ArrowUp") jump();
-      else cast();
+      jump();
     }
   });
   document.addEventListener("visibilitychange", () => {
@@ -650,18 +530,26 @@
   motion.addEventListener("change", scenePlayback);
   new ResizeObserver(resize).observe(board);
   resize();
-  const image = new Image();
-  image.onload = () => {
-    ready = true;
-    $("start-button").disabled = false;
-    $("start-button").textContent = "Entrar →";
-  };
-  image.onerror = () => {
-    $("asset-status").textContent =
-      "Não foi possível carregar os sprites. Atualize a página para tentar novamente.";
-  };
-  image.src = "assets/sprites/arcane-atlas.png";
-  loadRanking();
+  Promise.all(
+    [sprites.hero.image, sprites.world.image].map(
+      (src) =>
+        new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = resolve;
+          image.onerror = reject;
+          image.src = src;
+        }),
+    ),
+  )
+    .then(() => {
+      ready = true;
+      $("start-button").disabled = false;
+      $("start-button").textContent = "Entrar →";
+    })
+    .catch(() => {
+      $("asset-status").textContent =
+        "Não foi possível carregar os sprites. Atualize a página para tentar novamente.";
+    });
   function loop(now) {
     const dt = Math.min(0.032, Math.max(0, (now - previous) / 1000));
     previous = now;

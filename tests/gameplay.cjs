@@ -3,7 +3,7 @@ const fs = require("fs");
 const assert = require("node:assert/strict");
 const root = require("node:path").resolve(__dirname, "..");
 const original = fs.readFileSync(root + "/js/script.js", "utf8");
-const hook = `window.__arcane={get state(){return state},get objects(){return objects},get dims(){return {width,heroSize,bossSize,heroX,bossX}},start,jump,cast,pause,resume,makeSprite,heroBox,beginTransition,render,updateHud,tick(seconds){while(seconds>0&&state?.status==='playing'){const d=Math.min(.016,seconds);update(d);seconds-=d;}render();}};`;
+const hook = `window.__arcane={get state(){return state},get objects(){return objects},get dims(){return {width,heroSize,bossSize,heroX,bossX}},start,jump,pause,resume,makeSprite,heroBox,beginTransition,render,updateHud,tick(seconds){while(seconds>0&&state?.status==='playing'){const d=Math.min(.016,seconds);update(d);seconds-=d;}render();}};`;
 (async () => {
   const browser = await chromium.launch({
     ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
@@ -57,7 +57,9 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
       t.tick(19.5);
       ok(t.state.mode === "run", "still run");
       ok(
-        document.getElementById("notice").textContent.includes("3 segundos"),
+        document
+          .getElementById("notice")
+          .textContent.includes("BOSS SE APROXIMA"),
         "approach warning",
       );
       t.tick(3);
@@ -72,23 +74,18 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
         t.objects.some((o) => o.kind.startsWith("poison")),
         "poison released",
       );
-      const hp = t.state.bossHP;
-      t.cast();
-      ok(t.state.spellPending, "cast charge");
-      t.tick(0.14);
       ok(
-        t.objects.some((o) => o.kind === "spell projectile"),
-        "spell release",
+        t.objects.every((o) => o.kind === "poison projectile"),
+        "only boss can shoot",
       );
-      t.tick(2);
-      ok(t.state.bossHP < hp, "spell hit boss");
-      for (let i = 0; i < 16 && t.state.mode === "boss"; i++) {
-        t.cast();
-        t.tick(1.2);
-      }
+      t.tick(20 - t.state.phaseTime - 0.02);
+      ok(t.state.mode === "boss", "survival not complete early");
+      const beforeVictory = t.state.score;
+      t.tick(0.04);
+      ok(t.state.score - beforeVictory >= 300, "survival bonus");
       ok(
         t.state.mode === "transition" && t.state.bosses === 1,
-        "boss defeated",
+        "boss survived",
       );
       ok(t.state.round === 2, "next room");
       t.tick(2.5);
@@ -115,14 +112,14 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
       const before = t.state.score;
       t.tick(0.016);
       ok(Math.floor(t.state.score - before) === 30, "collect +30");
-      t.makeSprite("rock", 8, 60, t.heroBox().x - 10, 0);
+      t.makeSprite("rock", 60, t.heroBox().x - 10, 0);
       t.tick(0.016);
       ok(t.state.lives === 2, "rock collision");
       t.state.hurtUntil = 0;
-      t.makeSprite("rock", 8, 60, t.heroBox().x - 10, 0);
+      t.makeSprite("rock", 60, t.heroBox().x - 10, 0);
       t.tick(0.016);
       t.state.hurtUntil = 0;
-      t.makeSprite("rock", 8, 60, t.heroBox().x - 10, 0);
+      t.makeSprite("rock", 60, t.heroBox().x - 10, 0);
       t.tick(0.016);
       ok(t.state.status === "over", "gameover");
       t.start();
@@ -140,6 +137,14 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
       t.state.hurtUntil = 999;
       t.tick(1);
       return {
+        height: innerHeight,
+        scrollHeight: document.documentElement.scrollHeight,
+        boardBottom: document
+          .getElementById("game-board")
+          .getBoundingClientRect().bottom,
+        removed: !document.querySelector(
+          ".below-game,.game-heading,.game-toolbar,#hud-phase,#attack-cue,#spell-button,#boss-hud,footer",
+        ),
         width: innerWidth,
         scroll: document.documentElement.scrollWidth,
         video: document.getElementById("scene-video").readyState,
@@ -148,6 +153,9 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
     });
 
     assert.equal(result.scroll, viewport.width, "horizontal overflow");
+    assert(result.scrollHeight <= result.height, "vertical overflow");
+    assert(result.boardBottom <= result.height, "game fits viewport");
+    assert(result.removed, "removed UI not in document");
     assert.deepEqual(errors, []);
     assert.deepEqual(failed, []);
     console.log(JSON.stringify({ viewport, result, status: "PASS" }));

@@ -1,26 +1,27 @@
 # VORTEX · Arcane Run
 
-Nova versão do jogo acadêmico, com um mago de roxo, masmorra em vídeo e fases alternadas de obstáculos e confronto. **Arcane Run é um título provisório.** A publicação continua em `rodrigueszzxx/jogosenai`, conforme solicitado.
+Nova versão do jogo acadêmico, com um mago de barba branca, masmorra em vídeo e fases alternadas de obstáculos e confronto. **Arcane Run é um título provisório.** A publicação continua em `rodrigueszzxx/jogosenai`, conforme solicitado.
 
 ## Jogar
 
 1. Informe seu nome e entre na masmorra.
 2. Na travessia, pule as pedras e colete cristais de 30 pontos.
-3. Após 24 segundos ativos, o jogo muda para a batalha. Há um aviso três segundos antes e uma transição sem perigos de 2,4 segundos.
-4. Contra o Rei do Lodo, pule os projéteis baixos e permaneça no chão contra os altos. Os ataques são anunciados com antecedência. O aviso de pulo considera a aproximação do projétil.
-5. Lance feitiços para retirar vida do boss. A primeira batalha exige 12 acertos; as seguintes acrescentam dois, até 20. Há um intervalo de 0,8 segundo entre feitiços.
-6. Derrotar o boss concede 300 pontos e inicia outra travessia. Não há limite de salas.
+3. Após 24 segundos ativos, o jogo muda para o confronto. Há um aviso três segundos antes e uma transição sem perigos de 2,4 segundos.
+4. Contra o Rei do Lodo, pule os projéteis baixos e permaneça no chão contra os altos. O brilho do boss e a faixa na trajetória sinalizam os ataques, sem dicas escritas durante a ação.
+5. Sobreviva por **20 segundos ativos** para superar o boss. O jogador não dispara projéteis; não há feitiços, atalhos de ataque ou barra de vida do boss.
+6. Superar o confronto concede 300 pontos e inicia outra travessia. Não há limite de salas.
 
 São três vidas por partida e 1,4 segundo de proteção após sofrer dano. O jogo também concede dez pontos por segundo ativo. Não há pontuação durante pausa ou transição. Os níveis mudam aos 20 e 45 segundos ativos; a velocidade dos obstáculos aumenta e os ataques do boss ficam mais frequentes nas salas seguintes.
 
-| Ação                    | Computador                                  | Celular                         |
-| ----------------------- | ------------------------------------------- | ------------------------------- |
-| Pular                   | Espaço, seta para cima ou clique no cenário | Botão Pular ou toque no cenário |
-| Feitiço, durante o boss | J ou X                                      | Botão Feitiço                   |
-| Pausar                  | P, Esc ou botão Pausar                      | Botão Pausar                    |
-| Continuar               | Botão Continuar                             | Botão Continuar                 |
+| Ação      | Computador                                  | Celular                   |
+| --------- | ------------------------------------------- | ------------------------- |
+| Pular     | Espaço, seta para cima ou clique no cenário | Toque no cenário          |
+| Pausar    | P, Esc ou botão Pausar no cabeçalho         | Botão Pausar no cabeçalho |
+| Continuar | Botão Continuar                             | Botão Continuar           |
 
-Ao ocultar a aba, o jogo pausa automaticamente. O retorno exige Continuar, evitando uma retomada inesperada. O vídeo e o áudio também suspendem. O áudio começa após uma interação; a preferência de silêncio é salva. Com movimento reduzido, o vídeo permanece no pôster e a levitação visual fica estática, preservando os controles e as colisões.
+Durante a partida, somente o cabeçalho (jogador, nível, vidas, pontos, som e pausa) e o jogo ocupam a tela. Não há título acima da área de jogo, indicador de etapa, barra de informações inferior, seção de jornada, ranking abaixo do jogo ou rodapé. A área se adapta à altura da janela, incluindo celular em paisagem. Os avisos escritos aparecem apenas nas trocas de etapa. As instruções ficam na abertura e no Sobre nós. O ranking está recolhido em **Ver ranking**, somente na tela de Game Over.
+
+Ao ocultar a aba, o jogo pausa automaticamente. O retorno exige Continuar, evitando uma retomada inesperada. O vídeo e o áudio também suspendem. O áudio começa após uma interação; a preferência de silêncio é salva. Com movimento reduzido, o vídeo permanece no pôster e a animação visual do mago fica estática, preservando os controles e as colisões.
 
 ## Executar localmente
 
@@ -42,8 +43,9 @@ A estrutura `ranking` é criada automaticamente com `id`, `nome`, `pontos` e `da
 - `js/script.js`: relógio da partida, estados de travessia/boss/transição/pausa, física, colisões, animações, ataques, pontos e ranking.
 - `js/audio.js`: música, efeitos e preferência de silêncio.
 - `css/styles.css`: interface responsiva e exibição dos recortes.
-- `assets/sprites/arcane-atlas.png`: folha transparente preparada a partir das referências fornecidas; seis poses de levitação, duas de feitiço, pedra, boss, veneno e magia.
-- `assets/sprites/frames.json`: limites de cada sprite. O CSS exibe apenas o retângulo correspondente, com a base alinhada e sem fundos ou textos da referência.
+- `assets/sprites/wizard-atlas.png`: cinco quadros transparentes do novo mago, preparados a partir da referência enviada.
+- `assets/sprites/world-atlas.png`: folha reutilizada apenas nos recortes da pedra, boss e veneno. Os antigos quadros do mago roxo e de magia não possuem mais mapeamento nem uso no jogo.
+- `assets/sprites/frames.json`: limites de cada sprite. O CSS exibe apenas o retângulo correspondente, com a base alinhada e sem fundos da referência. O novo mago possui âncora horizontal por quadro para evitar deslocamentos laterais entre as poses com e sem cajado.
 - `assets/scenes/dungeon.mp4`: vídeo enviado, com recorte de bordas, codificação H.264 e sem a faixa sonora original. O cenário preenche a área do jogo por `object-fit: cover`, adaptando o enquadramento no celular.
 - `assets/scenes/dungeon-poster.webp`: cenário estático para carregamento, pausa inicial e movimento reduzido.
 - `assets/audio/`: música, coleta e Game Over reaproveitados da base.
@@ -70,16 +72,19 @@ Os testes expõem o estado somente na cópia do JavaScript interceptada pelo Pla
 
 Validação realizada em Chromium nas larguras de 1280, 390 e 320 px:
 
-| Caso                                                               | Resultado |
-| ------------------------------------------------------------------ | --------- |
-| Carregamento dos sprites, vídeo e interface sem rolagem horizontal | Aprovado  |
-| Pedras, coleta com +30 e pulo com aterrissagem                     | Aprovado  |
-| Aviso, transição, entrada do boss e retorno após vitória           | Aprovado  |
-| Feitiço: preparação, lançamento, dano e derrota do boss            | Aprovado  |
-| Veneno baixo atinge no chão e é evitado com salto                  | Aprovado  |
-| Veneno alto passa sobre o mago no chão e atinge durante salto      | Aprovado  |
-| Três vidas, Game Over e reinício com estado zerado                 | Aprovado  |
-| Pausa manual e ao ocultar a aba, sem avanço de tempo/pontos        | Aprovado  |
-| Atalho J e cenário estático com movimento reduzido                 | Aprovado  |
+| Caso                                                                     | Resultado |
+| ------------------------------------------------------------------------ | --------- |
+| Carregamento dos dois atlas e do vídeo                                   | Aprovado  |
+| Apenas cabeçalho e jogo, sem rolagem da página                           | Aprovado  |
+| Pedras, coleta com +30 e pulo com aterrissagem                           | Aprovado  |
+| Avisos de transição e alternância entre obstáculos e boss                | Aprovado  |
+| Boss permanece até completar 20 segundos ativos, sem disparos do jogador | Aprovado  |
+| Sobrevivência por esquiva, +300 pontos e retorno à travessia             | Aprovado  |
+| Veneno baixo evitado com salto e alto evitado permanecendo no chão       | Aprovado  |
+| Três vidas, Game Over e reinício com estado zerado                       | Aprovado  |
+| Pausa manual e ao ocultar a aba, sem avanço de tempo/pontos              | Aprovado  |
+| Cenário estático com movimento reduzido                                  | Aprovado  |
+
+A revisão visual também conferiu as telas de 1280 × 800, 390 × 844, 320 × 568 e 844 × 390, com o novo personagem inteiro e o jogo dentro da janela.
 
 A verificação de sintaxe foi feita com PHP e Node. Também foi executada uma partida no navegador sem interceptar o JavaScript ou o ranking: as três colisões encerraram a rodada, a pontuação foi salva no MariaDB, apareceu no ranking e o reinício funcionou. O registro exclusivo de teste foi removido depois. Confira suas credenciais ao configurar o banco no computador de apresentação.

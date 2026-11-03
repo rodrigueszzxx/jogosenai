@@ -26,10 +26,10 @@
       <h2>Do Hero Jump ao Arcane Run</h2>
       <p>
         O projeto começou com uma corrida de obstáculos. Nesta nova versão do
-        grupo, um mago de roxo explora uma masmorra e alterna entre saltar
-        ruínas e enfrentar o Rei do Lodo. Os avisos de transição e de ataques
-        fazem parte do desafio: observar o cenário é tão importante quanto
-        reagir.
+        grupo, um mago de barba branca explora uma masmorra e alterna entre
+        saltar ruínas e enfrentar o Rei do Lodo. Os avisos de transição e de
+        ataques fazem parte do desafio: observar o cenário é tão importante
+        quanto reagir.
       </p>
       <p>
         Arcane Run é o título provisório desta adaptação. O projeto está no
@@ -39,10 +39,10 @@
       </p>
       <h2>Como jogar</h2>
       <p>
-        Pule com Espaço, seta para cima ou o botão Pular. Durante a batalha,
-        lance feitiços com J, X ou o botão Feitiço. Ataques baixos exigem um
-        salto; ataques altos passam sobre o mago quando ele fica no chão. Os
-        cristais valem 30 pontos e cada boss derrotado concede 300 pontos.
+        Pule com Espaço, seta para cima ou toque no cenário. Durante o
+        confronto, sobreviva por 20 segundos aos ataques do boss. Salte sobre o
+        veneno baixo e permaneça no chão para evitar o alto. Os cristais valem
+        30 pontos e cada confronto superado concede 300 pontos.
       </p>
       <p>
         O jogo oferece três vidas por partida, pausa manual e pausa automática
@@ -72,15 +72,15 @@
               <tr>
                 <th scope="row">RF02</th>
                 <td>
-                  Animar o mago durante a travessia e o lançamento de feitiços.
+                  Animar os cinco quadros de movimento do mago com transparência
+                  e pés alinhados.
                 </td>
                 <td>Funcional</td>
               </tr>
               <tr>
                 <th scope="row">RF03</th>
                 <td>
-                  Permitir saltar com teclado, clique no cenário e botão de
-                  toque.
+                  Permitir saltar com teclado e clique ou toque no cenário.
                 </td>
                 <td>Funcional</td>
               </tr>
@@ -109,21 +109,23 @@
               <tr>
                 <th scope="row">RF07</th>
                 <td>
-                  Avisar a mudança de etapa antes da entrada do boss e após sua
-                  derrota.
+                  Avisar a mudança de etapa antes da entrada do boss e após o
+                  confronto.
                 </td>
                 <td>Funcional</td>
               </tr>
               <tr>
                 <th scope="row">RF08</th>
-                <td>Anunciar e lançar ataques baixos e altos do boss.</td>
+                <td>
+                  Sinalizar visualmente e lançar ataques baixos e altos do boss.
+                </td>
                 <td>Funcional</td>
               </tr>
               <tr>
                 <th scope="row">RF09</th>
                 <td>
-                  Permitir lançar feitiços, reduzir a vida do boss e premiar sua
-                  derrota com 300 pontos.
+                  Superar o boss sobrevivendo por 20 segundos e receber 300
+                  pontos, sem ataques do jogador.
                 </td>
                 <td>Funcional</td>
               </tr>
