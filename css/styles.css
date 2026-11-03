@@ -247,6 +247,39 @@ body[data-screen="pause"] .game-tools {
   z-index: -3;
   opacity: 0.85;
 }
+.scene-panorama {
+  position: absolute;
+  inset: 0 0 43px;
+  z-index: -3;
+  overflow: hidden;
+}
+.scene-track {
+  display: flex;
+  width: 300%;
+  height: 100%;
+  transform: translate3d(var(--scene-offset, 0px), 0, 0);
+}
+.scene-panel {
+  flex: 0 0 33.3333333333%;
+  height: 100%;
+  background: var(--scene-image) center / cover no-repeat;
+  image-rendering: pixelated;
+}
+.scene-panel:nth-child(2) {
+  transform: scaleX(-1);
+}
+.game-board[data-theme="pokemon"] .floor {
+  background: linear-gradient(#69a543, #345b32);
+  border-color: #b8d785;
+}
+.game-board[data-theme="forest"] .floor {
+  background: linear-gradient(#4b6f2b, #253b24);
+  border-color: #8eb74c;
+}
+.game-board[data-theme="pokemon"] .scene-shade,
+.game-board[data-theme="forest"] .scene-shade {
+  background: linear-gradient(transparent 60%, #101a1033);
+}
 .scene-shade {
   background: linear-gradient(180deg, #120e2044, transparent 50%, #100c1c33);
   z-index: -2;
@@ -301,6 +334,9 @@ body[data-screen="pause"] .game-tools {
 }
 .gem .sprite-art {
   filter: drop-shadow(0 0 5px #c28cfe77);
+}
+.ring .sprite-art {
+  filter: drop-shadow(0 1px 2px #241608aa);
 }
 
 .lane-warning {
@@ -510,14 +546,14 @@ input:not([type]) {
   text-align: left;
 }
 .character-select {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   justify-content: center;
   gap: 18px;
 }
 .character-card {
   cursor: pointer;
-  flex: 1;
-  max-width: 210px;
+  min-width: 0;
   position: relative;
 }
 .character-card input {
@@ -951,6 +987,7 @@ h3,
     margin-bottom: 18px;
   }
   .character-select {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
   .card-body {

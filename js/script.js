@@ -6,6 +6,13 @@
   const collectibleSprites = JSON.parse($("collectible-sprites").textContent);
   const audio = window.BeyondJumpAudio;
   const PIKACHU_IMAGE = "assets/characters/pikachu.gif";
+  const SONIC_IMAGE = "assets/characters/sonic.gif";
+  const CHARACTERS = {
+    wizard: { name: "Mago", theme: "dungeon", obstacle: "rock" },
+    pikachu: { name: "Pikachu", theme: "pokemon", obstacle: "pokeball" },
+    sonic: { name: "Sonic", theme: "forest", obstacle: "spike" },
+    shadow: { name: "Shadow", theme: "forest", obstacle: "spike" },
+  };
   const RAICHU_IMAGES = [1, 2, 3].map(
     (n) => `assets/characters/raichu/corrida-0${n}.png`,
   );
@@ -24,15 +31,16 @@
   const hero = $("hero");
   const boss = $("boss");
   const video = $("scene-video");
+  const panorama = $("scene-panorama");
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const RUN_DURATION = 24;
   const TRANSITION_DURATION = 2.4;
   const BOSS_DURATION = 20;
   const GROUND = 43;
   const LEVELS = [
-    { name: "Fácil", start: 0, speed: 1 },
+    { name: "Fácil", start: 0, speed: 0.8 },
     { name: "Médio", start: 20, speed: 1.15 },
-    { name: "Difícil", start: 45, speed: 1.3 },
+    { name: "Difícil", start: 45, speed: 1.6 },
   ];
   let width = board.clientWidth;
   let heroSize, bossSize, heroX, bossX;
@@ -61,7 +69,7 @@
     readStorage("mario_final_player") || readStorage("hero_jump_player");
   const savedCharacter = readStorage("mario_final_character");
   const savedRadio = document.querySelector(
-    `input[name="character"][value="${savedCharacter === "pikachu" ? "pikachu" : "wizard"}"]`,
+    `input[name="character"][value="${Object.hasOwn(CHARACTERS, savedCharacter) ? savedCharacter : "wizard"}"]`,
   );
   savedRadio.checked = true;
   document
@@ -73,13 +81,12 @@
     );
 
   function paintSprite(node, kind, size, frame = 0) {
+    if (kind === "rock" && state) kind = CHARACTERS[state.character].obstacle;
     const sheet =
-      kind === "hero"
-        ? sprites.hero
-        : kind === "gem"
-          ? sprites.gem
-          : sprites.world;
-    const f = kind === "hero" ? sheet.frames[frame] : sheet.frames[kind];
+      kind === "hero" ? sprites.hero : sprites[kind] || sprites.world;
+    const f = Array.isArray(sheet.frames)
+      ? sheet.frames[frame]
+      : sheet.frames[kind];
     const scale = size / sheet.cell;
     const art = node.querySelector(".sprite-art");
     const anchor = f.anchorX ?? f.x + f.w / 2;
@@ -120,18 +127,18 @@
   function paintHero() {
     const time = state?.time || 0;
     const art = hero.querySelector(".sprite-art");
-    if (!state || state.character === "wizard") {
+    if (!state || ["wizard", "shadow"].includes(state.character)) {
       art.hidden = false;
       heroImage.hidden = true;
       heroFreeze.hidden = true;
       hero.classList.remove("is-evolved");
-      const sequence = sprites.hero.runSequence;
+      const kind = state?.character === "shadow" ? "shadow" : "hero";
+      const sheet = sprites[kind];
+      const sequence = sheet.runSequence;
       const frame = state
-        ? sequence[
-            Math.floor((time * 1000) / sprites.hero.frameMs) % sequence.length
-          ]
+        ? sequence[Math.floor((time * 1000) / sheet.frameMs) % sequence.length]
         : 0;
-      paintSprite(hero, "hero", heroSize, frame);
+      paintSprite(hero, kind, heroSize * (kind === "shadow" ? 0.92 : 1), frame);
       return;
     }
     art.hidden = true;
@@ -145,9 +152,11 @@
               RAICHU_SEQUENCE.length
           ]
         ]
-      : PIKACHU_IMAGE;
+      : state.character === "sonic"
+        ? SONIC_IMAGE
+        : PIKACHU_IMAGE;
     if (heroImage.getAttribute("src") !== src) heroImage.src = src;
-    heroImage.alt = state.evolved ? "Raichu" : "Pikachu";
+    heroImage.alt = state.evolved ? "Raichu" : CHARACTERS[state.character].name;
     const image = preloadedImages.get(src);
     if (!image) return;
     const height = Math.min(
@@ -183,6 +192,8 @@
       : Math.max(30, Math.min(40, heroSize * 0.27));
     if (!special && state.character === "wizard")
       return makeSprite("gem", size, width + size, heroSize * 0.9 + 20);
+    if (!special && ["sonic", "shadow"].includes(state.character))
+      return makeSprite("ring", size, width + size, heroSize * 0.9 + 20);
     const el = document.createElement("span");
     const kind = special ? "stone" : "candy";
     el.className = `actor collectible ${kind}`;
@@ -255,7 +266,11 @@
   }
 
   function scenePlayback() {
-    if (state?.status === "playing" && !document.hidden) {
+    if (
+      state?.status === "playing" &&
+      state.character === "wizard" &&
+      !document.hidden
+    ) {
       video.muted = true;
       video.playbackRate = 1;
       if (video.paused)
@@ -289,6 +304,7 @@
       evolution: null,
       resumeStatus: "playing",
       score: 0,
+      sceneryOffset: 0,
       time: 0,
       elapsed: 0,
       phaseTime: 0,
@@ -306,6 +322,16 @@
       transitionTo: null,
     };
     saveStorage("mario_final_character", state.character);
+    const theme = CHARACTERS[state.character].theme;
+    board.dataset.theme = theme;
+    video.hidden = theme !== "dungeon";
+    panorama.hidden = theme === "dungeon";
+    panorama.style.setProperty(
+      "--scene-image",
+      theme === "dungeon"
+        ? "none"
+        : `url('${new URL(`assets/scenes/${theme === "pokemon" ? "pokemon" : "forest"}.jpg`, document.baseURI).href}')`,
+    );
     clearEvolution();
     setScreen(null);
     frozenImageKey = "";
@@ -384,14 +410,17 @@
   }
 
   function updateRun(dt) {
-    const speed = LEVELS[levelIndex()].speed;
+    const speed = speedMultiplier();
     // At least three seconds without new rocks before the encounter.
     if (state.phaseTime < RUN_DURATION - 3) {
       state.spawn -= dt;
       if (state.spawn <= 0) {
-        const size = Math.max(60, Math.min(96, width * 0.105));
+        const size =
+          state.character === "wizard"
+            ? Math.max(60, Math.min(96, width * 0.105))
+            : Math.max(44, Math.min(70, heroSize * 0.48));
         makeSprite("rock", size, width + size, 0);
-        state.spawn = 1.65 / speed + Math.random() * 0.45;
+        state.spawn = Math.max(1.05, 1.65 / speed) + Math.random() * 0.45;
       }
       state.crystalAt -= dt;
       if (state.crystalAt <= 0) {
@@ -411,12 +440,12 @@
     }
     for (const o of objects) {
       if (o.kind !== "rock") continue;
-      o.x -= Math.max(145, width * 0.31) * speed * dt;
+      o.x -= worldSpeed() * dt;
       const box = {
         x: o.x + o.size * 0.15,
         y: 0,
         w: o.size * 0.7,
-        h: o.size * 0.46,
+        h: o.size * (state.character === "wizard" ? 0.46 : 0.65),
       };
       if (intersects(heroBox(), box)) hurt(o);
       if (o.x < -o.size) o.dead = true;
@@ -435,7 +464,7 @@
       state.stoneUnlocked = true;
       state.stoneAt = 0;
       objects.forEach((o) => {
-        if (["gem", "candy"].includes(o.kind)) o.dead = true;
+        if (["gem", "candy", "ring"].includes(o.kind)) o.dead = true;
       });
     }
     if (
@@ -445,10 +474,10 @@
       state.stoneAt -= dt;
       if (state.stoneAt <= 0) makeCollectible(true);
     }
-    const speed = LEVELS[levelIndex()].speed;
     for (const o of objects) {
-      if (o.dead || !["gem", "candy", "stone"].includes(o.kind)) continue;
-      o.x -= Math.max(145, width * 0.31) * speed * dt;
+      if (o.dead || !["gem", "candy", "ring", "stone"].includes(o.kind))
+        continue;
+      o.x -= worldSpeed() * dt;
       if (
         intersects(heroBox(), {
           x: o.x + o.size * 0.15,
@@ -584,11 +613,29 @@
     return index;
   }
 
+  // Hero Jump reference: 1.6 s traversal at 1x; smooth 0.8 → 1.15 → 1.6 → 2.
+  function speedMultiplier() {
+    const index = levelIndex();
+    const level = LEVELS[index];
+    const next = LEVELS[index + 1] || { start: 90, speed: 2 };
+    const progress = Math.min(
+      1,
+      Math.max(0, (state.elapsed - level.start) / (next.start - level.start)),
+    );
+    return level.speed + (next.speed - level.speed) * progress;
+  }
+
+  function worldSpeed() {
+    return ((width + 150) / 1.6) * speedMultiplier();
+  }
+
   function update(dt) {
     state.time += dt;
     if (state.mode !== "transition") {
       state.elapsed += dt;
       state.score += dt * 10;
+      state.sceneryOffset =
+        (state.sceneryOffset + 32 * speedMultiplier() * dt) % (width * 2);
     }
     state.phaseTime += dt;
     if (state.y > 0 || state.vy > 0) {
@@ -635,6 +682,10 @@
 
   function render() {
     const time = state?.time || 0;
+    panorama.style.setProperty(
+      "--scene-offset",
+      `${-(state?.sceneryOffset || 0)}px`,
+    );
     paintHero();
     position(hero, heroX, state?.y || 0);
     hero.classList.toggle(
@@ -907,6 +958,7 @@
   new ResizeObserver(resize).observe(board);
   resize();
   paintSprite($("mage-preview"), "hero", 110, 0);
+  paintSprite($("shadow-preview"), "shadow", 100, 1);
   setScreen("splash-screen");
   loadRanking();
   heroImage.addEventListener("load", () => {
@@ -918,6 +970,13 @@
       sprites.world.image,
       sprites.gem.image,
       PIKACHU_IMAGE,
+      SONIC_IMAGE,
+      sprites.shadow.image,
+      sprites.pokeball.image,
+      sprites.spike.image,
+      sprites.ring.image,
+      "assets/scenes/pokemon.jpg",
+      "assets/scenes/forest.jpg",
       ...RAICHU_IMAGES,
       ...Object.values(collectibleSprites).map((sheet) => sheet.image),
       ...evolutionFrames.map((image) => image.getAttribute("src")),

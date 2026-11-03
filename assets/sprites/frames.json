@@ -83,5 +83,99 @@
         "h": 1024
       }
     }
+  },
+  "shadow": {
+    "image": "assets/characters/shadow-atlas.png",
+    "width": 1536,
+    "height": 1024,
+    "cell": 395,
+    "frames": [
+      {
+        "x": 80,
+        "y": 69,
+        "w": 357,
+        "h": 383,
+        "anchorX": 265
+      },
+      {
+        "x": 624,
+        "y": 78,
+        "w": 288,
+        "h": 376,
+        "anchorX": 777
+      },
+      {
+        "x": 1149,
+        "y": 66,
+        "w": 283,
+        "h": 390,
+        "anchorX": 1289
+      },
+      {
+        "x": 74,
+        "y": 587,
+        "w": 387,
+        "h": 378,
+        "anchorX": 265
+      },
+      {
+        "x": 635,
+        "y": 578,
+        "w": 281,
+        "h": 390,
+        "anchorX": 777
+      },
+      {
+        "x": 1148,
+        "y": 570,
+        "w": 289,
+        "h": 395,
+        "anchorX": 1289
+      }
+    ],
+    "runSequence": [0, 1, 2, 3, 4, 5],
+    "frameMs": 70
+  },
+  "pokeball": {
+    "image": "assets/obstacles/pokeball.png",
+    "width": 362,
+    "height": 361,
+    "cell": 361,
+    "frames": {
+      "pokeball": {
+        "x": 0,
+        "y": 0,
+        "w": 362,
+        "h": 361
+      }
+    }
+  },
+  "spike": {
+    "image": "assets/obstacles/spike-ball.png",
+    "width": 378,
+    "height": 360,
+    "cell": 360,
+    "frames": {
+      "spike": {
+        "x": 0,
+        "y": 0,
+        "w": 378,
+        "h": 360
+      }
+    }
+  },
+  "ring": {
+    "image": "assets/collectibles/ring.png",
+    "width": 1268,
+    "height": 1241,
+    "cell": 1093,
+    "frames": {
+      "ring": {
+        "x": 98,
+        "y": 74,
+        "w": 1071,
+        "h": 1093
+      }
+    }
   }
 }

@@ -26,9 +26,9 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="css/styles.css?v=brand-hearts-7" />
-    <script src="js/audio.js?v=brand-hearts-7" defer></script>
-    <script src="js/script.js?v=brand-hearts-7" defer></script>
+    <link rel="stylesheet" href="css/styles.css?v=characters-8" />
+    <script src="js/audio.js?v=characters-8" defer></script>
+    <script src="js/script.js?v=characters-8" defer></script>
   </head>
   <body class="game-page">
     <div class="game-tools" aria-label="Controles da partida">
@@ -90,6 +90,17 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
           >
             <source src="assets/scenes/dungeon.mp4" type="video/mp4" />
           </video>
+          <div
+            id="scene-panorama"
+            class="scene-panorama"
+            aria-hidden="true"
+            hidden
+          >
+            <div class="scene-track">
+              <span class="scene-panel"></span><span class="scene-panel"></span
+              ><span class="scene-panel"></span>
+            </div>
+          </div>
           <div class="scene-shade" aria-hidden="true"></div>
           <div class="floor" aria-hidden="true"></div>
           <div class="world" id="world" aria-hidden="true" hidden>
@@ -163,7 +174,7 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
           <li>
             <strong>SOBREVIVER</strong
             ><span
-              >Salte sobre as pedras. Você tem três vidas por partida.</span
+              >Salte sobre os obstáculos. Você tem três vidas por partida.</span
             >
           </li>
           <li>
@@ -177,8 +188,8 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
           <li>
             <strong>COLETAR</strong
             ><span
-              >Os itens valem 30 pontos. O Mago coleta gemas e o Pikachu coleta
-              doces.</span
+              >Os itens valem 30 pontos. O Mago coleta gemas, o Pikachu coleta
+              doces e Sonic e Shadow coletam argolas.</span
             >
           </li>
           <li>
@@ -212,7 +223,7 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
     >
       <div class="modal-card start-card">
         <h2 id="start-title" class="game-title">BEYOND JUMP</h2>
-        <p class="game-subtitle">Escolha seu herói e atravesse a masmorra.</p>
+        <p class="game-subtitle">Escolha seu herói e comece a aventura.</p>
         <form id="start-form">
           <div class="input-group">
             <label for="player-input">DIGITE SEU NOME</label
@@ -249,6 +260,23 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
                   /><strong>PIKACHU</strong></span
                 ></label
               >
+              <label class="character-card">
+                <input type="radio" name="character" value="sonic" />
+                <span class="card-body"
+                  ><img
+                    src="assets/characters/sonic.gif"
+                    alt="Sonic correndo"
+                  /><strong>SONIC</strong></span
+                >
+              </label>
+              <label class="character-card">
+                <input type="radio" name="character" value="shadow" />
+                <span class="card-body"
+                  ><span id="shadow-preview" class="character-preview"
+                    ><span class="sprite-art"></span></span
+                  ><strong>SHADOW</strong></span
+                >
+              </label>
             </div>
           </fieldset>
           <div class="modal-actions">

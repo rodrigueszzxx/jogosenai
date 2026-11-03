@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sobre nós · Beyond the Limits</title>
-    <link rel="stylesheet" href="../css/styles.css?v=brand-hearts-7" />
+    <link rel="stylesheet" href="../css/styles.css?v=characters-8" />
   </head>
   <body>
     <main class="story">
@@ -26,11 +26,13 @@
       <h2>Do Hero Jump ao Beyond Jump</h2>
       <p>
         O projeto começou com uma corrida de obstáculos. Nesta nova versão do
-        grupo, o Mago e o Pikachu exploram uma masmorra e alternam entre saltar
-        ruínas e enfrentar o Rei do Lodo. A estrutura de abertura, instruções,
-        seleção de personagem e ranking foi retomada do Hero Jump. Os avisos de
-        transição e de ataques fazem parte do desafio: observar o cenário é tão
-        importante quanto reagir.
+        grupo, Mago, Pikachu, Sonic e Shadow percorrem cenários próprios e
+        alternam entre saltar obstáculos e enfrentar o Rei do Lodo. O Mago
+        explora a masmorra; Pikachu visita o cenário Pokémon; Sonic e Shadow
+        compartilham a floresta. A estrutura de abertura, instruções, seleção de
+        personagem e ranking foi retomada do Hero Jump. Os avisos de transição e
+        de ataques fazem parte do desafio: observar o cenário é tão importante
+        quanto reagir.
       </p>
       <p>
         Beyond Jump é o nome desta nova aventura. O projeto está no repositório
@@ -43,9 +45,11 @@
         confronto, sobreviva por 20 segundos aos ataques do boss. Salte sobre o
         veneno baixo e permaneça no chão para evitar o alto. Os itens valem 30
         pontos e cada confronto superado concede 300 pontos. O Mago coleta
-        gemas, enquanto o Pikachu coleta doces. Aos 1.500 pontos, surge a Pedra
-        do Trovão: coletá-la transforma Pikachu em Raichu, com raios, som e uma
-        pausa de 1,2 segundo que preserva o pulo e os ataques.
+        gemas, o Pikachu coleta doces e Sonic e Shadow coletam argolas. As
+        Pokébolas são obstáculos do Pikachu; as esferas de espinhos desafiam
+        Sonic e Shadow. Aos 1.500 pontos com Pikachu, surge a Pedra do Trovão:
+        coletá-la transforma Pikachu em Raichu, com raios, som e uma pausa de
+        1,2 segundo que preserva o pulo e os ataques.
       </p>
       <p>
         O jogo oferece três vidas por partida, pausa manual e pausa automática
@@ -72,15 +76,15 @@
                 <th scope="row">RF01</th>
                 <td>
                   Apresentar abertura e instruções, solicitar nome e permitir
-                  selecionar Mago ou Pikachu.
+                  selecionar Mago, Pikachu, Sonic ou Shadow.
                 </td>
                 <td>Funcional</td>
               </tr>
               <tr>
                 <th scope="row">RF02</th>
                 <td>
-                  Animar a corrida do Mago, do Pikachu e do Raichu com
-                  proporções preservadas.
+                  Animar a corrida do Mago, do Pikachu, do Raichu, do Sonic e do
+                  Shadow com proporções preservadas.
                 </td>
                 <td>Funcional</td>
               </tr>

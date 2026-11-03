@@ -2,7 +2,7 @@
   "name": "beyond-jump",
   "private": true,
   "scripts": {
-    "test": "node tests/gameplay.cjs && node tests/combat.cjs && node tests/animation.cjs && node tests/evolution.cjs"
+    "test": "node tests/gameplay.cjs && node tests/combat.cjs && node tests/animation.cjs && node tests/evolution.cjs && node tests/characters.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"
