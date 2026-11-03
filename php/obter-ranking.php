@@ -12,9 +12,9 @@ try { $pdo = conectarBanco(); } catch (PDOException $e) {
 
 try {
     $stmt = $pdo->prepare("
-        SELECT id, nome, pontos, DATE_FORMAT(data_registro, '%d/%m/%Y %H:%i') as data 
-        FROM ranking 
-        ORDER BY pontos DESC, id ASC 
+        SELECT id, nome, pontos, DATE_FORMAT(data_registro, '%d/%m/%Y %H:%i') as data
+        FROM ranking
+        ORDER BY pontos DESC, id ASC
         LIMIT 10
     ");
     $stmt->execute();

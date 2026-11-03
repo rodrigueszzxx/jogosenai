@@ -1,0 +1,10 @@
+{
+  "name": "arcane-run-vortex",
+  "private": true,
+  "scripts": {
+    "test": "node tests/gameplay.cjs && node tests/combat.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

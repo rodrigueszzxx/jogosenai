@@ -1,277 +1,231 @@
 <?php
-
-require_once __DIR__ . '/php/conexao.php';
-try { $pdo = conectarBanco(); } catch (Throwable $e) {
-    http_response_code(503);
-    header('Content-Type: text/html; charset=utf-8');
-    echo '<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Hero Jump</title><p>Não foi possível conectar ao banco do jogo. Tente novamente mais tarde.</p><a href="pages/sobre-nos.php">Conheça a VORTEX</a></html>';
-    exit;
-}
-
-/**
- * Lista de personagens jogáveis.
- * Para adicionar um novo: coloque as imagens em assets/characters/ e inclua um item aqui.
- *  - 'run'  = imagem do personagem correndo (PNG, GIF ou SVG)
- *  - 'dead' = imagem do personagem quando perde (Game Over)
- *  - 'cenario' = imagem de fundo do jogo desse personagem
- *  - 'coleta' = imagem do item que concede pontos ao personagem
- *  - 'obstaculo' = imagem do obstáculo desse personagem
- */
-$spritesColetaveis = json_decode(file_get_contents(__DIR__ . '/assets/collectibles/frames.json'), true, 512, JSON_THROW_ON_ERROR);
-
-$personagens = [
-    ['id' => 'pikachu', 'coleta_sprite' => 'pikachu', 'coleta' => 'assets/collectibles/pikachu.png', 'nome' => 'Pikachu', 'run' => 'assets/characters/pikachu.gif', 'dead' => 'assets/characters/pikachu.gif', 'cenario' => 'assets/cenario-pikachu.jpg', 'obstaculo' => 'assets/obstaculo-pikachu.png'],
-    ['id' => 'bart', 'coleta_sprite' => 'bart', 'coleta' => 'assets/collectibles/bart.png', 'nome' => 'Bart', 'run' => 'assets/characters/bart.gif', 'dead' => 'assets/characters/bart.gif', 'cenario' => 'assets/cenario-bart.png', 'obstaculo' => 'assets/obstaculo-bart.png'],
-    ['id' => 'sasuke', 'coleta_sprite' => 'sasuke', 'coleta' => 'assets/collectibles/sasuke.png', 'nome' => 'Sasuke', 'run' => 'assets/characters/sasuke.gif', 'dead' => 'assets/characters/sasuke.gif', 'cenario' => 'assets/cenario-sasuke.png', 'obstaculo' => 'assets/obstaculo-sasuke.png'],
-    ['id' => 'sonic', 'coleta' => 'assets/collectibles/sonic.gif', 'nome' => 'Sonic', 'run' => 'assets/characters/sonic.gif', 'dead' => 'assets/characters/sonic.gif', 'cenario' => 'assets/cenario-sonic.jpg', 'obstaculo' => 'assets/obstaculo-sonic.png'],
-];
-
-// Busca inicial do ranking para carregar rápido na primeira abertura
-$rankingInicial = [];
-try {
-    $stmt = $pdo->query("
-        SELECT id, nome, pontos, DATE_FORMAT(data_registro, '%d/%m/%Y %H:%i') as data 
-        FROM ranking 
-        ORDER BY pontos DESC, id ASC 
-        LIMIT 10
-    ");
-    $rankingInicial = $stmt->fetchAll();
-} catch (Exception $e) {
-    // Mantém a tela disponível se a consulta falhar (ranking vazio não lança exceção).
-    $rankingInicial = [];
-}
-
-// Recorde (1º lugar) mostrado na tela de abertura
-$recorde = !empty($rankingInicial) ? $rankingInicial[0] : null;
+$atlas = file_get_contents(__DIR__ . '/assets/sprites/frames.json');
 ?>
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hero Jump | VORTEX</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=fundo-pontos-2">
-</head>
-<body class="game-page">
-    <button type="button" class="audio-toggle" id="audio-toggle" aria-label="Silenciar áudio" aria-pressed="false">Som: ligado</button>
-
-    <div class="game-container">
-        
-        <header class="hud-bar">
-            <div class="player-info">
-                <span class="label">JOGADOR:</span>
-                <span class="value" id="hud-player-name">---</span>
-            </div>
-            <div class="level-info" id="level-info" data-level="1">
-                <span class="label">NÍVEL:</span>
-                <span class="value level-badge" id="level-display" role="status" aria-live="polite">1 — FÁCIL</span>
-            </div>
-            <div class="collect-info">
-                <span class="label">ITENS:</span>
-                <span class="value" id="collect-display">0</span>
-            </div>
-            <div class="score-info">
-                <span class="label">PONTOS:</span>
-                <span class="value" id="score-display">0</span>
-            </div>
-        </header>
-
-        
-        <main class="game-board" id="game-board">
-            <div class="scenery-track" id="scenery-track" aria-hidden="true">
-                <?php for ($i = 0; $i < 3; $i++): ?>
-                    <div class="scenery-panel" style="background-image: url('<?= htmlspecialchars($personagens[0]['cenario']) ?>')"></div>
-                <?php endfor; ?>
-            </div>
-            <div class="level-notice" id="level-notice" hidden aria-hidden="true"></div>
-            <img src="<?= htmlspecialchars($personagens[0]['run']) ?>" class="hero" alt="Personagem">
-            <img src="<?= htmlspecialchars($personagens[0]['obstaculo']) ?>" class="pipe" alt="Obstáculo">
-            <div class="collect-feedback" id="collect-feedback" role="status" aria-live="polite"></div>
-            <span class="jump-tip" id="jump-tip">Pressione ESPAÇO ou clique para pular</span>
-        </main>
-    </div>
-
-    <!-- Quadros da evolução: overlay independente para cobrir a viewport inteira -->
-    <div class="raios-evolucao" id="raios-evolucao" hidden aria-hidden="true">
-        <img src="assets/effects/evolution-thunder-1.jpg" alt="" hidden>
-        <img src="assets/effects/evolution-thunder-2.jpg" alt="" hidden>
-        <img src="assets/effects/evolution-thunder-3.jpg" alt="" hidden>
-        <img src="assets/effects/evolution-thunder-4.jpg" alt="" hidden>
-    </div>
-
-    <!-- 0. TELA INICIAL (aparece ao entrar no site e ao clicar em "Voltar à tela inicial") -->
-    <div class="splash active" id="splash-screen" role="dialog" aria-label="Hero Jump - tela inicial">
-        <div class="splash-bg" aria-hidden="true"></div>
-
-        <div class="splash-content">
-            <div class="studio-signature" aria-label="VORTEX apresenta">
-                <span class="vortex-mark"><img src="assets/brand/vortex.jpg" alt="Logotipo VORTEX" width="2814" height="1536"></span>
-                <span class="studio-name">VORTEX<span class="studio-caption">APRESENTA</span></span>
-            </div>
-            <h1 class="splash-title">HERO<br>JUMP</h1>
-
-            <p class="splash-record">🏆 RECORDE: <span id="splash-record-text"><?= $recorde ? htmlspecialchars($recorde['nome']) . ' - ' . (int)$recorde['pontos'] . ' PTS' : '---' ?></span></p>
-
-            <button type="button" class="btn btn-primary splash-play" id="btn-splash-play">INICIAR JOGO</button>
-            <a class="about-link" href="pages/sobre-nos.php">Sobre nós <span aria-hidden="true">→</span></a>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#100e1a" />
+    <title>Arcane Run · VORTEX</title>
+    <link rel="stylesheet" href="css/styles.css?v=arcane-1" />
+    <script src="js/audio.js?v=arcane-1" defer></script>
+    <script src="js/script.js?v=arcane-1" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.php" aria-label="VORTEX, início"
+        ><span class="brand-mark">V</span> VORTEX <small>ARCADE</small></a
+      >
+      <nav aria-label="Navegação principal">
+        <a href="pages/sobre-nos.php">Sobre nós</a>
+        <button
+          type="button"
+          id="audio-toggle"
+          class="quiet"
+          aria-label="Silenciar áudio"
+          aria-pressed="false"
+        >
+          Som: ligado
+        </button>
+      </nav>
+    </header>
+    <main class="game-shell">
+      <div class="game-heading">
+        <div>
+          <p class="eyebrow">AS PROFUNDEZAS ESPERAM</p>
+          <h1>ARCANE <span>RUN</span></h1>
         </div>
-    </div>
-
-    <!-- 0.1 COMO JOGAR (abre ao clicar em "Iniciar jogo" na tela inicial) -->
-    <div class="modal-overlay" id="howto-modal" role="dialog" aria-modal="true" aria-labelledby="howto-title">
-        <div class="modal-card howto-card">
-            <h2 class="game-title" id="howto-title">COMO JOGAR</h2>
-
-            <ul class="howto-list">
-                <li>
-                    <span class="howto-label">PULAR</span>
-                    <span>Aperte <span class="key">ESPAÇO</span> ou <span class="key">&uarr;</span>, ou clique/toque no cenário.</span>
-                </li>
-                <li>
-                    <span class="howto-label">DESVIAR</span>
-                    <span>Pule por cima dos obstáculos. Bateu em um, acabou!</span>
-                </li>
-                <li>
-                    <span class="howto-label">PONTUAR</span>
-                    <span>Quanto mais tempo você sobreviver, mais pontos faz. Colete os itens do seu personagem para ganhar 30 pontos extras por item. Com Pikachu, a Pedra do Trovão aparece a partir de 1.500 pontos; colete-a para evoluir para Raichu.</span>
-                </li>
-                <li>
-                    <span class="howto-label">NÍVEIS</span>
-                    <span>Comece no Fácil. Após 20 segundos de jogo, avance para o Médio; aos 45 segundos, entre no Difícil. O cenário e os obstáculos aceleram aos poucos. A pausa da evolução não conta nesse tempo.</span>
-                </li>
-                <li>
-                    <span class="howto-label">RANKING</span>
-                    <span>Sua pontuação é salva e os 10 melhores aparecem no ranking.</span>
-                </li>
-            </ul>
-
-            <div class="modal-actions">
-                <button type="button" class="btn btn-primary" id="btn-howto-ok">OK</button>
-            </div>
+        <span class="edition">CAPÍTULO I · A MASMORRA</span>
+      </div>
+      <div class="hud" aria-label="Informações da partida">
+        <div>
+          <span class="label">JOGADOR</span
+          ><strong id="hud-player">Mago</strong>
         </div>
-    </div>
-
-    <!-- 1. TELA DE INÍCIO / INSERIR NOME / ESCOLHER PERSONAGEM -->
-    <div class="modal-overlay" id="start-modal">
-        <div class="modal-card start-card">
-            <div class="modal-header">
-                <h1 class="game-title">HERO JUMP</h1>
-                <p class="game-subtitle">Corra pela cidade, desvie dos obstáculos e dispute o topo do ranking!</p>
-            </div>
-
-            <form class="start-form" id="start-form">
-                <div class="input-group">
-                    <label for="player-input">DIGITE SEU NOME:</label>
-                    <input 
-                        type="text" 
-                        id="player-input" 
-                        placeholder="Ex: Seu Nome" 
-                        maxlength="30" 
-                        required 
-                        autocomplete="off"
-                        autofocus
-                    >
-                </div>
-
-                <div class="input-group">
-                    <span class="field-label" id="character-label">ESCOLHA SEU PERSONAGEM:</span>
-                    <div class="character-select" role="radiogroup" aria-labelledby="character-label">
-                        <?php foreach ($personagens as $i => $p): ?>
-                            <label class="character-card">
-                                <input
-                                    type="radio"
-                                    name="character"
-                                    value="<?= htmlspecialchars($p['id']) ?>"
-                                    data-coleta="<?= htmlspecialchars($p['coleta']) ?>"
-                                    data-run="<?= htmlspecialchars($p['run']) ?>"
-                                    data-dead="<?= htmlspecialchars($p['dead']) ?>"
-                                    data-cenario="<?= htmlspecialchars($p['cenario']) ?>"
-                                    data-coleta-sprite="<?= htmlspecialchars($p['coleta_sprite'] ?? '') ?>"
-                                    data-obstaculo="<?= htmlspecialchars($p['obstaculo']) ?>"
-                                    <?= $i === 0 ? 'checked' : '' ?>
-                                >
-                                <span class="card-body">
-                                    <img src="<?= htmlspecialchars($p['run']) ?>" alt="">
-                                    <span class="card-name"><?= htmlspecialchars($p['nome']) ?></span>
-                                </span>
-                            </label>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="submit" class="btn btn-primary">INICIAR JOGO</button>
-                    <button type="button" class="btn btn-secondary" id="btn-view-ranking">VER RANKING</button>
-                </div>
+        <div>
+          <span class="label">ETAPA</span
+          ><strong id="hud-phase">Travessia</strong>
+        </div>
+        <div>
+          <span class="label">NÍVEL</span
+          ><strong id="hud-level">1 · Fácil</strong>
+        </div>
+        <div>
+          <span class="label">VIDAS</span
+          ><strong id="hud-lives" aria-label="3 vidas">◆ ◆ ◆</strong>
+        </div>
+        <div class="score">
+          <span class="label">PONTOS</span><strong id="hud-score">00000</strong>
+        </div>
+      </div>
+      <section
+        class="game-board"
+        id="game-board"
+        aria-label="Cenário da partida"
+      >
+        <video
+          id="scene-video"
+          class="scene-video"
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          poster="assets/scenes/dungeon-poster.webp"
+          aria-hidden="true"
+        >
+          <source src="assets/scenes/dungeon.mp4" type="video/mp4" />
+        </video>
+        <div class="scene-shade" aria-hidden="true"></div>
+        <div class="floor" aria-hidden="true"></div>
+        <div class="world" id="world" aria-hidden="true" hidden>
+          <div class="actor hero" id="hero">
+            <span class="sprite-art"></span>
+          </div>
+          <div class="actor boss" id="boss" hidden>
+            <span class="sprite-art"></span>
+          </div>
+          <div class="lane-warning" id="lane-warning" hidden></div>
+        </div>
+        <div class="boss-hud" id="boss-hud" hidden>
+          <div>
+            <strong>REI DO LODO</strong><span id="boss-health-text"></span>
+          </div>
+          <progress
+            id="boss-health"
+            max="12"
+            value="12"
+            aria-label="Vida do boss"
+          ></progress>
+        </div>
+        <p
+          class="notice"
+          id="notice"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></p>
+        <p
+          class="attack-cue"
+          id="attack-cue"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></p>
+        <div class="screen" id="menu-screen">
+          <div class="menu-card">
+            <span class="chapter">UMA CORRIDA. UM DUELO. SUA MAGIA.</span>
+            <h2>Aventure-se<br />nas <em>sombras.</em></h2>
+            <p>
+              Salte sobre as ruínas. Enfrente o Rei do Lodo.<br />Sobreviva para
+              atravessar a próxima sala.
+            </p>
+            <form id="start-form">
+              <label for="player-name">Como devemos chamar você?</label>
+              <div class="start-row">
+                <input
+                  id="player-name"
+                  name="nome"
+                  maxlength="30"
+                  autocomplete="nickname"
+                  placeholder="Seu nome"
+                  required
+                /><button id="start-button" class="primary" disabled>
+                  Carregando…
+                </button>
+              </div>
             </form>
-
-            <div class="server-status">
-                <span class="status-dot online"></span> Conectado ao MySQL
-            </div>
+            <p class="menu-help">
+              ESPAÇO / ↑ para pular <span>·</span> J / X para lançar feitiço no
+              boss
+            </p>
+            <p id="asset-status" class="muted" role="status"></p>
+          </div>
         </div>
-    </div>
-
-    <!-- 2. TELA DE GAME OVER & RANKING -->
-    <div class="modal-overlay" id="gameover-modal">
-        <div class="modal-card gameover-card">
-            <div class="modal-header">
-                <h2 class="gameover-title">GAME OVER</h2>
-                <div class="final-score-box">
-                    <div class="final-score-label">SUA PONTUAÇÃO</div>
-                    <div class="final-score-num" id="final-score-value">0</div>
-                    <div class="save-status" id="save-status-msg"></div>
-                </div>
-            </div>
-
-            <!-- Tabela com o TOP 10 -->
-            <div class="ranking-container">
-                <h3 class="ranking-title">🏆 TOP 10 MELHORES PONTUAÇÕES</h3>
-                <div class="table-wrapper">
-                    <table class="ranking-table">
-                        <thead>
-                            <tr>
-                                <th>POS</th>
-                                <th>JOGADOR</th>
-                                <th>PONTUAÇÃO</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ranking-body">
-                            <?php if (!empty($rankingInicial)): ?>
-                                <?php foreach ($rankingInicial as $i => $row): ?>
-                                    <tr>
-                                        <td class="ranking-pos">
-                                            <?= $i === 0 ? '🥇 1º' : ($i === 1 ? '🥈 2º' : ($i === 2 ? '🥉 3º' : ($i + 1) . 'º')) ?>
-                                        </td>
-                                        <td><strong><?= htmlspecialchars($row['nome']) ?></strong></td>
-                                        <td><?= (int)$row['pontos'] ?> pts</td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="3" class="loading-cell">Nenhuma pontuação gravada ainda. Jogue para ser o 1º!</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="modal-actions">
-                <button type="button" class="btn btn-primary" id="btn-restart">JOGAR NOVAMENTE</button>
-                <button type="button" class="btn btn-secondary" id="btn-change-player">TROCAR JOGADOR</button>
-                <button type="button" class="btn btn-secondary" id="btn-home">VOLTAR À TELA INICIAL</button>
-            </div>
+        <div class="screen pause-screen" id="pause-screen" hidden>
+          <div class="dialog">
+            <p class="eyebrow">RESPIRE UM POUCO</p>
+            <h2>Partida pausada</h2>
+            <p>O tempo, os ataques e os pontos estão parados.</p>
+            <button id="resume-button" class="primary">Continuar</button>
+          </div>
         </div>
-    </div>
-
-   
-    <script type="application/json" id="collectible-sprites"><?= json_encode($spritesColetaveis, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
-    <script src="js/audio.js?v=audio-1" defer></script>
-    <script src="js/script.js?v=fundo-pontos-2" defer></script>
-</body>
+        <div class="screen" id="over-screen" hidden>
+          <div class="dialog gameover">
+            <p class="eyebrow">A MASMORRA VENCEU ESTA VEZ</p>
+            <h2>Fim da jornada</h2>
+            <strong class="final-score" id="final-score">0</strong>
+            <p id="final-detail"></p>
+            <p id="save-status" role="status"></p>
+            <div class="actions">
+              <button id="restart-button" class="primary">
+                Tentar novamente</button
+              ><button id="menu-button" class="secondary">Início</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div class="game-toolbar">
+        <p id="phase-tip">
+          Desvie das pedras e colete cristais. Cada cristal vale 30 pontos.
+        </p>
+        <div class="controls">
+          <button id="jump-button" class="control">
+            ↑ Pular <kbd>ESPAÇO</kbd></button
+          ><button id="spell-button" class="control spell" disabled>
+            ✦ Feitiço <kbd>J</kbd></button
+          ><button
+            id="pause-button"
+            class="quiet"
+            disabled
+            aria-label="Pausar partida"
+          >
+            Ⅱ Pausar
+          </button>
+        </div>
+      </div>
+      <section class="below-game">
+        <div class="journey">
+          <p class="eyebrow">ENTENDA A JORNADA</p>
+          <h2>A cada sala, um novo desafio.</h2>
+          <div class="steps">
+            <p>
+              <b>01 / TRAVESSIA</b>Salte sobre as pedras e junte cristais
+              durante 24 segundos.
+            </p>
+            <p>
+              <b>02 / CONFRONTO</b>Pule o veneno baixo, fique no chão contra o
+              alto e lance feitiços.
+            </p>
+            <p>
+              <b>03 / PRÓXIMA SALA</b>Derrote o boss, receba 300 pontos e
+              continue uma nova travessia.
+            </p>
+          </div>
+        </div>
+        <div class="ranking">
+          <div class="ranking-title">
+            <h2>Top 10</h2>
+            <button
+              id="ranking-refresh"
+              class="quiet"
+              aria-label="Atualizar ranking"
+            >
+              ↻
+            </button>
+          </div>
+          <p id="ranking-status" class="muted" role="status">
+            Consultando ranking…
+          </p>
+          <ol id="ranking-list"></ol>
+        </div>
+      </section>
+    </main>
+    <footer>
+      VORTEX © 2026 <span>Projeto acadêmico · mario_final_grupo</span>
+    </footer>
+    <script id="sprite-data" type="application/json">
+      <?= $atlas ?>
+    </script>
+  </body>
 </html>

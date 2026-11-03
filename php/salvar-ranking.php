@@ -42,9 +42,9 @@ try {
 
     // Busca os 10 melhores colocados atualizados
     $stmtRanking = $pdo->prepare("
-        SELECT id, nome, pontos, DATE_FORMAT(data_registro, '%d/%m/%Y %H:%i') as data 
-        FROM ranking 
-        ORDER BY pontos DESC, id ASC 
+        SELECT id, nome, pontos, DATE_FORMAT(data_registro, '%d/%m/%Y %H:%i') as data
+        FROM ranking
+        ORDER BY pontos DESC, id ASC
         LIMIT 10
     ");
     $stmtRanking->execute();

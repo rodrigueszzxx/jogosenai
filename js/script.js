@@ -1,892 +1,675 @@
-/**
- * Hero Jump - Lógica do Jogo e Integração com Ranking MySQL
- */
+/** Arcane Run: one animation clock controls movement, battles, score and pauses. */
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const atlas = JSON.parse($("sprite-data").textContent);
+  const audio = window.ArcaneAudio;
+  const board = $("game-board");
+  const world = $("world");
+  const hero = $("hero");
+  const boss = $("boss");
+  const video = $("scene-video");
+  const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  const RUN_DURATION = 24;
+  const TRANSITION_DURATION = 2.4;
+  const GROUND = 43;
+  const LEVELS = [
+    { name: "Fácil", start: 0, speed: 1 },
+    { name: "Médio", start: 20, speed: 1.15 },
+    { name: "Difícil", start: 45, speed: 1.3 },
+  ];
+  let width = board.clientWidth;
+  let heroSize, bossSize, heroX, bossX;
+  let ready = false;
+  let previous = performance.now();
+  let requestVersion = 0;
+  let state = null;
+  let objects = [];
+  let noticeUntil = 0;
 
-document.addEventListener('DOMContentLoaded', () => {
-    const audio = window.HeroJumpAudio;
-    // Elementos do Jogo
-    const hero = document.querySelector('.hero');
-    const pipe = document.querySelector('.pipe');
-    const collectibleSprites = JSON.parse(document.getElementById('collectible-sprites').textContent);
-    const gameBoard = document.getElementById('game-board');
-    const hudPlayerName = document.getElementById('hud-player-name');
-    const scoreDisplay = document.getElementById('score-display');
-    const levelDisplay = document.getElementById('level-display');
-    const levelInfo = document.getElementById('level-info');
-    const levelNotice = document.getElementById('level-notice');
-    const sceneryTrack = document.getElementById('scenery-track');
-    const sceneryPanels = sceneryTrack.querySelectorAll('.scenery-panel');
-    const collectDisplay = document.getElementById('collect-display');
-    const collectFeedback = document.getElementById('collect-feedback');
-    const jumpTip = document.getElementById('jump-tip');
-    const evolutionOverlay = document.getElementById('raios-evolucao');
-    const evolutionFrames = Array.from(evolutionOverlay.querySelectorAll('img'));
-    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    evolutionFrames.forEach((imagem) => {
-        imagem.addEventListener('error', () => console.error('Não foi possível carregar o raio:', imagem.src));
+  const readStorage = (key) => {
+    try {
+      return localStorage.getItem(key) || "";
+    } catch (_) {
+      return "";
+    }
+  };
+  const saveStorage = (key, value) => {
+    try {
+      localStorage.setItem(key, value);
+    } catch (_) {
+      /* Optional preference. */
+    }
+  };
+  $("player-name").value = readStorage("mario_final_player");
+
+  function paintSprite(node, index, size) {
+    const f = atlas.frames[index];
+    const scale = size / atlas.cell;
+    const art = node.querySelector(".sprite-art");
+    node.style.width = `${size}px`;
+    node.style.height = `${size}px`;
+    art.style.width = `${f.w * scale}px`;
+    art.style.height = `${f.h * scale}px`;
+    art.style.backgroundSize = `${atlas.width * scale}px ${atlas.height * scale}px`;
+    art.style.backgroundPosition = `${-f.x * scale}px ${-f.y * scale}px`;
+  }
+
+  function position(node, x, y) {
+    node.style.transform = `translate3d(${x}px,${-(GROUND + y)}px,0)`;
+  }
+
+  function resize() {
+    const oldWidth = width;
+    width = board.clientWidth;
+    heroSize = Math.max(112, Math.min(170, width * 0.18));
+    bossSize = Math.max(130, Math.min(235, width * 0.25));
+    heroX = width * 0.045;
+    bossX = width - bossSize - width * 0.025;
+    objects.forEach((o) => {
+      o.x *= width / oldWidth;
     });
-    const DURACAO_EVOLUCAO = 1200;
+    paintSprite(hero, 0, heroSize);
+    paintSprite(boss, 9, bossSize);
+    render();
+  }
 
-    // Modais e Telas
-    const startModal = document.getElementById('start-modal');
-    const startForm = document.getElementById('start-form');
-    const playerInput = document.getElementById('player-input');
-    const btnViewRanking = document.getElementById('btn-view-ranking');
-    const characterInputs = document.querySelectorAll('input[name="character"]');
+  function makeSprite(kind, index, size, x, y) {
+    const el = document.createElement("div");
+    el.className = `actor ${kind}`;
+    const art = document.createElement("span");
+    art.className = "sprite-art";
+    el.append(art);
+    world.append(el);
+    paintSprite(el, index, size);
+    position(el, x, y);
+    const object = { kind, el, x, y, size, dead: false };
+    objects.push(object);
+    return object;
+  }
 
-    const gameoverModal = document.getElementById('gameover-modal');
-    const finalScoreValue = document.getElementById('final-score-value');
-    const saveStatusMsg = document.getElementById('save-status-msg');
-    const rankingBody = document.getElementById('ranking-body');
-    const btnRestart = document.getElementById('btn-restart');
-    const btnChangePlayer = document.getElementById('btn-change-player');
+  function clearObjects() {
+    objects.forEach((o) => o.el.remove());
+    objects = [];
+  }
 
-    // Tempo em segundos de partida ativa: a pausa da evolução é descontada.
-    // A velocidade interpola entre os níveis, sem saltos nos obstáculos.
-    const NIVEIS = [
-        { numero: 1, nome: 'Fácil', inicio: 0, velocidade: 0.8 },
-        { numero: 2, nome: 'Médio', inicio: 20, velocidade: 1.15 },
-        { numero: 3, nome: 'Difícil', inicio: 45, velocidade: 1.6 }
-    ];
-    const VELOCIDADE_MAXIMA = 2;
-    const TEMPO_VELOCIDADE_MAXIMA = 90;
-    const PONTOS_POR_SEGUNDO_BASE = 10;
-    const VELOCIDADE_CENARIO_BASE = 32; // pixels por segundo; mais lento que os obstáculos
-    // Ignora as bordas do desenho para tolerar raspadas durante o salto.
-    const HITBOX_OBSTACULO = { lateral: 0.18, superior: 0.30, inferior: 0.05 };
+  function showNotice(text, duration = 2.4) {
+    $("notice").textContent = text;
+    $("notice").hidden = false;
+    noticeUntil = (state?.time || 0) + duration;
+  }
 
-    // Cada coleta soma ao mesmo total usado pelo placar e pelo ranking.
-    const PONTOS_POR_ITEM = 30;
-    const PONTOS_PARA_EVOLUIR = 1500;
-    const RAICHU_FRAMES = [1, 2, 3].map((numero) =>
-        `assets/characters/raichu/corrida-0${numero}.png`
+  function scenePlayback() {
+    if (state?.status === "playing" && !motion.matches && !document.hidden) {
+      video.play().catch(() => {});
+    } else video.pause();
+  }
+
+  function start() {
+    if (!ready) return;
+    const name = $("player-name").value.trim();
+    if (!name) {
+      $("player-name").focus();
+      return;
+    }
+    requestVersion++;
+    saveStorage("mario_final_player", name);
+    clearObjects();
+    audio?.pararEfeitos();
+    state = {
+      status: "playing",
+      mode: "run",
+      name,
+      score: 0,
+      time: 0,
+      elapsed: 0,
+      phaseTime: 0,
+      round: 1,
+      lives: 3,
+      bosses: 0,
+      crystals: 0,
+      y: 0,
+      vy: 0,
+      hurtUntil: 0,
+      spawn: 1.4,
+      crystalAt: 1,
+      castUntil: 0,
+      castReady: 0,
+      spellPending: false,
+      castRelease: 0,
+      bossHP: 12,
+      bossMax: 12,
+      attackAt: 1.8,
+      attackCount: 0,
+      pendingAttack: null,
+      bossHitUntil: 0,
+      transitionTo: null,
+    };
+    $("hud-player").textContent = name;
+    $("menu-screen").hidden = true;
+    world.hidden = false;
+    $("over-screen").hidden = true;
+    $("pause-screen").hidden = true;
+    $("boss-hud").hidden = true;
+    $("attack-cue").hidden = true;
+    $("lane-warning").hidden = true;
+    boss.hidden = true;
+    hero.classList.remove("hurt");
+    $("pause-button").disabled = false;
+    $("jump-button").disabled = false;
+    previous = performance.now();
+    showNotice("Sala 1 · A travessia começa", 2.4);
+    scenePlayback();
+    updateHud();
+    render();
+  }
+
+  function jump() {
+    if (
+      state?.status !== "playing" ||
+      state.mode === "transition" ||
+      state.y > 0.1
+    )
+      return;
+    state.vy = 455;
+  }
+
+  function cast() {
+    if (
+      state?.status !== "playing" ||
+      state.mode !== "boss" ||
+      state.time < state.castReady
+    )
+      return;
+    state.castReady = state.time + 0.8;
+    state.castUntil = state.time + 0.4;
+    state.castRelease = state.time + 0.12;
+    state.spellPending = true;
+  }
+
+  function beginTransition(target) {
+    state.mode = "transition";
+    state.phaseTime = 0;
+    state.transitionTo = target;
+    state.pendingAttack = null;
+    state.spellPending = false;
+    state.y = 0;
+    state.vy = 0;
+    clearObjects();
+    boss.classList.remove("charging");
+    $("attack-cue").hidden = true;
+    $("lane-warning").hidden = true;
+    $("boss-hud").hidden = true;
+    boss.hidden = true;
+    if (target === "boss")
+      showNotice("BOSS À FRENTE · Prepare seus feitiços!", TRANSITION_DURATION);
+    else
+      showNotice(
+        `BOSS DERROTADO! +300 · Sala ${state.round} a seguir`,
+        TRANSITION_DURATION,
+      );
+  }
+
+  function finishTransition() {
+    state.mode = state.transitionTo;
+    state.phaseTime = 0;
+    state.spawn = 1.4;
+    state.crystalAt = 1;
+    if (state.mode === "boss") {
+      state.bossMax = Math.min(20, 12 + (state.round - 1) * 2);
+      state.bossHP = state.bossMax;
+      state.attackAt = 1.7;
+      state.attackCount = 0;
+      state.castReady = state.time;
+      boss.hidden = false;
+      $("boss-hud").hidden = false;
+      showNotice("REI DO LODO · J ou X para atacar", 2.5);
+    } else showNotice(`Sala ${state.round} · De volta aos obstáculos`, 2.5);
+  }
+
+  function hurt(object) {
+    object.dead = true;
+    if (state.time < state.hurtUntil) return;
+    state.lives--;
+    state.hurtUntil = state.time + 1.4;
+    if (state.lives <= 0) endGame();
+    else showNotice("Você foi atingido · Proteção por um instante", 1.3);
+  }
+
+  function intersects(a, b) {
+    return (
+      a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
     );
-    const RAICHU_SEQUENCE = [0, 1, 2, 1];
-    const RAICHU_FRAME_MS = 100;
-    const RAICHU_IMAGE = RAICHU_FRAMES[0];
-    const raichuFrameImages = RAICHU_FRAMES.map((src) => {
-        const imagem = new Image();
-        imagem.src = src;
-        return imagem;
-    });
-    const raichuImage = raichuFrameImages[0];
-    const thunderstoneImage = new Image();
-    thunderstoneImage.src = collectibleSprites.thunderstone.image;
+  }
+  function heroBox() {
+    return {
+      x: heroX + heroSize * 0.24,
+      y: state.y + 4,
+      w: heroSize * 0.39,
+      h: heroSize * 0.67,
+    };
+  }
 
-    // Variáveis de Estado
-    let currentPlayer = '';
-    let currentCharacter = null;
-    let score = 0;
-    let isPlaying = false;
-    let gameLoop = null;
-    let scoreLoop = null;
-    let multiplicadorVelocidade = NIVEIS[0].velocidade;
-    let nivelAtual = NIVEIS[0];
-    let avisoNivelTimeout = null;
-    let deslocamentoCenario = 0;
-    let ultimoTickCenario = 0;
-    let inicioPartida = 0;
-    let pontosExatos = 0;
-    let ultimoTickPontos = 0;
-    let animacaoObstaculo = null;
-    let coletavel = null;
-    let itensColetados = 0;
-    let proximoItemEm = 0;
-    let ultimoTickItem = 0;
-    let feedbackTimeout = null;
-    let pedraLiberada = false;
-    let evoluiuParaRaichu = false;
-    let inicioAnimacaoRaichu = 0;
-    let quadroRaichu = 0;
-    let evolutionTimeout = null;
-    let evolutionFrameTimers = [];
-    let evolutionCleanupTimeout = null;
-    let evolutionSwapTimeout = null;
-    let evolutionStartTime = 0;
-    let isEvolutionAnimating = false;
-    let jumpTimeout = null;
-    let fimDoPulo = 0;
-    let tempoRestantePulo = 0;
-
-    /**
-     * Lê o personagem marcado na tela de início
-     */
-    function getSelectedCharacter() {
-        const selected = document.querySelector('input[name="character"]:checked');
-        if (!selected) return null;
-        return {
-            id: selected.value,
-            coleta: selected.dataset.coleta,
-            run: selected.dataset.run,
-            dead: selected.dataset.dead,
-            cenario: selected.dataset.cenario,
-            coletaSprite: selected.dataset.coletaSprite,
-            obstaculo: selected.dataset.obstaculo
+  function updateRun(dt) {
+    const speed = LEVELS[levelIndex()].speed;
+    // At least three seconds without new rocks before the encounter.
+    if (state.phaseTime < RUN_DURATION - 3) {
+      state.spawn -= dt;
+      if (state.spawn <= 0) {
+        const size = Math.max(60, Math.min(96, width * 0.105));
+        makeSprite("rock", 8, size, width + size, 0);
+        state.spawn = 1.65 / speed + Math.random() * 0.45;
+      }
+      state.crystalAt -= dt;
+      if (state.crystalAt <= 0) {
+        const el = document.createElement("span");
+        el.className = "crystal";
+        world.append(el);
+        objects.push({
+          kind: "crystal",
+          el,
+          x: width + 25,
+          y: heroSize * 0.9 + 20,
+          size: 23,
+          dead: false,
+        });
+        state.crystalAt = 2.3 + Math.random() * 0.8;
+      }
+    }
+    if (
+      state.phaseTime >= RUN_DURATION - 3 &&
+      state.phaseTime - dt < RUN_DURATION - 3
+    ) {
+      showNotice("O boss se aproxima · Troca em 3 segundos", 3);
+    }
+    if (state.phaseTime >= RUN_DURATION) {
+      beginTransition("boss");
+      return;
+    }
+    for (const o of objects) {
+      o.x -= Math.max(145, width * 0.31) * speed * dt;
+      if (o.kind === "rock") {
+        const box = {
+          x: o.x + o.size * 0.15,
+          y: 0,
+          w: o.size * 0.7,
+          h: o.size * 0.46,
         };
+        if (intersects(heroBox(), box)) hurt(o);
+      } else if (
+        o.kind === "crystal" &&
+        intersects(heroBox(), { x: o.x, y: o.y, w: 19, h: 25 })
+      ) {
+        state.score += 30;
+        state.crystals++;
+        o.dead = true;
+        audio?.tocar("coleta");
+      }
+      if (o.x < -o.size) o.dead = true;
+      if (state.status !== "playing") break;
     }
+  }
 
-    /**
-     * Mostra no jogo o personagem escolhido, com o cenário e o obstáculo dele
-     */
-    function showCharacterOnBoard() {
-        if (!currentCharacter) return;
-        hero.src = currentCharacter.run;
-        pipe.src = currentCharacter.obstaculo;
-        sceneryPanels.forEach((panel) => {
-            panel.style.backgroundImage = `url('${currentCharacter.cenario}')`;
-        });
+  function updateBoss(dt) {
+    if (!state.pendingAttack && state.phaseTime >= state.attackAt) {
+      const high = state.attackCount % 3 === 2;
+      state.pendingAttack = { release: state.phaseTime + 0.85, high };
+      boss.classList.add("charging");
+      $("attack-cue").textContent = high
+        ? "ATAQUE ALTO · Fique no chão!"
+        : "ATAQUE BAIXO · Prepare-se para pular!";
+      $("attack-cue").hidden = false;
+      $("lane-warning").hidden = false;
+      $("lane-warning").style.bottom =
+        `${GROUND + (high ? heroSize * 0.84 : 0)}px`;
     }
-
-    // Os GIFs dos personagens já são carregados pelos cards de seleção.
-    // Pré-carrega os cenários, obstáculos e coletáveis para a troca ser instantânea.
-    characterInputs.forEach((input) => {
-        const imgColeta = new Image();
-        imgColeta.src = collectibleSprites[input.dataset.coletaSprite]?.image || input.dataset.coleta;
-
-        const imgCenario = new Image();
-        imgCenario.src = input.dataset.cenario;
-
-        const imgObstaculo = new Image();
-        imgObstaculo.src = input.dataset.obstaculo;
-    });
-
-    // ===== Tela inicial: aparece ao entrar no site e ao voltar pelo botão do Game Over =====
-    const splash = document.getElementById('splash-screen');
-    const btnSplashPlay = document.getElementById('btn-splash-play');
-    const btnHome = document.getElementById('btn-home');
-    const splashRecord = document.getElementById('splash-record-text');
-
-    const howtoModal = document.getElementById('howto-modal');
-    const btnHowtoOk = document.getElementById('btn-howto-ok');
-
-    // "Iniciar jogo" na tela inicial -> abre a tela "Como jogar"
-    function irParaComoJogar() {
-        if (!splash || !splash.classList.contains('active') || splash.classList.contains('leaving')) return;
-        splash.classList.add('leaving');
-
-        // Mostra o "Como jogar" por trás enquanto a tela inicial some
-        howtoModal.classList.add('active');
-
-        setTimeout(() => {
-            splash.classList.remove('active', 'leaving');
-            btnHowtoOk.focus();
-        }, 400);
+    if (state.pendingAttack && state.phaseTime >= state.pendingAttack.release) {
+      const high = state.pendingAttack.high;
+      const size = Math.max(44, Math.min(66, width * 0.07));
+      const shot = makeSprite(
+        "poison projectile",
+        10,
+        size,
+        bossX + bossSize * 0.2,
+        high ? heroSize * 0.84 : 2,
+      );
+      shot.high = high;
+      state.pendingAttack = null;
+      state.attackCount++;
+      state.attackAt =
+        state.phaseTime + Math.max(1.3, 2.05 - state.round * 0.08);
+      boss.classList.remove("charging");
     }
-
-    // "OK" no "Como jogar" -> segue para nome + personagem
-    function confirmarComoJogar() {
-        howtoModal.classList.remove('active');
-        startModal.classList.add('active');
-        playerInput.focus();
+    if (state.spellPending && state.time >= state.castRelease) {
+      makeSprite(
+        "spell projectile",
+        11,
+        Math.max(49, heroSize * 0.48),
+        heroX + heroSize * 0.72,
+        state.y + heroSize * 0.34,
+      );
+      state.spellPending = false;
     }
-
-    function abrirAbertura() {
-        if (!splash) return;
-        gameoverModal.classList.remove('active');
-        howtoModal.classList.remove('active');
-        startModal.classList.remove('active');
-        resetElements();
-        splash.classList.remove('leaving');
-        splash.classList.add('active');
-        if (btnSplashPlay) btnSplashPlay.focus();
-    }
-
-    /**
-     * Atualiza o recorde mostrado na tela inicial com o 1º lugar do ranking
-     */
-    function atualizarRecorde(list) {
-        if (!splashRecord || !list || list.length === 0) return;
-        splashRecord.textContent = `${list[0].nome} - ${parseInt(list[0].pontos, 10)} PTS`;
-    }
-
-    if (splash) {
-        if (btnSplashPlay) btnSplashPlay.addEventListener('click', irParaComoJogar);
-
-        document.addEventListener('keydown', (e) => {
-            if (!splash.classList.contains('active') || e.repeat) return;
-            // Links e botões mantêm sua ativação nativa por teclado.
-            if (e.target.closest('a, button, input, select, textarea')) return;
-            if (e.code === 'Enter' || e.code === 'Space' || e.key === ' ') {
-                e.preventDefault();
-                irParaComoJogar();
-            }
-        });
-    }
-
-    if (btnHowtoOk) {
-        btnHowtoOk.addEventListener('click', confirmarComoJogar);
-        // Segurar Enter não deve pular o "Como jogar" sem a pessoa ler
-        btnHowtoOk.addEventListener('keydown', (e) => {
-            if (e.repeat) e.preventDefault();
-        });
-    }
-
-    if (btnHome) btnHome.addEventListener('click', abrirAbertura);
-
-    // Recupera último nome utilizado caso exista
-    const savedName = localStorage.getItem('hero_jump_player');
-    if (savedName && playerInput) {
-        playerInput.value = savedName;
-    }
-
-    // Recupera o último personagem escolhido caso exista
-    const savedCharacter = localStorage.getItem('hero_jump_character');
-    if (savedCharacter) {
-        characterInputs.forEach((input) => {
-            if (input.value === savedCharacter) {
-                input.checked = true;
-            }
-        });
-    }
-    currentCharacter = getSelectedCharacter();
-    showCharacterOnBoard();
-
-    // Ao escolher outro personagem, mostra ele no cenário
-    characterInputs.forEach((input) => {
-        input.addEventListener('change', () => {
-            currentCharacter = getSelectedCharacter();
-            if (currentCharacter) {
-                showCharacterOnBoard();
-                localStorage.setItem('hero_jump_character', currentCharacter.id);
-            }
-        });
-    });
-
-    /**
-     * Inicia uma nova rodada
-     */
-    function startGame() {
-        // Limpa loops anteriores se existirem
-        clearInterval(gameLoop);
-        clearInterval(scoreLoop);
-
-        // Reseta posições e visuais
-        resetElements();
-
-        isPlaying = true;
-        score = 0;
-        scoreDisplay.textContent = '0';
-        hudPlayerName.textContent = currentPlayer || 'Jogador';
-
-        // Ativa animações CSS do jogo
-        gameBoard.classList.add('running');
-
-        // Toda nova partida começa no Fácil, em 0.8x.
-        inicioPartida = performance.now();
-        ultimoTickCenario = inicioPartida;
-        ultimoTickItem = inicioPartida;
-        proximoItemEm = inicioPartida;
-        animacaoObstaculo = obterAnimacaoDoObstaculo();
-        atualizarVelocidade();
-
-        // A pontuação por sobrevivência acompanha a velocidade; cada item soma 30.
-        pontosExatos = 0;
-        ultimoTickPontos = performance.now();
-        scoreLoop = setInterval(() => {
-            if (!isPlaying) return;
-            const agora = performance.now();
-            if (isEvolutionAnimating) { ultimoTickPontos = agora; return; }
-            const segundos = (agora - ultimoTickPontos) / 1000;
-            ultimoTickPontos = agora;
-            pontosExatos += PONTOS_POR_SEGUNDO_BASE * multiplicadorVelocidade * segundos;
-            score = Math.floor(pontosExatos);
-            scoreDisplay.textContent = score;
-        }, 100);
-
-        // Loop principal: acelera o jogo e checa colisão
-        gameLoop = setInterval(() => {
-            if (!isPlaying || isEvolutionAnimating) return;
-            atualizarVelocidade();
-            checkCollision();
-            if (!isPlaying) return;
-            atualizarAnimacaoRaichu();
-            atualizarCenario();
-            atualizarColetaveis();
-        }, 10);
-    }
-
-    /**
-     * Pega a animação CSS que move o obstáculo (para podermos acelerá-la sem "pulos")
-     */
-    function obterAnimacaoDoObstaculo() {
-        if (typeof pipe.getAnimations !== 'function') return null;
-        const animacoes = pipe.getAnimations();
-        return animacoes.find((a) => a.animationName === 'pipe-animation') || animacoes[0] || null;
-    }
-
-    function obterDificuldade(msDecorridos) {
-        const segundos = Math.max(0, msDecorridos / 1000);
-        let indice = 0;
-        for (let i = 1; i < NIVEIS.length; i++) {
-            if (segundos >= NIVEIS[i].inicio) indice = i;
-        }
-        const nivel = NIVEIS[indice];
-        const seguinte = NIVEIS[indice + 1];
-        const fim = seguinte ? seguinte.inicio : TEMPO_VELOCIDADE_MAXIMA;
-        const velocidadeFinal = seguinte ? seguinte.velocidade : VELOCIDADE_MAXIMA;
-        const progresso = Math.min(1, (segundos - nivel.inicio) / (fim - nivel.inicio));
-        return {
-            nivel,
-            multiplicador: nivel.velocidade + (velocidadeFinal - nivel.velocidade) * progresso
+    const body = {
+      x: bossX + bossSize * 0.2,
+      y: 0,
+      w: bossSize * 0.64,
+      h: bossSize * 0.72,
+    };
+    for (const o of objects) {
+      if (o.kind.startsWith("poison")) {
+        o.x -= Math.max(105, width * 0.3) * dt;
+        const hit = {
+          x: o.x + o.size * 0.12,
+          y: o.y + o.size * 0.05,
+          w: o.size * 0.46,
+          h: o.size * 0.34,
         };
-    }
-
-    function limparAvisoNivel() {
-        clearTimeout(avisoNivelTimeout);
-        avisoNivelTimeout = null;
-        levelNotice.hidden = true;
-        levelNotice.textContent = '';
-    }
-
-    function mostrarNivel(nivel, avisar = false) {
-        nivelAtual = nivel;
-        levelDisplay.textContent = `${nivel.numero} — ${nivel.nome.toUpperCase()}`;
-        levelInfo.dataset.level = nivel.numero;
-        gameBoard.dataset.level = nivel.numero;
-        if (avisar) {
-            limparAvisoNivel();
-            levelNotice.textContent = `NÍVEL ${nivel.numero} — ${nivel.nome.toUpperCase()}`;
-            levelNotice.hidden = false;
-            avisoNivelTimeout = setTimeout(limparAvisoNivel, 2200);
-        }
-    }
-
-    function atualizarVelocidade() {
-        const dificuldade = obterDificuldade(performance.now() - inicioPartida);
-        multiplicadorVelocidade = dificuldade.multiplicador;
-        if (dificuldade.nivel.numero !== nivelAtual.numero) {
-            mostrarNivel(dificuldade.nivel, true);
-        }
-
-        // playbackRate muda a velocidade da animação mantendo a posição atual (sem saltos)
-        if (animacaoObstaculo) {
-            animacaoObstaculo.playbackRate = multiplicadorVelocidade;
-        }
-    }
-
-    function atualizarCenario() {
-        const agora = performance.now();
-        const segundos = Math.min((agora - ultimoTickCenario) / 1000, 0.1);
-        ultimoTickCenario = agora;
-        if (motionPreference.matches) return;
-        const ciclo = gameBoard.clientWidth * 2;
-        if (!ciclo) return;
-        deslocamentoCenario = (deslocamentoCenario
-            + VELOCIDADE_CENARIO_BASE * multiplicadorVelocidade * segundos) % ciclo;
-        sceneryTrack.style.transform = `translate3d(${-deslocamentoCenario}px, 0, 0)`;
-    }
-    // Os quadros de Evolution Thunder cobrem a viewport inteira.
-    // O preto das imagens desaparece pelo modo de mesclagem "screen" no CSS.
-    function limparAnimacaoEvolucao() {
-        evolutionFrameTimers.forEach(clearTimeout);
-        evolutionFrameTimers = [];
-        clearTimeout(evolutionCleanupTimeout);
-        clearTimeout(evolutionSwapTimeout);
-        clearTimeout(evolutionTimeout);
-        evolutionCleanupTimeout = null;
-        evolutionSwapTimeout = null;
-        evolutionTimeout = null;
-        evolutionOverlay.classList.remove('active', 'finishing');
-        evolutionOverlay.hidden = true;
-        evolutionFrames.forEach((frame) => { frame.hidden = true; });
-    }
-
-    function tocarAnimacaoEvolucao() {
-        limparAnimacaoEvolucao();
-        // Movimento reduzido mantém um raio estático com entrada e saída suaves.
-        const sequencia = motionPreference.matches ? [0] : [0, 1, 2, 3];
-        evolutionFrames[0].hidden = false;
-        evolutionOverlay.hidden = false;
-        // Registra o estado inicial antes de iniciar a transição de opacidade.
-        void evolutionOverlay.offsetWidth;
-        evolutionOverlay.classList.add('active');
-        sequencia.slice(1).forEach((indice, passo) => {
-            evolutionFrameTimers.push(setTimeout(() => {
-                evolutionFrames.forEach((frame, atual) => { frame.hidden = atual !== indice; });
-            }, (passo + 1) * 210));
-        });
-        evolutionCleanupTimeout = setTimeout(() => {
-            evolutionOverlay.classList.add('finishing');
-        }, DURACAO_EVOLUCAO - 240);
-    }
-
-    function trocarSpriteParaRaichu() {
-        if (!isPlaying || !evoluiuParaRaichu) return;
-        // Usa a proporção do Raichu, sem comprimi-lo na caixa do Pikachu.
-        hero.style.aspectRatio = `${raichuImage.naturalWidth} / ${raichuImage.naturalHeight}`;
-        hero.src = RAICHU_IMAGE;
-        hero.classList.add('is-evolved');
-        hero.alt = 'Raichu';
-        quadroRaichu = 0;
-        inicioAnimacaoRaichu = performance.now();
-    }
-
-    function atualizarAnimacaoRaichu() {
-        if (!evoluiuParaRaichu || !hero.classList.contains('is-evolved')) return;
-        const passo = Math.floor((performance.now() - inicioAnimacaoRaichu) / RAICHU_FRAME_MS);
-        const quadro = RAICHU_SEQUENCE[passo % RAICHU_SEQUENCE.length];
-        if (quadro === quadroRaichu) return;
-        hero.src = RAICHU_FRAMES[quadro];
-        quadroRaichu = quadro;
-    }
-
-    function agendarFimDoPulo(duracao) {
-        clearTimeout(jumpTimeout);
-        fimDoPulo = performance.now() + duracao;
-        jumpTimeout = setTimeout(() => {
-            hero.classList.remove('jump');
-            jumpTimeout = null;
-            fimDoPulo = 0;
-        }, duracao);
-    }
-
-    function finalizarAnimacaoEvolucao() {
-        const agora = performance.now();
-        const pausa = isEvolutionAnimating ? agora - evolutionStartTime : 0;
-        limparAnimacaoEvolucao();
-        inicioPartida += pausa;
-        proximoItemEm += pausa;
-        if (coletavel) coletavel.inicio += pausa;
-        ultimoTickItem = agora;
-        ultimoTickPontos = agora;
-        ultimoTickCenario = agora;
-        // A corrida começa quando a partida retoma, mantendo o personagem parado nos raios.
-        inicioAnimacaoRaichu = agora;
-        isEvolutionAnimating = false;
-        gameBoard.classList.remove('evolving');
-        if (isPlaying && hero.classList.contains('jump')) {
-            agendarFimDoPulo(tempoRestantePulo);
-        }
-        tempoRestantePulo = 0;
-    }
-
-    function removerColetavel() {
-        if (!coletavel) return;
-        coletavel.elemento.remove();
-        coletavel = null;
-    }
-
-    function limparColetaveis() {
-        removerColetavel();
-        clearTimeout(feedbackTimeout);
-        collectFeedback.textContent = '';
-        delete collectFeedback.dataset.kind;
-    }
-
-    function criarColetavel() {
-        const especial = pedraLiberada && !evoluiuParaRaichu;
-        const sprite = collectibleSprites[especial ? 'thunderstone' : currentCharacter.coletaSprite] || null;
-        const elemento = document.createElement(sprite ? 'span' : 'img');
-        elemento.className = 'collectible';
-        elemento.dataset.character = currentCharacter.id;
-        elemento.dataset.kind = especial ? 'evolution' : 'normal';
-        elemento.setAttribute('aria-hidden', 'true');
-        let visual = null;
-        if (sprite) {
-            visual = document.createElement('span');
-            visual.className = 'collectible-visual';
-            visual.style.backgroundImage = `url('${sprite.image}')`;
-            elemento.appendChild(visual);
-        } else {
-            // Sonic já possui um GIF animado próprio.
-            elemento.src = currentCharacter.coleta;
-            elemento.alt = '';
-            elemento.draggable = false;
-        }
-        elemento.style.bottom = `${Math.max(110, hero.offsetHeight + 15) + Math.random() * 25}px`;
-        gameBoard.appendChild(elemento);
-        const largura = elemento.offsetWidth;
-        coletavel = { elemento, visual, sprite, largura, especial,
-            x: gameBoard.clientWidth + largura, inicio: performance.now(), quadro: -1, altura: 0 };
-        elemento.style.transform = `translateX(${coletavel.x}px)`;
-        atualizarQuadroColetavel();
-    }
-
-    function atualizarQuadroColetavel() {
-        if (!coletavel?.sprite) return;
-        const { sprite, elemento, visual } = coletavel;
-        const indice = Math.floor((performance.now() - coletavel.inicio) / 1000
-            * sprite.fps * Math.sqrt(multiplicadorVelocidade)) % sprite.frames.length;
-        if (indice === coletavel.quadro && coletavel.altura === elemento.offsetHeight) return;
-        const quadro = sprite.frames[indice];
-        const escala = elemento.offsetHeight / sprite.maxHeight;
-        visual.style.width = `${quadro.w * escala}px`;
-        visual.style.height = `${quadro.h * escala}px`;
-        visual.style.backgroundSize = `${sprite.width * escala}px ${sprite.height * escala}px`;
-        visual.style.backgroundPosition = `${-quadro.x * escala}px ${-quadro.y * escala}px`;
-        visual.style.clipPath = quadro.clip;
-        coletavel.quadro = indice;
-        coletavel.altura = elemento.offsetHeight;
-    }
-
-    function atualizarColetaveis() {
-        if (!isPlaying || isEvolutionAnimating || !currentCharacter) return;
-        const agora = performance.now();
-        // O gatilho depende da pontuação real, nunca do texto exibido no painel.
-        if (currentCharacter.id === 'pikachu' && !pedraLiberada && !evoluiuParaRaichu
-            && score >= PONTOS_PARA_EVOLUIR
-            && raichuFrameImages.every((imagem) => imagem.complete && imagem.naturalWidth > 0)
-            && thunderstoneImage.complete && thunderstoneImage.naturalWidth > 0) {
-            pedraLiberada = true;
-            removerColetavel();
-            proximoItemEm = agora;
-            clearTimeout(feedbackTimeout);
-            collectFeedback.dataset.kind = 'evolution';
-            collectFeedback.textContent = 'A Pedra do Trovão apareceu!';
-            feedbackTimeout = setTimeout(() => { collectFeedback.textContent = ''; }, 1600);
-        }
-        const segundos = Math.min((agora - ultimoTickItem) / 1000, 0.1);
-        ultimoTickItem = agora;
-        if (!coletavel) {
-            if (agora >= proximoItemEm) criarColetavel();
+        if (intersects(heroBox(), hit)) hurt(o);
+      } else {
+        o.x += Math.max(270, width * 0.75) * dt;
+        if (
+          intersects(body, {
+            x: o.x,
+            y: o.y,
+            w: o.size * 0.72,
+            h: o.size * 0.63,
+          })
+        ) {
+          o.dead = true;
+          state.bossHP--;
+          state.bossHitUntil = state.time + 0.15;
+          if (state.bossHP <= 0) {
+            state.score += 300;
+            state.bosses++;
+            state.round++;
+            audio?.tocar("coleta");
+            beginTransition("run");
             return;
+          }
         }
-
-        atualizarQuadroColetavel();
-
-        // Mesma distância e duração base da animação do obstáculo.
-        const pixelsPorSegundo = (gameBoard.clientWidth + 150) / 1.6;
-        coletavel.x -= pixelsPorSegundo * multiplicadorVelocidade * segundos;
-        coletavel.elemento.style.transform = `translateX(${coletavel.x}px)`;
-        const item = coletavel.elemento.getBoundingClientRect();
-        const personagem = hero.getBoundingClientRect();
-        // Margens evitam coletar apenas por encostar no espaço vazio do GIF.
-        const margemX = personagem.width * 0.18;
-        const margemY = personagem.height * 0.12;
-        const margemItemX = item.width * (currentCharacter.id === 'bart' ? 0.25 : 0.1);
-        const margemItemY = item.height * 0.08;
-        const tocou = personagem.right - margemX > item.left + margemItemX
-            && personagem.left + margemX < item.right - margemItemX
-            && personagem.bottom - margemY > item.top + margemItemY
-            && personagem.top + margemY < item.bottom - margemItemY;
-
-        if (tocou) {
-            pontosExatos += PONTOS_POR_ITEM;
-            score = Math.floor(pontosExatos);
-            scoreDisplay.textContent = score;
-            itensColetados++;
-            collectDisplay.textContent = itensColetados;
-            audio?.tocar('coleta');
-            clearTimeout(feedbackTimeout);
-            if (coletavel.especial) {
-                evoluirParaRaichu();
-            } else {
-                collectFeedback.dataset.kind = 'normal';
-                collectFeedback.textContent = `+${PONTOS_POR_ITEM} pontos!`;
-                feedbackTimeout = setTimeout(() => { collectFeedback.textContent = ''; }, 800);
-            }
-            removerColetavel();
-            proximoItemEm = agora + 700 + Math.random() * 800;
-        } else if (coletavel.x < -coletavel.largura) {
-            // Item perdido não rende pontos e não encerra a partida.
-            removerColetavel();
-            proximoItemEm = agora + 700 + Math.random() * 800;
-        }
+      }
+      if (o.x < -o.size || o.x > width + o.size) o.dead = true;
+      if (state.status !== "playing") break;
     }
-
-    function evoluirParaRaichu() {
-        if (currentCharacter.id !== 'pikachu' || evoluiuParaRaichu) return;
-        evoluiuParaRaichu = true;
-        pedraLiberada = false;
-        clearTimeout(feedbackTimeout);
-        collectFeedback.dataset.kind = 'evolution';
-        collectFeedback.textContent = 'PIKACHU EVOLUIU PARA RAICHU!';
-        feedbackTimeout = setTimeout(() => { collectFeedback.textContent = ''; }, 2800);
-
-        // Pausa pontuação, colisões, aceleração, itens, obstáculo e pulo.
-        evolutionStartTime = performance.now();
-        isEvolutionAnimating = true;
-        tempoRestantePulo = hero.classList.contains('jump')
-            ? Math.max(0, fimDoPulo - evolutionStartTime) : 0;
-        clearTimeout(jumpTimeout);
-        jumpTimeout = null;
-        gameBoard.classList.add('evolving');
-        tocarAnimacaoEvolucao();
-        audio?.tocar('evolucao');
-        evolutionSwapTimeout = setTimeout(trocarSpriteParaRaichu, 600);
-        evolutionTimeout = setTimeout(finalizarAnimacaoEvolucao, DURACAO_EVOLUCAO);
+    const threat = objects
+      .filter(
+        (o) =>
+          o.kind.startsWith("poison") && !o.dead && o.x + o.size > heroBox().x,
+      )
+      .sort((a, b) => a.x - b.x)[0];
+    const attack = threat || state.pendingAttack;
+    $("attack-cue").hidden = !attack;
+    $("lane-warning").hidden = !attack;
+    if (attack) {
+      const near =
+        threat &&
+        (threat.x - (heroBox().x + heroBox().w)) / Math.max(105, width * 0.3) <
+          0.48;
+      $("attack-cue").textContent = attack.high
+        ? "ATAQUE ALTO · Fique no chão!"
+        : near
+          ? "ATAQUE BAIXO · Pule agora!"
+          : "ATAQUE BAIXO · Prepare-se para pular!";
+      $("lane-warning").style.bottom =
+        `${GROUND + (attack.high ? heroSize * 0.84 : 0)}px`;
     }
+  }
 
-    function resetElements() {
-        audio?.pararEfeitos();
-        limparAvisoNivel();
-        mostrarNivel(NIVEIS[0]);
-        multiplicadorVelocidade = NIVEIS[0].velocidade;
-        deslocamentoCenario = 0;
-        ultimoTickCenario = performance.now();
-        sceneryTrack.style.transform = 'translate3d(0, 0, 0)';
-        clearTimeout(jumpTimeout);
-        jumpTimeout = null;
-        fimDoPulo = 0;
-        tempoRestantePulo = 0;
-        pedraLiberada = false;
-        evoluiuParaRaichu = false;
-        quadroRaichu = 0;
-        inicioAnimacaoRaichu = 0;
-        isEvolutionAnimating = false;
-        limparAnimacaoEvolucao();
-        gameBoard.classList.remove('evolving');
-        hero.classList.remove('is-evolved');
-        hero.style.aspectRatio = '';
-        hero.alt = 'Personagem';
-        limparColetaveis();
-        itensColetados = 0;
-        collectDisplay.textContent = '0';
-        // Reseta obstáculo
-        pipe.style.animation = '';
-        pipe.style.left = '';
+  function levelIndex() {
+    return state.elapsed >= 45 ? 2 : state.elapsed >= 20 ? 1 : 0;
+  }
 
-        // Reseta personagem
-        if (currentCharacter) {
-            hero.src = currentCharacter.run;
-        }
-        hero.style.animation = '';
-        hero.style.bottom = '0px';
-        hero.classList.remove('jump');
-
-        if (jumpTip) {
-            jumpTip.style.opacity = '1';
-        }
+  function update(dt) {
+    state.time += dt;
+    if (state.mode !== "transition") {
+      state.elapsed += dt;
+      state.score += dt * 10;
     }
-
-    function jump() {
-        if (!isPlaying || isEvolutionAnimating) return;
-        if (hero.classList.contains('jump')) return;
-
-        hero.classList.add('jump');
-
-        if (jumpTip) {
-            jumpTip.style.opacity = '0';
-        }
-
-        agendarFimDoPulo(500);
+    state.phaseTime += dt;
+    if (state.y > 0 || state.vy > 0) {
+      state.vy -= 1100 * dt;
+      state.y = Math.max(0, state.y + state.vy * dt);
+      if (!state.y) state.vy = 0;
     }
-
-    function checkCollision() {
-        if (!isPlaying || isEvolutionAnimating) return;
-
-        const personagem = hero.getBoundingClientRect();
-        const obstaculo = pipe.getBoundingClientRect();
-        const margemHeroi = personagem.width * 0.18;
-        const margemObstaculo = obstaculo.width * HITBOX_OBSTACULO.lateral;
-        const topoObstaculo = obstaculo.top + obstaculo.height * HITBOX_OBSTACULO.superior;
-        const baseObstaculo = obstaculo.bottom - obstaculo.height * HITBOX_OBSTACULO.inferior;
-        const tocou = personagem.right - margemHeroi > obstaculo.left + margemObstaculo
-            && personagem.left + margemHeroi < obstaculo.right - margemObstaculo
-            && personagem.bottom > topoObstaculo
-            && personagem.top + personagem.height * 0.12 < baseObstaculo;
-        if (tocou) {
-            const heroPosition = parseFloat(window.getComputedStyle(hero).bottom);
-            triggerGameOver(pipe.offsetLeft, heroPosition);
-        }
-    }
-
-    function triggerGameOver(pipePosition, heroPosition) {
-        if (!isPlaying) return;
-        isPlaying = false;
-        audio?.pararEfeitos();
-        audio?.tocar('gameover');
-        limparAvisoNivel();
-        clearTimeout(jumpTimeout);
-        jumpTimeout = null;
-        limparColetaveis();
-        clearInterval(gameLoop);
-        clearInterval(scoreLoop);
-
-        
-        gameBoard.classList.remove('running');
-
-        
-        pipe.style.animation = 'none';
-        pipe.style.left = `${pipePosition}px`;
-
-        // Congela o personagem na altura exata e muda para a imagem de Game Over
-        hero.style.animation = 'none';
-        hero.style.bottom = `${heroPosition}px`;
-        if (currentCharacter) {
-            hero.src = evoluiuParaRaichu ? RAICHU_IMAGE : currentCharacter.dead;
-        }
-        limparAnimacaoEvolucao();
-        isEvolutionAnimating = false;
-        gameBoard.classList.remove('evolving');
-
-        // Atualiza modal de Game Over
-        finalScoreValue.textContent = score;
-        saveStatusMsg.textContent = 'Salvando pontuação no banco...';
-        saveStatusMsg.style.color = '#ffcc00';
-
-        // Abre modal de Game Over
-        gameoverModal.classList.add('active');
-
-        // Salva a pontuação no banco MySQL via PHP
-        saveScore(currentPlayer, score);
-    }
-
-
-    function saveScore(playerName, finalScore) {
-        fetch('php/salvar-ranking.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                nome: playerName,
-                pontos: finalScore
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                saveStatusMsg.textContent = 'Pontuação registrada no banco!';
-                saveStatusMsg.style.color = '#10b981';
-                if (data.ranking) {
-                    renderRanking(data.ranking, playerName, finalScore);
-                }
-            } else {
-                saveStatusMsg.textContent = '⚠️ ' + (data.message || 'Erro ao registrar.');
-                saveStatusMsg.style.color = '#ef4444';
-            }
-        })
-        .catch(err => {
-            console.error('Erro na requisição:', err);
-            saveStatusMsg.textContent = '⚠️ Erro ao conectar ao servidor.';
-            saveStatusMsg.style.color = '#ef4444';
-        });
-    }
-
-    /**
-     * Busca o ranking atualizado no banco
-     */
-    function fetchRanking() {
-        fetch('php/obter-ranking.php')
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success' && data.ranking) {
-                    renderRanking(data.ranking);
-                }
-            })
-            .catch(err => console.error('Erro ao buscar ranking:', err));
-    }
-
-    /**
-     * Atualiza a tabela HTML do ranking
-     */
-    function renderRanking(list, highlightName = null, highlightScore = null) {
-        atualizarRecorde(list);
-        if (!rankingBody) return;
-        rankingBody.innerHTML = '';
-
-        if (!list || list.length === 0) {
-            rankingBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Nenhuma pontuação gravada ainda. Jogue para ser o 1º!</td></tr>';
-            return;
-        }
-
-        let highlighted = false;
-
-        list.forEach((item, index) => {
-            const tr = document.createElement('tr');
-
-            // Destaca a pontuação atual recém-salva se coincidir
-            if (!highlighted && highlightName && item.nome === highlightName && parseInt(item.pontos, 10) === highlightScore) {
-                tr.classList.add('highlight-current');
-                highlighted = true;
-            }
-
-            let medal = `${index + 1}º`;
-            if (index === 0) medal = '🥇 1º';
-            else if (index === 1) medal = '🥈 2º';
-            else if (index === 2) medal = '🥉 3º';
-
-            tr.innerHTML = `
-                <td class="ranking-pos">${medal}</td>
-                <td><strong>${escapeHtml(item.nome)}</strong></td>
-                <td>${parseInt(item.pontos, 10)} pts</td>
-            `;
-
-            rankingBody.appendChild(tr);
-        });
-    }
-
-    /**
-     * Função auxiliar para sanitizar strings no HTML
-     */
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
-
-    // Submit do Formulário de Início (INICIAR JOGO)
-    startForm.addEventListener('submit', (e) => {
-        e.preventDefault(); // Impede o recarregamento da página
-
-        const nameValue = playerInput.value.trim();
-        if (!nameValue) {
-            playerInput.focus();
-            return;
-        }
-
-        currentPlayer = nameValue;
-        localStorage.setItem('hero_jump_player', currentPlayer);
-
-        currentCharacter = getSelectedCharacter();
-        if (currentCharacter) {
-            localStorage.setItem('hero_jump_character', currentCharacter.id);
-        }
-
-        // Fecha tela de início e começa o jogo
-        startModal.classList.remove('active');
-        startGame();
+    if (state.mode === "run") updateRun(dt);
+    else if (state.mode === "boss") updateBoss(dt);
+    else if (state.phaseTime >= TRANSITION_DURATION) finishTransition();
+    objects = objects.filter((o) => {
+      if (o.dead) o.el.remove();
+      return !o.dead;
     });
+    if (state.time >= noticeUntil) $("notice").hidden = true;
+    updateHud();
+  }
 
-    // Botão "VER RANKING" na tela inicial
-    btnViewRanking.addEventListener('click', () => {
-        fetchRanking();
-        finalScoreValue.textContent = '---';
-        saveStatusMsg.textContent = '';
-        startModal.classList.remove('active');
-        gameoverModal.classList.add('active');
-    });
+  function updateHud() {
+    const index = levelIndex();
+    $("hud-phase").textContent =
+      state.mode === "boss"
+        ? "Boss"
+        : state.mode === "transition"
+          ? "Transição"
+          : "Travessia";
+    $("hud-level").textContent = `${index + 1} · ${LEVELS[index].name}`;
+    $("hud-score").textContent = Math.floor(state.score)
+      .toString()
+      .padStart(5, "0");
+    $("hud-lives").textContent =
+      "◆ ".repeat(Math.max(0, state.lives)) +
+      "◇ ".repeat(3 - Math.max(0, state.lives));
+    $("hud-lives").setAttribute("aria-label", `${state.lives} vidas`);
+    $("boss-health").max = state.bossMax;
+    $("boss-health").value = state.bossHP;
+    $("boss-health-text").textContent =
+      `${Math.max(0, state.bossHP)}/${state.bossMax}`;
+    $("spell-button").disabled =
+      state.status !== "playing" ||
+      state.mode !== "boss" ||
+      state.time < state.castReady;
+    $("jump-button").disabled =
+      state.status !== "playing" || state.mode === "transition";
+    $("phase-tip").textContent =
+      state.mode === "boss"
+        ? "Pule o veneno baixo. Fique no chão contra o alto. Use J / X para atacar."
+        : state.mode === "transition"
+          ? "Prepare-se: a próxima etapa começa em instantes."
+          : "Desvie das pedras e colete cristais. Cada cristal vale 30 pontos.";
+  }
 
-    // Botão "JOGAR NOVAMENTE" no Game Over
-    btnRestart.addEventListener('click', () => {
-        gameoverModal.classList.remove('active');
-        if (!currentPlayer) {
-            startModal.classList.add('active');
-            playerInput.focus();
-        } else {
-            startGame();
-        }
+  function render() {
+    const time = state?.time || 0;
+    let frame = motion.matches ? 0 : Math.floor(time / 0.13) % 6;
+    if (state && time < state.castUntil)
+      frame = time < state.castRelease ? 6 : 7;
+    paintSprite(hero, frame, heroSize);
+    position(hero, heroX, state?.y || 0);
+    hero.classList.toggle(
+      "hurt",
+      !!state && time < state.hurtUntil && Math.floor(time * 8) % 2 === 0,
+    );
+    position(boss, bossX, motion.matches ? 0 : Math.sin(time * 3) * 3 + 3);
+    boss.classList.toggle("hit", !!state && time < state.bossHitUntil);
+    objects.forEach((o) => {
+      if (o.kind === "crystal") {
+        o.el.style.left = `${o.x}px`;
+        o.el.style.bottom = `${GROUND + o.y}px`;
+      } else position(o.el, o.x, o.y);
     });
+  }
 
-    // 4. Botão "TROCAR JOGADOR" no Game Over
-    btnChangePlayer.addEventListener('click', () => {
-        gameoverModal.classList.remove('active');
-        resetElements();
-        startModal.classList.add('active');
-        playerInput.value = '';
-        playerInput.focus();
-    });
+  function pause() {
+    if (state?.status !== "playing") return;
+    state.status = "paused";
+    $("pause-screen").hidden = false;
+    $("spell-button").disabled = true;
+    $("jump-button").disabled = true;
+    audio?.pararEfeitos();
+    scenePlayback();
+    $("resume-button").focus();
+  }
+  function resume() {
+    if (state?.status !== "paused" || document.hidden) return;
+    state.status = "playing";
+    previous = performance.now();
+    $("pause-screen").hidden = true;
+    updateHud();
+    scenePlayback();
+  }
 
-    // 5. Controle do Pulo por Teclado (Espaço ou Seta para Cima)
-    document.addEventListener('keydown', (e) => {
-        if (e.code === 'Space' || e.key === ' ' || e.code === 'ArrowUp') {
-            if (isPlaying) {
-                e.preventDefault();
-                jump();
-            }
-        }
-    });
+  async function endGame() {
+    state.status = "over";
+    audio?.pararEfeitos();
+    audio?.tocar("gameover");
+    scenePlayback();
+    $("over-screen").hidden = false;
+    $("pause-button").disabled = true;
+    $("spell-button").disabled = true;
+    $("jump-button").disabled = true;
+    $("final-score").textContent = Math.floor(state.score);
+    $("final-detail").textContent =
+      `${state.crystals} cristais · ${state.bosses} bosses derrotados · Sala ${state.round}`;
+    $("save-status").textContent = "Registrando pontuação…";
+    const version = ++requestVersion;
+    try {
+      const res = await fetch("php/salvar-ranking.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome: state.name,
+          pontos: Math.floor(state.score),
+        }),
+      });
+      const data = await res.json();
+      if (version !== requestVersion) return;
+      if (!res.ok || data.status !== "success") throw Error("save");
+      $("save-status").textContent = "Pontuação registrada!";
+      renderRanking(data.ranking || []);
+    } catch (_) {
+      if (version === requestVersion)
+        $("save-status").textContent =
+          "Não foi possível salvar. Confira a conexão com o banco.";
+    }
+  }
 
-    // 6. Controle do Pulo por clique/toque no cenário (como diz a dica na tela)
-    gameBoard.addEventListener('pointerdown', (e) => {
-        if (isPlaying) {
-            e.preventDefault();
-            jump();
-        }
+  function renderRanking(items) {
+    $("ranking-list").replaceChildren();
+    $("ranking-status").textContent = items.length
+      ? "As melhores jornadas da masmorra."
+      : "Seja o primeiro a registrar uma jornada.";
+    items.forEach((item) => {
+      const li = document.createElement("li");
+      const name = document.createElement("span");
+      name.textContent = item.nome;
+      const points = document.createElement("b");
+      points.textContent = `${Number(item.pontos)} pts`;
+      li.append(name, points);
+      $("ranking-list").append(li);
     });
-});
+  }
+  async function loadRanking() {
+    $("ranking-status").textContent = "Consultando ranking…";
+    try {
+      const res = await fetch("php/obter-ranking.php");
+      const data = await res.json();
+      if (!res.ok || data.status !== "success") throw Error("ranking");
+      renderRanking(data.ranking || []);
+    } catch (_) {
+      $("ranking-status").textContent =
+        "Ranking indisponível. Você pode jogar normalmente.";
+    }
+  }
+
+  $("start-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    start();
+  });
+  $("restart-button").addEventListener("click", start);
+  $("menu-button").addEventListener("click", () => {
+    requestVersion++;
+    clearObjects();
+    state = null;
+    boss.hidden = true;
+    $("boss-hud").hidden = true;
+    $("notice").hidden = true;
+    $("attack-cue").hidden = true;
+    $("lane-warning").hidden = true;
+    $("over-screen").hidden = true;
+    $("menu-screen").hidden = false;
+    world.hidden = true;
+    audio?.pararEfeitos();
+    render();
+  });
+  $("jump-button").addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    jump();
+  });
+  $("spell-button").addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    cast();
+  });
+  // Keyboard-generated click keeps the mobile controls accessible.
+  $("jump-button").addEventListener("click", (e) => {
+    if (e.detail === 0) jump();
+  });
+  $("spell-button").addEventListener("click", (e) => {
+    if (e.detail === 0) cast();
+  });
+  $("pause-button").addEventListener("click", pause);
+  $("resume-button").addEventListener("click", resume);
+  $("ranking-refresh").addEventListener("click", loadRanking);
+  board.addEventListener("pointerdown", (e) => {
+    if (!e.target.closest("button,input,a,form,.screen")) jump();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (
+      e.target.closest("input,textarea,select,button,a") ||
+      e.ctrlKey ||
+      e.altKey ||
+      e.metaKey
+    )
+      return;
+    if (e.code === "Escape" || e.code === "KeyP") {
+      if (state?.status === "paused") resume();
+      else pause();
+    } else if (
+      ["Space", "ArrowUp", "KeyJ", "KeyX"].includes(e.code) &&
+      state?.status === "playing"
+    ) {
+      e.preventDefault();
+      if (e.repeat) return;
+      if (e.code === "Space" || e.code === "ArrowUp") jump();
+      else cast();
+    }
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) pause();
+    scenePlayback();
+  });
+  window.addEventListener("pagehide", pause);
+  motion.addEventListener("change", scenePlayback);
+  new ResizeObserver(resize).observe(board);
+  resize();
+  const image = new Image();
+  image.onload = () => {
+    ready = true;
+    $("start-button").disabled = false;
+    $("start-button").textContent = "Entrar →";
+  };
+  image.onerror = () => {
+    $("asset-status").textContent =
+      "Não foi possível carregar os sprites. Atualize a página para tentar novamente.";
+  };
+  image.src = "assets/sprites/arcane-atlas.png";
+  loadRanking();
+  function loop(now) {
+    const dt = Math.min(0.032, Math.max(0, (now - previous) / 1000));
+    previous = now;
+    if (state?.status === "playing") {
+      update(dt);
+      render();
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();

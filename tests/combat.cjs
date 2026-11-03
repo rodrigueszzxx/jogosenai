@@ -1,0 +1,143 @@
+const { chromium } = require("playwright");
+const fs = require("fs");
+const assert = require("node:assert/strict");
+const source = fs.readFileSync(
+  require("node:path").join(__dirname, "../js/script.js"),
+  "utf8",
+);
+const hook = `window.__arcane={get state(){return state},get objects(){return objects},get dims(){return {width,heroSize,bossSize,heroX,bossX}},start,jump,cast,pause,resume,makeSprite,heroBox,beginTransition,render,updateHud,tick(seconds){while(seconds>0&&state?.status==='playing'){const d=Math.min(.016,seconds);update(d);seconds-=d;}render();}};`;
+(async () => {
+  const browser = await chromium.launch({
+    ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+      ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
+      : {}),
+    args: ["--no-sandbox"],
+  });
+  for (const width of [1280, 390, 320]) {
+    const p = await browser.newPage({ viewport: { width, height: 950 } });
+    await p.route("**/js/script.js*", (r) =>
+      r.fulfill({
+        contentType: "text/javascript",
+        body: source.replace(/\}\)\(\);\s*$/, hook + "})();"),
+      }),
+    );
+    await p.route("**/php/*.php", (r) =>
+      r.fulfill({ json: { status: "success", ranking: [] } }),
+    );
+    await p.goto(process.env.ARCANE_TEST_URL || "http://127.0.0.1:8000");
+    await p.waitForFunction(
+      () => !document.getElementById("start-button").disabled,
+    );
+    await p.clock.install();
+    await p.clock.pauseAt(new Date());
+    await p.locator("#player-name").fill("Combat");
+    await p.locator("#start-button").click();
+    const result = await p.evaluate(() => {
+      const t = window.__arcane;
+      const ok = (v, m) => {
+        if (!v) throw Error(m);
+      };
+      const setup = () => {
+        t.start();
+        t.beginTransition("boss");
+        t.tick(2.5);
+        t.state.attackAt = 100;
+      };
+      const shot = (high) => {
+        const d = t.dims;
+        const b = t.heroBox();
+        const o = t.makeSprite(
+          "poison projectile",
+          10,
+          44,
+          b.x - 1,
+          high ? d.heroSize * 0.84 : 2,
+        );
+        o.high = high;
+      };
+      setup();
+      shot(false);
+      t.tick(0.016);
+      ok(t.state.lives === 2, "low hits grounded hero");
+      setup();
+      t.jump();
+      t.tick(0.25);
+      shot(false);
+      t.tick(0.016);
+      ok(t.state.lives === 3, "jump dodges low");
+      setup();
+      shot(true);
+      t.tick(0.016);
+      ok(t.state.lives === 3, "ground dodges high");
+      setup();
+      t.jump();
+      t.tick(0.25);
+      shot(true);
+      t.tick(0.016);
+      ok(t.state.lives === 2, "high hits jumping hero");
+      setup();
+      t.state.attackAt = 1;
+      for (let i = 0; i < 3; i++) {
+        t.tick(3);
+        t.state.hurtUntil = 999;
+      }
+      ok(t.state.attackCount >= 3, "attack sequence reached high");
+      setup();
+      const d = t.dims;
+      const b = t.heroBox();
+      const o = t.makeSprite("poison projectile", 10, 44, b.x + b.w + 20, 2);
+      o.high = false;
+      t.tick(0.016);
+      ok(
+        document
+          .getElementById("attack-cue")
+          .textContent.includes("Pule agora"),
+        "near threat cue",
+      );
+      document.hiddenTest = true;
+      Object.defineProperty(document, "hidden", {
+        configurable: true,
+        get: () => document.hiddenTest,
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+      ok(t.state.status === "paused", "hidden pauses");
+      const before = JSON.stringify(t.state);
+      t.tick(10);
+      ok(before === JSON.stringify(t.state), "hidden freezes timers");
+      document.hiddenTest = false;
+      document.dispatchEvent(new Event("visibilitychange"));
+      ok(t.state.status === "paused", "no surprise resume");
+      t.resume();
+      ok(t.state.status === "playing", "explicit resume");
+      setup();
+      return "PASS";
+    });
+    await p.locator("body").click({ position: { x: 5, y: 5 } });
+    await p.keyboard.press("j");
+    assert(
+      await p.evaluate(() => window.__arcane.state.spellPending),
+      "keyboard spell",
+    );
+    await p.evaluate(() => window.__arcane.tick(0.2));
+
+    await p.emulateMedia({ reducedMotion: "reduce" });
+    assert(await p.locator("#scene-video").evaluate((v) => v.paused));
+    await p.emulateMedia({ reducedMotion: "no-preference" });
+    await p.waitForFunction(
+      () => !document.getElementById("scene-video").paused,
+    );
+    console.log(
+      JSON.stringify({
+        width,
+        result,
+        keyboard: "PASS",
+        reducedMotion: "PASS",
+      }),
+    );
+    await p.close();
+  }
+  await browser.close();
+})().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
