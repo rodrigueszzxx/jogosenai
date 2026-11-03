@@ -40,7 +40,9 @@
         "h": 407,
         "anchorX": 1935
       }
-    ]
+    ],
+    "runSequence": [1, 2, 3, 2],
+    "frameMs": 100
   },
   "world": {
     "image": "assets/sprites/world-atlas.png",
@@ -65,6 +67,20 @@
         "y": 830,
         "w": 297,
         "h": 171
+      }
+    }
+  },
+  "gem": {
+    "image": "assets/sprites/purple-gem.png",
+    "width": 1201,
+    "height": 1310,
+    "cell": 1024,
+    "frames": {
+      "gem": {
+        "x": 125,
+        "y": 127,
+        "w": 951,
+        "h": 1024
       }
     }
   }

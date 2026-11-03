@@ -21,7 +21,7 @@ São três vidas por partida e 1,4 segundo de proteção após sofrer dano. O jo
 
 Durante a partida, somente o cabeçalho (jogador, nível, vidas, pontos, som e pausa) e o jogo ocupam a tela. Não há título acima da área de jogo, indicador de etapa, barra de informações inferior, seção de jornada, ranking abaixo do jogo ou rodapé. A área se adapta à altura da janela, incluindo celular em paisagem. Os avisos escritos aparecem apenas nas trocas de etapa. As instruções ficam na abertura e no Sobre nós. O ranking está recolhido em **Ver ranking**, somente na tela de Game Over.
 
-Ao ocultar a aba, o jogo pausa automaticamente. O retorno exige Continuar, evitando uma retomada inesperada. O vídeo e o áudio também suspendem. O áudio começa após uma interação; a preferência de silêncio é salva. Com movimento reduzido, o vídeo permanece no pôster e a animação visual do mago fica estática, preservando os controles e as colisões.
+Ao ocultar a aba, o jogo pausa automaticamente. O retorno exige Continuar, evitando uma retomada inesperada. O vídeo e o áudio também suspendem. O áudio começa após uma interação; a preferência de silêncio é salva. A corrida e o vídeo permanecem animados durante a partida, inclusive quando o sistema indica movimento reduzido. Essa preferência reduz apenas efeitos decorativos secundários, como a oscilação do boss e as transições do CSS. A corrida usa os quadros 2 → 3 → 4 → 3, com 100 ms por quadro; as poses paradas foram retiradas do ciclo. Pausa, Game Over e aba oculta interrompem as animações.
 
 ## Executar localmente
 
@@ -43,11 +43,12 @@ A estrutura `ranking` é criada automaticamente com `id`, `nome`, `pontos` e `da
 - `js/script.js`: relógio da partida, estados de travessia/boss/transição/pausa, física, colisões, animações, ataques, pontos e ranking.
 - `js/audio.js`: música, efeitos e preferência de silêncio.
 - `css/styles.css`: interface responsiva e exibição dos recortes.
-- `assets/sprites/wizard-atlas.png`: cinco quadros transparentes do novo mago, preparados a partir da referência enviada.
+- `assets/sprites/wizard-atlas.png`: folha transparente do mago, com recortes individuais definidos em `frames.json`. Somente as poses de corrida compõem a animação durante a partida.
+- `assets/sprites/purple-gem.png`: nova gema roxa com transparência; seu recorte e tamanho são calculados pelos limites do sprite. Ela substitui o cristal desenhado por CSS, mede aproximadamente 30 px no celular e 40 px no computador e mantém o valor de 30 pontos.
 - `assets/sprites/world-atlas.png`: folha reutilizada apenas nos recortes da pedra, boss e veneno. Os antigos quadros do mago roxo e de magia não possuem mais mapeamento nem uso no jogo.
 - `assets/sprites/frames.json`: limites de cada sprite. O CSS exibe apenas o retângulo correspondente, com a base alinhada e sem fundos da referência. O novo mago possui âncora horizontal por quadro para evitar deslocamentos laterais entre as poses com e sem cajado.
 - `assets/scenes/dungeon.mp4`: vídeo enviado, com recorte de bordas, codificação H.264 e sem a faixa sonora original. O cenário preenche a área do jogo por `object-fit: cover`, adaptando o enquadramento no celular.
-- `assets/scenes/dungeon-poster.webp`: cenário estático para carregamento, pausa inicial e movimento reduzido.
+- `assets/scenes/dungeon-poster.webp`: imagem de espera enquanto o vídeo carrega. O vídeo é pré-carregado, reproduzido sem áudio e repetido continuamente durante a partida.
 - `assets/audio/`: música, coleta e Game Over reaproveitados da base.
 - `assets/brand/`: logotipo da empresa fictícia VORTEX.
 - `pages/sobre-nos.php`: história da empresa, história do jogo, instruções e tabela de requisitos atualizada.
@@ -74,7 +75,7 @@ Validação realizada em Chromium nas larguras de 1280, 390 e 320 px:
 
 | Caso                                                                     | Resultado |
 | ------------------------------------------------------------------------ | --------- |
-| Carregamento dos dois atlas e do vídeo                                   | Aprovado  |
+| Carregamento dos atlas, da gema e do vídeo                               | Aprovado  |
 | Apenas cabeçalho e jogo, sem rolagem da página                           | Aprovado  |
 | Pedras, coleta com +30 e pulo com aterrissagem                           | Aprovado  |
 | Avisos de transição e alternância entre obstáculos e boss                | Aprovado  |
@@ -83,7 +84,9 @@ Validação realizada em Chromium nas larguras de 1280, 390 e 320 px:
 | Veneno baixo evitado com salto e alto evitado permanecendo no chão       | Aprovado  |
 | Três vidas, Game Over e reinício com estado zerado                       | Aprovado  |
 | Pausa manual e ao ocultar a aba, sem avanço de tempo/pontos              | Aprovado  |
-| Cenário estático com movimento reduzido                                  | Aprovado  |
+| Corrida e vídeo ativos mesmo com movimento reduzido                      | Aprovado  |
+
+O teste `tests/animation.cjs` utiliza o script publicado e o relógio real do vídeo, sem injetar estado: confirma três poses distintas de corrida, avanço do tempo e de quadros decodificados do vídeo, mudança dos pixels do cenário, repetição do vídeo, nova gema e pausa/retomada. Foram verificados os modos normal e reduzido nas três larguras.
 
 A revisão visual também conferiu as telas de 1280 × 800, 390 × 844, 320 × 568 e 844 × 390, com o novo personagem inteiro e o jogo dentro da janela.
 

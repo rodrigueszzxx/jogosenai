@@ -45,7 +45,12 @@
   $("player-name").value = readStorage("mario_final_player");
 
   function paintSprite(node, kind, size, frame = 0) {
-    const sheet = kind === "hero" ? sprites.hero : sprites.world;
+    const sheet =
+      kind === "hero"
+        ? sprites.hero
+        : kind === "gem"
+          ? sprites.gem
+          : sprites.world;
     const f = kind === "hero" ? sheet.frames[frame] : sheet.frames[kind];
     const scale = size / sheet.cell;
     const art = node.querySelector(".sprite-art");
@@ -111,8 +116,13 @@
   }
 
   function scenePlayback() {
-    if (state?.status === "playing" && !motion.matches && !document.hidden) {
-      video.play().catch(() => {});
+    if (state?.status === "playing" && !document.hidden) {
+      video.muted = true;
+      video.playbackRate = 1;
+      if (video.paused)
+        video.play().catch((error) => {
+          console.warn("Não foi possível iniciar o vídeo do cenário:", error);
+        });
     } else video.pause();
   }
 
@@ -237,17 +247,8 @@
       }
       state.crystalAt -= dt;
       if (state.crystalAt <= 0) {
-        const el = document.createElement("span");
-        el.className = "crystal";
-        world.append(el);
-        objects.push({
-          kind: "crystal",
-          el,
-          x: width + 25,
-          y: heroSize * 0.9 + 20,
-          size: 23,
-          dead: false,
-        });
+        const size = Math.max(30, Math.min(40, heroSize * 0.27));
+        makeSprite("gem", size, width + size, heroSize * 0.9 + 20);
         state.crystalAt = 2.3 + Math.random() * 0.8;
       }
     }
@@ -272,8 +273,13 @@
         };
         if (intersects(heroBox(), box)) hurt(o);
       } else if (
-        o.kind === "crystal" &&
-        intersects(heroBox(), { x: o.x, y: o.y, w: 19, h: 25 })
+        o.kind === "gem" &&
+        intersects(heroBox(), {
+          x: o.x + o.size * 0.15,
+          y: o.y + o.size * 0.08,
+          w: o.size * 0.7,
+          h: o.size * 0.84,
+        })
       ) {
         state.score += 30;
         state.crystals++;
@@ -380,9 +386,12 @@
 
   function render() {
     const time = state?.time || 0;
-    const frame = motion.matches
-      ? 0
-      : Math.floor(time / 0.13) % sprites.hero.frames.length;
+    const sequence = sprites.hero.runSequence;
+    const frame = state
+      ? sequence[
+          Math.floor((time * 1000) / sprites.hero.frameMs) % sequence.length
+        ]
+      : 0;
     paintSprite(hero, "hero", heroSize, frame);
     position(hero, heroX, state?.y || 0);
     hero.classList.toggle(
@@ -390,12 +399,7 @@
       !!state && time < state.hurtUntil && Math.floor(time * 8) % 2 === 0,
     );
     position(boss, bossX, motion.matches ? 0 : Math.sin(time * 3) * 3 + 3);
-    objects.forEach((o) => {
-      if (o.kind === "crystal") {
-        o.el.style.left = `${o.x}px`;
-        o.el.style.bottom = `${GROUND + o.y}px`;
-      } else position(o.el, o.x, o.y);
-    });
+    objects.forEach((o) => position(o.el, o.x, o.y));
   }
 
   function pause() {
@@ -527,11 +531,16 @@
     scenePlayback();
   });
   window.addEventListener("pagehide", pause);
-  motion.addEventListener("change", scenePlayback);
+  // Core animations remain active even with reduced motion. Optional bobbing
+  // and CSS transitions still respect the preference.
+  video.addEventListener("canplay", scenePlayback);
+  video.addEventListener("error", () =>
+    console.error("Falha ao carregar o vídeo do cenário:", video.error),
+  );
   new ResizeObserver(resize).observe(board);
   resize();
   Promise.all(
-    [sprites.hero.image, sprites.world.image].map(
+    [sprites.hero.image, sprites.world.image, sprites.gem.image].map(
       (src) =>
         new Promise((resolve, reject) => {
           const image = new Image();

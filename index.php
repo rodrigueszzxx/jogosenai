@@ -11,9 +11,9 @@ $sprites = file_get_contents(__DIR__ . '/assets/sprites/frames.json');
     />
     <meta name="theme-color" content="#100e1a" />
     <title>Arcane Run · VORTEX</title>
-    <link rel="stylesheet" href="css/styles.css?v=survival-2" />
-    <script src="js/audio.js?v=survival-2" defer></script>
-    <script src="js/script.js?v=survival-2" defer></script>
+    <link rel="stylesheet" href="css/styles.css?v=gem-run-3" />
+    <script src="js/audio.js?v=gem-run-3" defer></script>
+    <script src="js/script.js?v=gem-run-3" defer></script>
   </head>
   <body class="game-page">
     <header class="site-header">
@@ -74,7 +74,7 @@ $sprites = file_get_contents(__DIR__ . '/assets/sprites/frames.json');
           muted
           loop
           playsinline
-          preload="metadata"
+          preload="auto"
           poster="assets/scenes/dungeon-poster.webp"
           aria-hidden="true"
         >

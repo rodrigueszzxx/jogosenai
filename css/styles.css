@@ -239,16 +239,10 @@ nav a {
 .projectile {
   z-index: 6;
 }
-.crystal {
-  position: absolute;
-  width: 19px;
-  height: 25px;
-  background: linear-gradient(140deg, #f4ddff, #c08cfb 50%, #6846a9);
-  border: 2px solid #e1bcff;
-  clip-path: polygon(50% 0, 100% 40%, 70% 100%, 30% 100%, 0 40%);
-  filter: drop-shadow(0 0 8px #c28cfe);
-  z-index: 3;
+.gem .sprite-art {
+  filter: drop-shadow(0 0 5px #c28cfe77);
 }
+
 .lane-warning {
   position: absolute;
   left: 0;

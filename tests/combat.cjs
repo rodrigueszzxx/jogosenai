@@ -140,7 +140,7 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
     await p.clock.resume();
     await p.emulateMedia({ reducedMotion: "reduce" });
     await p.waitForFunction(
-      () => document.getElementById("scene-video").paused,
+      () => !document.getElementById("scene-video").paused,
     );
     await p.emulateMedia({ reducedMotion: "no-preference" });
     await p.waitForFunction(

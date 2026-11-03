@@ -102,7 +102,7 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
       const el = document.createElement("span");
       document.getElementById("world").append(el);
       t.objects.push({
-        kind: "crystal",
+        kind: "gem",
         el,
         x: hb.x + 5,
         y: hb.y + 8,

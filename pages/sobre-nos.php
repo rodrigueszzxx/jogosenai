@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sobre nós · VORTEX</title>
-    <link rel="stylesheet" href="../css/styles.css?v=arcane-1" />
+    <link rel="stylesheet" href="../css/styles.css?v=gem-run-3" />
   </head>
   <body>
     <main class="story">
@@ -46,8 +46,9 @@
       </p>
       <p>
         O jogo oferece três vidas por partida, pausa manual e pausa automática
-        ao sair da aba. A opção de movimento reduzido mantém o cenário estático.
-        O ranking registra as dez maiores pontuações deste projeto.
+        ao sair da aba. A corrida e o vídeo continuam animados; o movimento
+        reduzido afeta apenas os efeitos decorativos secundários. O ranking
+        registra as dez maiores pontuações deste projeto.
       </p>
       <section id="requisitos">
         <h2>Requisitos do projeto</h2>
@@ -72,8 +73,8 @@
               <tr>
                 <th scope="row">RF02</th>
                 <td>
-                  Animar os cinco quadros de movimento do mago com transparência
-                  e pés alinhados.
+                  Animar os quadros de corrida do mago com transparência e pés
+                  alinhados.
                 </td>
                 <td>Funcional</td>
               </tr>
@@ -87,7 +88,7 @@
               <tr>
                 <th scope="row">RF04</th>
                 <td>
-                  Coletar cristais, removê-los e acrescentar 30 pontos por
+                  Coletar gemas roxas, removê-las e acrescentar 30 pontos por
                   unidade.
                 </td>
                 <td>Funcional</td>
@@ -177,8 +178,8 @@
               <tr>
                 <th scope="row">RNF02</th>
                 <td>
-                  Respeitar a preferência de movimento reduzido com cenário
-                  estático.
+                  Reduzir efeitos decorativos opcionais sem congelar a corrida e
+                  o vídeo.
                 </td>
                 <td>Não funcional</td>
               </tr>
