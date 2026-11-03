@@ -673,8 +673,6 @@
     render();
     $("pause-button").disabled = true;
     $("final-score-value").textContent = Math.floor(state.score);
-    $("final-detail").textContent =
-      `${state.crystals} cristais · ${state.bosses} confrontos superados · Sala ${state.round}`;
     $("save-status-msg").textContent = "Registrando pontuação…";
     const version = ++requestVersion;
     try {
@@ -700,24 +698,45 @@
 
   function renderRanking(items) {
     $("ranking-body").replaceChildren();
-    $("ranking-status").textContent = items.length
-      ? ""
-      : "Nenhuma pontuação registrada ainda.";
+    $("ranking-status").textContent = "";
     $("splash-record-text").textContent = items.length
       ? `${items[0].nome} — ${Number(items[0].pontos)} PTS`
       : "Seja o primeiro!";
+    if (!items.length) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 3;
+      cell.className = "loading-cell";
+      cell.textContent =
+        "Nenhuma pontuação gravada ainda. Jogue para ser o 1º!";
+      row.append(cell);
+      $("ranking-body").append(row);
+      return;
+    }
+    let highlighted = false;
     items.forEach((item, index) => {
-      const tr = document.createElement("tr");
-      for (const text of [
-        `${index + 1}º`,
-        item.nome,
-        `${Number(item.pontos)} pts`,
-      ]) {
-        const td = document.createElement("td");
-        td.textContent = text;
-        tr.append(td);
+      const row = document.createElement("tr");
+      const current =
+        !highlighted &&
+        state?.status === "over" &&
+        item.nome === state.name &&
+        Number(item.pontos) === Math.floor(state.score);
+      if (current) {
+        row.classList.add("highlight-current");
+        highlighted = true;
       }
-      $("ranking-body").append(tr);
+      const position = document.createElement("td");
+      position.className = "ranking-pos";
+      position.textContent =
+        ["🥇 1º", "🥈 2º", "🥉 3º"][index] || `${index + 1}º`;
+      const name = document.createElement("td");
+      const strong = document.createElement("strong");
+      strong.textContent = item.nome;
+      name.append(strong);
+      const points = document.createElement("td");
+      points.textContent = `${Number(item.pontos)} pts`;
+      row.append(position, name, points);
+      $("ranking-body").append(row);
     });
   }
 
@@ -799,6 +818,7 @@
   $("btn-restart").addEventListener("click", start);
   $("btn-change-player").addEventListener("click", openSelection);
   $("btn-home").addEventListener("click", openHome);
+  $("btn-pause-home").addEventListener("click", openHome);
   $("btn-view-ranking").addEventListener("click", () => {
     setScreen("gameover-modal");
     loadRanking();

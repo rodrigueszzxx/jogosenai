@@ -594,55 +594,146 @@ input:not([type]) {
   margin-top: 22px;
   border-top: 1px solid var(--line);
 }
+/* Game Over segue o painel, a pontuação e a tabela do Hero Jump. */
+#gameover-modal {
+  background: rgba(12, 16, 34, 0.9);
+  backdrop-filter: blur(8px);
+}
+.gameover-card {
+  max-width: 540px;
+  padding: 30px;
+  background: #202641;
+  border: 4px solid #b8a3ff;
+  border-radius: 16px;
+  box-shadow:
+    0 0 30px #b8a3ff4d,
+    0 15px 40px #000b;
+}
+.gameover-card .modal-header {
+  margin-bottom: 25px;
+}
+.gameover-title {
+  font: 400 26px/1.5 var(--font-game);
+  color: #b8a3ff;
+  text-shadow: 3px 3px #000;
+  margin: 0 0 10px;
+}
 .final-score-box {
-  padding: 18px;
-  border: 1px solid var(--line);
-  background: #100d1b;
-  border-radius: 10px;
+  background: #0c1022;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #202641;
 }
-.final-score {
-  display: block;
-  font: 400 34px/1.6 var(--font-game);
-  color: var(--gold);
-  margin: 10px 0;
+.final-score-label {
+  font: 400 12px/1.6 var(--font-ui);
+  color: #e8ecff;
+  margin-bottom: 4px;
 }
-.final-score-box p {
-  font-size: 11px;
-  color: var(--muted);
+.final-score-num {
+  font: 400 24px/1.6 var(--font-game);
+  color: #b8a3ff;
+  text-shadow: 2px 2px #000;
+}
+.save-status {
+  margin-top: 8px;
+  font: 400 11px/1.6 var(--font-ui);
+  color: #849bff;
 }
 .ranking-container {
-  margin-top: 24px;
+  margin-bottom: 20px;
   text-align: left;
 }
-.ranking-container h3 {
-  font: 400 10px/1.8 var(--font-game);
-  color: var(--gold);
+.ranking-title {
+  font: 400 12px/1.8 var(--font-game);
+  color: #b8a3ff;
+  margin: 0 0 12px;
+  letter-spacing: 0.5px;
 }
 .table-wrapper {
-  max-height: 235px;
-  overflow-y: auto;
+  max-height: 220px;
+  overflow: auto;
+  border-radius: 8px;
+  background: #0c1022;
+  border: 1px solid #202641;
+}
+.table-wrapper::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: #849bff;
+  border-radius: 4px;
 }
 .ranking-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
-}
-.ranking-table th,
-.ranking-table td {
-  padding: 10px 8px;
-  border-bottom: 1px solid var(--line);
+  font: 400 13px/1.6 var(--font-ui);
   text-align: left;
 }
-.ranking-table thead {
+.ranking-table th {
+  background: #202641;
+  color: #b8a3ff;
+  font: 400 9px/1.7 var(--font-game);
+  padding: 10px 14px;
   position: sticky;
   top: 0;
-  background: #1b142b;
-  color: var(--purple);
-  font-size: 10px;
+  z-index: 2;
+}
+.ranking-table td {
+  padding: 8px 14px;
+  border-bottom: 1px solid #0c1022;
+}
+.ranking-table tr:nth-child(even) {
+  background: #ffffff05;
+}
+.ranking-table tr.highlight-current {
+  background: #b8a3ff24;
+  color: #b8a3ff;
+  font-weight: 700;
 }
 .ranking-table td:nth-child(2) {
   overflow-wrap: anywhere;
   max-width: 220px;
+}
+.ranking-pos {
+  font: 400 10px/1.6 var(--font-game);
+  width: 70px;
+  white-space: nowrap;
+}
+.loading-cell {
+  text-align: center;
+  padding: 20px !important;
+  color: #e8ecff;
+}
+.gameover-card .modal-actions,
+.pause-card .modal-actions {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+.gameover-card .modal-actions button {
+  width: 100%;
+  font: 400 12px/1.8 var(--font-game);
+  padding: 14px 20px;
+  letter-spacing: 0.5px;
+  border: 0;
+  border-bottom: 4px solid #202641;
+  border-radius: 8px;
+  color: #e8ecff;
+}
+.gameover-card .primary {
+  background: linear-gradient(#b8a3ff, #6c63b5);
+}
+.gameover-card .primary:hover {
+  background: linear-gradient(#849bff, #b8a3ff);
+}
+.gameover-card .secondary {
+  background: #202641;
+}
+.gameover-card .secondary:hover {
+  background: #2b3456;
 }
 #pause-screen {
   z-index: 20000;
@@ -767,11 +858,6 @@ h3,
 .splash-company small {
   font-family: var(--font-ui);
 }
-.ranking-table thead {
-  font-family: var(--font-game);
-  font-weight: 400;
-  font-size: 8px;
-}
 .requirements-wrap tbody th {
   font-family: var(--font-game);
   font-weight: 400;
@@ -890,15 +976,32 @@ h3,
     line-height: 1.9;
     padding: 0 12px;
   }
+  .gameover-card {
+    padding: 22px 16px;
+  }
+  .gameover-title {
+    font-size: 22px;
+  }
+  .ranking-title {
+    font-size: 9px;
+  }
   .ranking-table {
-    font-size: 11px;
+    font-size: 12px;
   }
-  .ranking-table th,
+  .ranking-table th {
+    font-size: 8px;
+    padding: 10px 8px;
+  }
   .ranking-table td {
-    padding: 9px 5px;
+    padding: 8px;
   }
-  .ranking-table thead {
-    font-size: 7px;
+  .ranking-pos {
+    font-size: 9px;
+    width: 55px;
+  }
+  .gameover-card .modal-actions button {
+    font-size: 10px;
+    padding: 12px 14px;
   }
   .table-wrapper {
     max-height: 190px;

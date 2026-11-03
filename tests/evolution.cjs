@@ -248,6 +248,47 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
         await page.locator("#btn-home").click();
         assert(await page.locator("#splash-screen").isVisible());
         assert(await page.evaluate(() => window.__arcane.state === null));
+        for (const mode of ["run", "boss", "evolving"]) {
+          await page.evaluate((mode) => {
+            const t = window.__arcane;
+            document.querySelector(
+              `input[value=${mode === "evolving" ? "pikachu" : "wizard"}]`,
+            ).checked = true;
+            t.start();
+            if (mode === "boss") {
+              t.beginTransition("boss");
+              t.tick(2.5);
+            }
+            if (mode === "evolving") {
+              t.state.score = 1500;
+              t.tick(0.016);
+              const stone = t.objects.find((o) => o.kind === "stone"),
+                box = t.heroBox();
+              stone.x = box.x + 4;
+              stone.y = box.y + 4;
+              t.tick(0.016);
+            }
+          }, mode);
+          await page.locator("#pause-button").click();
+          assert(await page.locator("#pause-screen").isVisible());
+          await page.locator("#btn-pause-home").click();
+          assert(await page.locator("#splash-screen").isVisible());
+          assert(await page.locator("#pause-screen").isHidden());
+          assert(await page.locator("#raios-evolucao").isHidden());
+          assert(
+            await page.evaluate(
+              () =>
+                window.__arcane.state === null &&
+                window.__arcane.objects.length === 0 &&
+                document.getElementById("scene-video").paused,
+            ),
+          );
+          assert.equal(
+            posts,
+            1,
+            "returning home must not submit an abandoned round",
+          );
+        }
       } finally {
         await page.close();
       }

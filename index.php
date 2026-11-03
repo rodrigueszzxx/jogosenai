@@ -26,9 +26,9 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="css/styles.css?v=beyond-jump-5" />
-    <script src="js/audio.js?v=beyond-jump-5" defer></script>
-    <script src="js/script.js?v=beyond-jump-5" defer></script>
+    <link rel="stylesheet" href="css/styles.css?v=gameover-6" />
+    <script src="js/audio.js?v=gameover-6" defer></script>
+    <script src="js/script.js?v=gameover-6" defer></script>
   </head>
   <body class="game-page">
     <div class="game-tools" aria-label="Controles da partida">
@@ -274,7 +274,12 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
     >
       <div class="modal-card pause-card">
         <h2 id="pause-title">Partida pausada</h2>
-        <button id="resume-button" class="primary">Continuar</button>
+        <div class="modal-actions">
+          <button id="resume-button" class="primary">Continuar</button
+          ><button id="btn-pause-home" class="secondary">
+            VOLTAR À TELA INICIAL
+          </button>
+        </div>
       </div>
     </section>
     <section
@@ -286,15 +291,18 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
       hidden
     >
       <div class="modal-card gameover-card">
-        <h2 id="gameover-title" class="game-title">GAME OVER</h2>
-        <div class="final-score-box">
-          <span class="label">SUA PONTUAÇÃO</span
-          ><strong id="final-score-value" class="final-score">0</strong>
-          <p id="final-detail"></p>
-          <p id="save-status-msg" role="status"></p>
+        <div class="modal-header">
+          <h2 id="gameover-title" class="gameover-title">GAME OVER</h2>
+          <div class="final-score-box">
+            <div class="final-score-label">SUA PONTUAÇÃO</div>
+            <div id="final-score-value" class="final-score-num">0</div>
+            <div id="save-status-msg" class="save-status" role="status"></div>
+          </div>
         </div>
         <div class="ranking-container">
-          <h3>TOP 10 MELHORES PONTUAÇÕES</h3>
+          <h3 class="ranking-title">
+            <span aria-hidden="true">🏆</span> TOP 10 MELHORES PONTUAÇÕES
+          </h3>
           <p id="ranking-status" class="muted" role="status"></p>
           <div class="table-wrapper">
             <table class="ranking-table">
@@ -313,7 +321,9 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
           <button id="btn-restart" class="primary">JOGAR NOVAMENTE</button
           ><button id="btn-change-player" class="secondary">
             TROCAR JOGADOR</button
-          ><button id="btn-home" class="secondary">TELA INICIAL</button>
+          ><button id="btn-home" class="secondary">
+            VOLTAR À TELA INICIAL
+          </button>
         </div>
       </div>
     </section>

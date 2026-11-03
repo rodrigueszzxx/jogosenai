@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sobre nós · VORTEX</title>
-    <link rel="stylesheet" href="../css/styles.css?v=beyond-jump-5" />
+    <link rel="stylesheet" href="../css/styles.css?v=gameover-6" />
   </head>
   <body>
     <main class="story">
@@ -164,7 +164,8 @@
                 <th scope="row">RF13</th>
                 <td>
                   Pausar manualmente ou ao ocultar a aba, retomando por
-                  confirmação do jogador.
+                  confirmação do jogador, com opção de voltar à tela inicial no
+                  menu de pausa.
                 </td>
                 <td>Funcional</td>
               </tr>
