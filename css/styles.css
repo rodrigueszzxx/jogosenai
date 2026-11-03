@@ -867,30 +867,6 @@ input:not([type]) {
   color: var(--purple);
   margin: 0 0 7px;
 }
-.requirements-wrap {
-  overflow-x: auto;
-  margin-top: 20px;
-}
-.requirements-wrap table {
-  width: 100%;
-  min-width: 510px;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-.requirements-wrap th,
-.requirements-wrap td {
-  text-align: left;
-  padding: 12px;
-  border: 1px solid var(--line);
-}
-.requirements-wrap thead {
-  background: var(--panel);
-}
-.requirements-wrap caption {
-  text-align: left;
-  color: var(--muted);
-  margin-bottom: 12px;
-}
 
 h1,
 h2,
@@ -917,11 +893,6 @@ h3,
 }
 .splash-company small {
   font-family: var(--font-ui);
-}
-.requirements-wrap tbody th {
-  font-family: var(--font-game);
-  font-weight: 400;
-  font-size: 8px;
 }
 @media (max-width: 600px) {
   .game-page {

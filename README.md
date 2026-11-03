@@ -97,7 +97,7 @@ A estrutura `ranking` é criada automaticamente com `id`, `nome`, `pontos` e `da
 - `assets/audio/`: música, coleta, Game Over e evolução reaproveitados da base.
 - `assets/brand/beyond-the-limits.png`: nova logo da empresa Beyond the Limits, preparada com transparência a partir da imagem enviada.
 - `assets/ui/heart.png`: coração vermelho sem fundo nem linhas-guia; o CSS recorta a margem transparente para exibir o ícone nítido no HUD.
-- `pages/sobre-nos.php`: história da empresa, história do jogo, instruções e tabela de requisitos atualizada.
+- `pages/sobre-nos.php`: texto institucional da Beyond The Limits fornecido pela equipe, história do jogo e instruções, sem tabela de requisitos.
 - `php/`: conexão e endpoints de consulta/salvamento do ranking.
 - `tests/`: testes de interface, combate, animação e evolução em Chromium.
 

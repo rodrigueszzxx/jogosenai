@@ -27,9 +27,9 @@ $secretCharacters = ['thamires' =>
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="css/styles.css?v=senai-11" />
-    <script src="js/audio.js?v=senai-11" defer></script>
-    <script src="js/script.js?v=senai-11" defer></script>
+    <link rel="stylesheet" href="css/styles.css?v=about-12" />
+    <script src="js/audio.js?v=about-12" defer></script>
+    <script src="js/script.js?v=about-12" defer></script>
   </head>
   <body class="game-page">
     <div class="game-tools" aria-label="Controles da partida">
