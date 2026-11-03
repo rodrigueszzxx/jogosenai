@@ -26,9 +26,9 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="css/styles.css?v=runner-9" />
-    <script src="js/audio.js?v=runner-9" defer></script>
-    <script src="js/script.js?v=runner-9" defer></script>
+    <link rel="stylesheet" href="css/styles.css?v=balanced-10" />
+    <script src="js/audio.js?v=balanced-10" defer></script>
+    <script src="js/script.js?v=balanced-10" defer></script>
   </head>
   <body class="game-page">
     <div class="game-tools" aria-label="Controles da partida">

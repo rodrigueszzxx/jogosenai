@@ -42,8 +42,8 @@
   const FALL_GRAVITY = 3900;
   const LEVELS = [
     { name: "Fácil", start: 0, speed: 1 },
-    { name: "Médio", start: 20, speed: 1.2 },
-    { name: "Difícil", start: 45, speed: 1.4 },
+    { name: "Médio", start: 20, speed: 1.15 },
+    { name: "Difícil", start: 45, speed: 1.3 },
   ];
   let width = board.clientWidth;
   let heroSize, bossSize, heroX, bossX;
@@ -53,6 +53,25 @@
   let state = null;
   let objects = [];
   let noticeUntil = 0;
+  let previewTime = 0;
+
+  function paintSelection(dt = 0) {
+    if (document.hidden || $("start-modal").hidden) return;
+    previewTime += dt;
+    const size = matchMedia("(max-width: 600px)").matches ? 100 : 110;
+    for (const [id, kind] of [
+      ["mage-preview", "hero"],
+      ["shadow-preview", "shadow"],
+    ]) {
+      const sheet = sprites[kind];
+      const sequence = sheet.runSequence;
+      const frame =
+        sequence[
+          Math.floor((previewTime * 1000) / sheet.frameMs) % sequence.length
+        ];
+      paintSprite($(id), kind, size, frame);
+    }
+  }
 
   const readStorage = (key) => {
     try {
@@ -191,8 +210,8 @@
 
   function makeCollectible(special = false) {
     const size = special
-      ? Math.max(44, Math.min(60, heroSize * 0.4))
-      : Math.max(30, Math.min(40, heroSize * 0.27));
+      ? Math.max(54, Math.min(72, heroSize * 0.52))
+      : Math.max(40, Math.min(56, heroSize * 0.4));
     if (!special && state.character === "wizard")
       return makeSprite("gem", size, width + size, heroSize * 0.9 + 20);
     if (!special && ["sonic", "shadow"].includes(state.character))
@@ -317,7 +336,7 @@
       y: 0,
       vy: 0,
       hurtUntil: 0,
-      spawn: 1,
+      spawn: 1.2,
       crystalAt: 1,
       attackAt: 1.8,
       attackCount: 0,
@@ -385,7 +404,7 @@
   function finishTransition() {
     state.mode = state.transitionTo;
     state.phaseTime = 0;
-    state.spawn = 1;
+    state.spawn = 1.2;
     state.crystalAt = 1;
     if (state.mode === "boss") {
       state.attackAt = 1.7;
@@ -427,7 +446,7 @@
             ? Math.max(60, Math.min(96, width * 0.105))
             : Math.max(44, Math.min(70, heroSize * 0.48));
         makeSprite("rock", size, width + size, 0);
-        state.spawn = Math.max(0.75, 1.1 / speed) + Math.random() * 0.3;
+        state.spawn = Math.max(0.9, 1.35 / speed) + Math.random() * 0.3;
       }
       state.crystalAt -= dt;
       if (state.crystalAt <= 0) {
@@ -620,11 +639,11 @@
     return index;
   }
 
-  // A brisk starting pace with continuous, bounded runner acceleration.
+  // A gentler start; acceleration is continuous and only counts active play.
   function speedMultiplier() {
     const index = levelIndex();
     const level = LEVELS[index];
-    const next = LEVELS[index + 1] || { start: 90, speed: 1.6 };
+    const next = LEVELS[index + 1] || { start: 120, speed: 1.6 };
     const progress = Math.min(
       1,
       Math.max(0, (state.elapsed - level.start) / (next.start - level.start)),
@@ -633,11 +652,11 @@
   }
 
   function worldSpeed() {
-    return Math.max(350, (width + 120) * 0.85) * speedMultiplier();
+    return Math.max(280, (width + 120) * 0.6) * speedMultiplier();
   }
 
   function projectileSpeed() {
-    return Math.max(240, width * 0.45);
+    return Math.max(185, width * 0.32) * speedMultiplier();
   }
 
   function highAttackY() {
@@ -664,7 +683,7 @@
       state.elapsed += dt;
       state.score += dt * 10;
       state.sceneryOffset =
-        (state.sceneryOffset + 80 * speedMultiplier() * dt) % (width * 2);
+        (state.sceneryOffset + 50 * speedMultiplier() * dt) % (width * 2);
     }
     state.phaseTime += dt;
     updateJump(dt);
@@ -853,6 +872,7 @@
   function setScreen(id) {
     screens.forEach((name) => ($(name).hidden = name !== id));
     document.body.dataset.screen = id || "game";
+    if (id === "start-modal") paintSelection();
     board.tabIndex = id ? -1 : 0;
     if (id === "gameover-modal") {
       const result = state?.status === "over";
@@ -982,8 +1002,6 @@
   );
   new ResizeObserver(resize).observe(board);
   resize();
-  paintSprite($("mage-preview"), "hero", 110, 0);
-  paintSprite($("shadow-preview"), "shadow", 100, 1);
   setScreen("splash-screen");
   loadRanking();
   heroImage.addEventListener("load", () => {
@@ -1030,6 +1048,7 @@
   function loop(now) {
     const dt = Math.min(0.032, Math.max(0, (now - previous) / 1000));
     previous = now;
+    paintSelection(dt);
     if (state?.status === "playing") update(dt);
     else if (state?.status === "evolving") updateEvolution(dt);
     if (["playing", "evolving"].includes(state?.status)) render();

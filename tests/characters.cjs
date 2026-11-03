@@ -167,6 +167,25 @@ const hook = `window.__characters={get state(){return state},get objects(){retur
             "pause freezes scene",
           );
           t.resume();
+          t.start();
+          t.state.spawn = t.state.crystalAt = 100;
+          let previousSpeed = t.worldSpeed();
+          const initialSpeed = previousSpeed;
+          const maxSpeed = initialSpeed * 1.6;
+          for (let second = 1; second <= 140; second++) {
+            t.state.elapsed = second;
+            const speed = t.worldSpeed();
+            ok(
+              speed >= previousSpeed && speed <= maxSpeed + 0.001,
+              "speed rises gradually and has a cap",
+            );
+            ok(
+              speed - previousSpeed <= initialSpeed * 0.008,
+              "no speed jumps at level boundaries",
+            );
+            previousSpeed = speed;
+          }
+          ok(previousSpeed > initialSpeed * 1.5, "speed eventually increases");
           // Compare the physical arc at real frame intervals, including 30 Hz.
           const arcs = [];
           for (const hz of [30, 60, 120]) {
@@ -208,9 +227,9 @@ const hook = `window.__characters={get state(){return state},get objects(){retur
           // A jump must clear each character's obstacle at every difficulty.
           for (const [time, speed] of [
             [0, 1],
-            [20, 1.2],
-            [45, 1.4],
-            [90, 1.6],
+            [20, 1.15],
+            [45, 1.3],
+            [120, 1.6],
           ]) {
             t.start();
             t.state.spawn = t.state.crystalAt = 100;
@@ -221,7 +240,7 @@ const hook = `window.__characters={get state(){return state},get objects(){retur
             );
             const hb = t.heroBox();
             const size = obstacle.size;
-            t.makeSprite("rock", size, hb.x + hb.w + t.worldSpeed() * 0.2, 0);
+            t.makeSprite("rock", size, hb.x + hb.w + t.worldSpeed() * 0.15, 0);
             t.jump();
             t.tick(0.65);
             ok(t.state.lives === 3, "obstacle can be cleared by jumping");

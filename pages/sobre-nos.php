@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sobre nós · Beyond the Limits</title>
-    <link rel="stylesheet" href="../css/styles.css?v=runner-9" />
+    <link rel="stylesheet" href="../css/styles.css?v=balanced-10" />
   </head>
   <body>
     <main class="story">

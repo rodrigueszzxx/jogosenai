@@ -27,6 +27,49 @@ const assert = require("node:assert/strict");
           );
           await page.locator("#btn-splash-play").click();
           await page.locator("#btn-howto-ok").click();
+          const selection = await page.evaluate(async () => {
+            const samples = { mage: [], shadow: [] };
+            for (let i = 0; i < 8; i++) {
+              for (const [name, id] of [
+                ["mage", "mage-preview"],
+                ["shadow", "shadow-preview"],
+              ]) {
+                samples[name].push(
+                  document.querySelector(`#${id} .sprite-art`).style
+                    .backgroundPosition,
+                );
+              }
+              await new Promise((resolve) => setTimeout(resolve, 85));
+            }
+            return {
+              samples,
+              heights: [
+                ...document.querySelectorAll(
+                  ".card-body > img,.character-preview",
+                ),
+              ].map((el) => el.getBoundingClientRect().height),
+              names: [...document.querySelectorAll(".card-body strong")].map(
+                (el) => el.getBoundingClientRect().top,
+              ),
+            };
+          });
+          assert(
+            new Set(selection.samples.mage).size >= 3,
+            "Mago preview animates",
+          );
+          assert(
+            new Set(selection.samples.shadow).size >= 4,
+            "Shadow preview animates",
+          );
+          assert(
+            Math.max(...selection.heights) - Math.min(...selection.heights) < 1,
+            "equal preview sizes",
+          );
+          assert(
+            Math.abs(selection.names[0] - selection.names[1]) < 1 &&
+              Math.abs(selection.names[2] - selection.names[3]) < 1,
+            "character names aligned",
+          );
           await page.locator("#player-input").fill("Animação");
           await page.locator("#btn-start-game").click();
           await page.waitForFunction(
@@ -101,7 +144,7 @@ const assert = require("node:assert/strict");
             gem.source.includes("purple-gem.png"),
             "use the supplied collectible",
           );
-          assert(gem.height >= 30 && gem.height <= 40, "collectible size");
+          assert(gem.height >= 40 && gem.height <= 56, "collectible size");
           await page.locator("#pause-button").click();
           const frozen = await page.evaluate(() => ({
             time: document.getElementById("scene-video").currentTime,

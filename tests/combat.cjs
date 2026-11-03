@@ -5,7 +5,7 @@ const source = fs.readFileSync(
   require("node:path").join(__dirname, "../js/script.js"),
   "utf8",
 );
-const hook = `window.__arcane={get state(){return state},get objects(){return objects},get dims(){return {width,heroSize,bossSize,heroX,bossX}},start,jump,pause,resume,makeSprite,heroBox,beginTransition,render,updateHud,tick(seconds){while(seconds>0&&state?.status==='playing'){const d=Math.min(.016,seconds);update(d);seconds-=d;}render();}};`;
+const hook = `window.__arcane={get state(){return state},get objects(){return objects},get dims(){return {width,heroSize,bossSize,heroX,bossX}},start,jump,pause,resume,makeSprite,heroBox,beginTransition,render,updateHud,projectileSpeed,tick(seconds){while(seconds>0&&state?.status==='playing'){const d=Math.min(.016,seconds);update(d);seconds-=d;}render();}};`;
 (async () => {
   const browser = await chromium.launch({
     ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
@@ -92,7 +92,7 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
           (o) =>
             !o.high &&
             o.x > b.x + b.w &&
-            (o.x - b.x - b.w) / Math.max(240, d.width * 0.45) < 0.2,
+            (o.x - b.x - b.w) / t.projectileSpeed() < 0.12,
         );
         if (threat) t.jump();
         t.tick(0.016);

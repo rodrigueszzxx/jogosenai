@@ -390,6 +390,9 @@ body[data-screen="pause"] .game-tools {
   background-repeat: no-repeat;
   image-rendering: pixelated;
 }
+.candy .collectible-visual {
+  filter: drop-shadow(0 0 3px #d8edff99);
+}
 .stone {
   filter: drop-shadow(0 0 7px #ffe27d);
 }
@@ -995,6 +998,10 @@ h3,
     padding: 10px 5px;
   }
   .card-body img {
+    width: 100px;
+    height: 100px;
+  }
+  .character-preview {
     width: 100px;
     height: 100px;
   }
