@@ -1,5 +1,5 @@
 {
-  "name": "beyond-jump-vortex",
+  "name": "beyond-jump",
   "private": true,
   "scripts": {
     "test": "node tests/gameplay.cjs && node tests/combat.cjs && node tests/animation.cjs && node tests/evolution.cjs"

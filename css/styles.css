@@ -195,8 +195,22 @@ body[data-screen="pause"] .game-tools {
   color: #b8a3ff;
 }
 #hud-lives {
-  color: #b8a3ff;
-  letter-spacing: 1px;
+  --heart-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--heart-height);
+  min-width: calc(var(--heart-height) * 3.2299528302 + 8px);
+}
+.life-heart {
+  display: block;
+  flex: none;
+  width: calc(var(--heart-height) * 1.0766509434);
+  height: var(--heart-height);
+  background: url("../assets/ui/heart.png") 50% 49.5384615385% / 146.878422782%
+    138.325471698% no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 1px 1px #0008);
 }
 .game-shell {
   width: 100%;
@@ -388,16 +402,11 @@ body[data-screen="pause"] .game-tools {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 20px;
   letter-spacing: 5px;
   font-weight: 800;
-}
-.splash-company img {
-  width: 66px;
-  height: 66px;
-  object-fit: cover;
-  border-radius: 12px;
 }
 .splash-company small {
   display: block;
@@ -521,7 +530,7 @@ input:not([type]) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 180px;
+  min-height: 164px;
   padding: 12px;
   gap: 8px;
   border: 2px solid #493958;
@@ -540,10 +549,6 @@ input:not([type]) {
 .card-body strong {
   font: 400 10px/1.8 var(--font-game);
   color: var(--purple);
-}
-.card-body small {
-  color: var(--muted);
-  font-size: 10px;
 }
 .card-body img {
   width: 110px;
@@ -795,8 +800,9 @@ input:not([type]) {
   margin-bottom: 35px;
 }
 .story-logo {
-  width: 100px;
-  border-radius: 12px;
+  width: min(210px, 35vw);
+  height: auto;
+  object-fit: contain;
   float: right;
   margin: 0 0 20px 25px;
 }
@@ -869,7 +875,7 @@ h3,
   }
   .hud-bar {
     display: grid;
-    grid-template-columns: 1.45fr 0.65fr 0.9fr 1fr;
+    grid-template-columns: 1.2fr 1fr 1fr;
     gap: 9px 8px;
     padding: 10px;
     border-width: 3px;
@@ -904,8 +910,7 @@ h3,
     font-size: 9px;
   }
   #hud-lives {
-    font-size: 10px;
-    letter-spacing: 0;
+    --heart-height: 18px;
   }
   .game-board {
     height: 340px;
@@ -949,7 +954,7 @@ h3,
     gap: 10px;
   }
   .card-body {
-    min-height: 164px;
+    min-height: 150px;
     padding: 10px 5px;
   }
   .card-body img {
@@ -966,10 +971,6 @@ h3,
   }
   .splash-company {
     font-size: 10px;
-  }
-  .splash-company img {
-    width: 58px;
-    height: 58px;
   }
   .splash-record {
     font-size: 9px;
@@ -1022,6 +1023,7 @@ h3,
     font-size: 22px;
   }
   .story-logo {
+    width: min(220px, 75vw);
     float: none;
     display: block;
     margin: 0 0 24px;
@@ -1036,7 +1038,7 @@ h3,
     padding: 11px 10px;
   }
   .hud-bar {
-    grid-template-columns: 1.45fr 0.65fr 0.9fr 1fr;
+    grid-template-columns: 1.2fr 1fr 1fr;
     gap: 8px 6px;
   }
 }
@@ -1065,10 +1067,6 @@ h3,
   .splash-company {
     margin-bottom: 8px;
   }
-  .splash-company img {
-    width: 44px;
-    height: 44px;
-  }
   .splash-content {
     padding: 0;
   }
@@ -1093,5 +1091,64 @@ h3,
   }
   .sprite-art {
     filter: none;
+  }
+}
+
+.company-logo {
+  display: block;
+  width: min(240px, 60vw);
+  height: auto;
+  max-height: 164px;
+  object-fit: contain;
+}
+@media (max-height: 650px) {
+  .company-logo {
+    width: min(180px, 48vw);
+    max-height: 95px;
+  }
+  .splash-company {
+    margin-bottom: 12px;
+    gap: 6px;
+  }
+  .splash-content {
+    padding: 8px 0;
+  }
+  .splash-title {
+    margin: 12px 0;
+  }
+  .splash-record {
+    margin: 10px 0;
+  }
+  .splash-content .primary {
+    margin: 12px 0;
+    padding: 12px 24px;
+  }
+  .about-link {
+    margin-top: 8px;
+  }
+}
+@media (max-height: 480px) and (min-width: 601px) {
+  .company-logo {
+    width: 120px;
+    max-height: 64px;
+  }
+  .splash-company {
+    margin-bottom: 6px;
+    gap: 4px;
+  }
+  .splash-company small {
+    font-size: 8px;
+    margin: 0;
+  }
+  .splash-title {
+    font-size: 28px;
+    margin: 8px 0;
+  }
+  .splash-content {
+    padding: 0;
+  }
+  .splash-content .primary {
+    margin: 8px 0;
+    padding: 10px 20px;
   }
 }

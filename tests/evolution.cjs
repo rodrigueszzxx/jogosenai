@@ -128,7 +128,10 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
             t.state.score - score >= 30 && t.state.score - score < 31,
             "stone adds 30",
           );
-          ok(t.state.crystals === 1, "item count");
+          ok(
+            !document.getElementById("collect-display"),
+            "item counter removed",
+          );
           const snapshot = {
             time: t.state.time,
             elapsed: t.state.elapsed,

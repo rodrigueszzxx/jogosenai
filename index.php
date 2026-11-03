@@ -11,7 +11,7 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="theme-color" content="#100e1a" />
-    <title>Beyond Jump · VORTEX</title>
+    <title>Beyond Jump · Beyond the Limits</title>
     <link
       rel="preload"
       href="assets/fonts/press-start-2p-latin-400-normal.woff2"
@@ -26,9 +26,9 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="css/styles.css?v=gameover-6" />
-    <script src="js/audio.js?v=gameover-6" defer></script>
-    <script src="js/script.js?v=gameover-6" defer></script>
+    <link rel="stylesheet" href="css/styles.css?v=brand-hearts-7" />
+    <script src="js/audio.js?v=brand-hearts-7" defer></script>
+    <script src="js/script.js?v=brand-hearts-7" defer></script>
   </head>
   <body class="game-page">
     <div class="game-tools" aria-label="Controles da partida">
@@ -60,12 +60,12 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
           ><strong id="hud-level">1 · Fácil</strong>
         </div>
         <div>
-          <span class="label">ITENS</span
-          ><strong id="collect-display">0</strong>
-        </div>
-        <div>
           <span class="label">VIDAS</span
-          ><strong id="hud-lives" aria-label="3 vidas">◆ ◆ ◆</strong>
+          ><span id="hud-lives" role="img" aria-label="3 vidas"
+            ><span class="life-heart" aria-hidden="true"></span
+            ><span class="life-heart" aria-hidden="true"></span
+            ><span class="life-heart" aria-hidden="true"></span
+          ></span>
         </div>
         <div class="score">
           <span class="label">PONTOS</span><strong id="hud-score">00000</strong>
@@ -129,9 +129,11 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
     >
       <div class="splash-content">
         <div class="splash-company">
-          <img src="assets/brand/vortex.jpg" alt="Logotipo VORTEX" /><span
-            >VORTEX <small>APRESENTA</small></span
-          >
+          <img
+            class="company-logo"
+            src="assets/brand/beyond-the-limits.png"
+            alt="Beyond the Limits"
+          /><small>APRESENTA</small>
         </div>
         <h1 id="splash-title" class="splash-title">
           BEYOND<br /><span>JUMP</span>
@@ -235,7 +237,7 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
                 /><span class="card-body"
                   ><span id="mage-preview" class="character-preview"
                     ><span class="sprite-art"></span></span
-                  ><strong>MAGO</strong><small>Gemas da masmorra</small></span
+                  ><strong>MAGO</strong></span
                 ></label
               >
               <label class="character-card"
@@ -244,8 +246,7 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
                   ><img
                     src="assets/characters/pikachu.gif"
                     alt="Pikachu correndo"
-                  /><strong>PIKACHU</strong
-                  ><small>Evolui para Raichu</small></span
+                  /><strong>PIKACHU</strong></span
                 ></label
               >
             </div>

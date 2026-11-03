@@ -1,4 +1,4 @@
-# VORTEX · Beyond Jump
+# Beyond the Limits · Beyond Jump
 
 Nova versão do jogo acadêmico, com Mago e Pikachu selecionáveis, masmorra em vídeo e fases alternadas de obstáculos e confronto. O nome oficial do jogo é **Beyond Jump**. A publicação continua em `rodrigueszzxx/jogosenai`, conforme solicitado.
 
@@ -11,7 +11,7 @@ Nova versão do jogo acadêmico, com Mago e Pikachu selecionáveis, masmorra em 
 5. Sobreviva por **20 segundos ativos** para superar o boss. O jogador não dispara projéteis; não há feitiços, atalhos de ataque ou barra de vida do boss.
 6. Superar o confronto concede 300 pontos e inicia outra travessia. Não há limite de salas.
 
-São três vidas por partida e 1,4 segundo de proteção após sofrer dano. O jogo também concede dez pontos por segundo ativo. Não há pontuação durante pausa ou transição. Os níveis mudam aos 20 e 45 segundos ativos; a velocidade dos obstáculos aumenta e os ataques do boss ficam mais frequentes nas salas seguintes.
+São três corações de vida por partida e 1,4 segundo de proteção após sofrer dano. Cada acerto válido remove um coração; o terceiro encerra a rodada. Reiniciar restaura os três. A seleção exibe somente o sprite e o nome de cada personagem, sem legendas descritivas, e o cabeçalho não mostra contador de itens. O jogo também concede dez pontos por segundo ativo. Não há pontuação durante pausa ou transição. Os níveis mudam aos 20 e 45 segundos ativos; a velocidade dos obstáculos aumenta e os ataques do boss ficam mais frequentes nas salas seguintes.
 
 | Ação      | Computador                                  | Celular                   |
 | --------- | ------------------------------------------- | ------------------------- |
@@ -19,7 +19,7 @@ São três vidas por partida e 1,4 segundo de proteção após sofrer dano. O jo
 | Pausar    | P, Esc ou botão Pausar no cabeçalho         | Botão Pausar no cabeçalho |
 | Continuar | Botão Continuar                             | Botão Continuar           |
 
-Durante a partida, o cabeçalho compacto mostra jogador, nível, itens, vidas e pontos em uma barra como no Hero Jump. Os controles de som e pausa ficam discretos no canto superior. Não há título acima da área de jogo, indicador de etapa, barra de informações inferior, seção de jornada, ranking abaixo do jogo ou rodapé. O tabuleiro fica centralizado, com largura máxima de 900 px e altura de 420 px no computador ou 340 px no celular, limitada pela altura disponível na janela, incluindo paisagem. Os avisos escritos aparecem apenas nas trocas de etapa. As instruções ficam na abertura e no Sobre nós. A estrutura de telas segue o Hero Jump enviado: abertura com marca e recorde → Como jogar → nome e personagem → partida → Game Over com tabela Top 10. O ranking também pode ser consultado antes de iniciar, sem registrar uma pontuação. O Game Over reproduz o painel azul com borda lilás do Hero Jump: pontuação, status de gravação, tabela Top 10 com medalhas e destaque da rodada atual, além dos botões empilhados para jogar novamente, trocar jogador e voltar à abertura. O menu de pausa também oferece Voltar à tela inicial, encerrando a rodada em andamento e limpando obstáculos, projéteis e a evolução sem registrar uma pontuação de Game Over.
+Durante a partida, o cabeçalho compacto mostra jogador, nível, corações de vida e pontos em uma barra como no Hero Jump. Os controles de som e pausa ficam discretos no canto superior. Não há título acima da área de jogo, indicador de etapa, barra de informações inferior, seção de jornada, ranking abaixo do jogo ou rodapé. O tabuleiro fica centralizado, com largura máxima de 900 px e altura de 420 px no computador ou 340 px no celular, limitada pela altura disponível na janela, incluindo paisagem. Os avisos escritos aparecem apenas nas trocas de etapa. As instruções ficam na abertura e no Sobre nós. A estrutura de telas segue o Hero Jump enviado: abertura com marca e recorde → Como jogar → nome e personagem → partida → Game Over com tabela Top 10. O ranking também pode ser consultado antes de iniciar, sem registrar uma pontuação. O Game Over reproduz o painel azul com borda lilás do Hero Jump: pontuação, status de gravação, tabela Top 10 com medalhas e destaque da rodada atual, além dos botões empilhados para jogar novamente, trocar jogador e voltar à abertura. O menu de pausa também oferece Voltar à tela inicial, encerrando a rodada em andamento e limpando obstáculos, projéteis e a evolução sem registrar uma pontuação de Game Over.
 
 Ao ocultar a aba, o jogo pausa automaticamente. O retorno exige Continuar, evitando uma retomada inesperada. O vídeo e o áudio também suspendem. O áudio começa após uma interação; a preferência de silêncio é salva. A corrida e o vídeo permanecem animados durante a partida, inclusive quando o sistema indica movimento reduzido. Essa preferência reduz apenas efeitos decorativos secundários, como a oscilação do boss e as transições do CSS. A corrida usa os quadros 2 → 3 → 4 → 3, com 100 ms por quadro; as poses paradas foram retiradas do ciclo. Pausa, Game Over e aba oculta interrompem as animações.
 
@@ -29,7 +29,7 @@ Somente Pikachu libera a Pedra do Trovão ao atingir **1.500 pontos reais**. Alt
 
 Coletar a pedra concede os mesmos 30 pontos de um item e inicia uma pausa de **1,2 segundo** com raios sobre a tela inteira e o som original da transformação. Aos 0,6 segundo, o sprite muda para Raichu. Pontuação, nível, cronômetro do boss, obstáculos, projéteis, itens, pulo e vídeo ficam congelados, retomando do mesmo ponto. A pausa manual ou por aba oculta também interrompe a evolução e exige Continuar para retomar.
 
-Raichu utiliza os três PNGs da referência em sequência 1 → 2 → 3 → 2, com 100 ms por quadro. O tamanho preserva a proporção e os pés, e a hitbox permanece igual à dos outros personagens. Após evoluir, os doces retornam e a pedra deixa de aparecer. Reiniciar volta ao Pikachu, com zero pontos; trocar para Mago mantém sua corrida, gemas e regras anteriores.
+Raichu utiliza os três PNGs da referência em sequência 1 → 2 → 3 → 2, com 100 ms por quadro. O tamanho preserva a proporção e os pés, e a hitbox permanece igual à dos outros personagens. Após evoluir, os doces retornam e a pedra deixa de aparecer. Reiniciar volta ao Pikachu, com zero pontos e três corações; trocar para Mago mantém sua corrida, gemas e regras anteriores.
 
 Os recursos originais do Hero Jump foram reaproveitados diretamente: GIF do Pikachu, PNGs do Raichu, folhas de doce e pedra, quatro quadros de raios e áudio de evolução. Não foram restaurados Bart, Sasuke, Sonic ou o GIF antigo do Raichu, pois não fazem parte desta seleção.
 
@@ -65,7 +65,8 @@ A estrutura `ranking` é criada automaticamente com `id`, `nome`, `pontos` e `da
 - `assets/effects/`: os quatro JPGs originais dos raios, cujo preto é removido visualmente por mistura de cores no CSS.
 - `assets/scenes/opening.gif`: GIF azul enviado para a abertura, igual ao original do Hero Jump. O fundo aparece sem o escurecimento forte da versão anterior; também é usado com baixa opacidade ao redor do tabuleiro.
 - `assets/audio/`: música, coleta, Game Over e evolução reaproveitados da base.
-- `assets/brand/`: logotipo da empresa fictícia VORTEX.
+- `assets/brand/beyond-the-limits.png`: nova logo da empresa Beyond the Limits, preparada com transparência a partir da imagem enviada.
+- `assets/ui/heart.png`: coração vermelho sem fundo nem linhas-guia; o CSS recorta a margem transparente para exibir o ícone nítido no HUD.
 - `pages/sobre-nos.php`: história da empresa, história do jogo, instruções e tabela de requisitos atualizada.
 - `php/`: conexão e endpoints de consulta/salvamento do ranking.
 - `tests/`: testes de interface, combate, animação e evolução em Chromium.

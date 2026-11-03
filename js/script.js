@@ -295,7 +295,6 @@
       round: 1,
       lives: 3,
       bosses: 0,
-      crystals: 0,
       y: 0,
       vy: 0,
       hurtUntil: 0,
@@ -459,7 +458,6 @@
         })
       ) {
         state.score += 30;
-        state.crystals++;
         o.dead = true;
         audio?.tocar("coleta");
         if (o.kind === "stone") {
@@ -617,11 +615,22 @@
     $("hud-score").textContent = Math.floor(state.score)
       .toString()
       .padStart(5, "0");
-    $("hud-lives").textContent =
-      "◆ ".repeat(Math.max(0, state.lives)) +
-      "◇ ".repeat(3 - Math.max(0, state.lives));
-    $("hud-lives").setAttribute("aria-label", `${state.lives} vidas`);
-    $("collect-display").textContent = state.crystals;
+    const lives = Math.max(0, state.lives);
+    const hearts = $("hud-lives");
+    if (hearts.childElementCount !== lives) {
+      hearts.replaceChildren(
+        ...Array.from({ length: lives }, () => {
+          const heart = document.createElement("span");
+          heart.className = "life-heart";
+          heart.setAttribute("aria-hidden", "true");
+          return heart;
+        }),
+      );
+    }
+    hearts.setAttribute(
+      "aria-label",
+      `${lives} ${lives === 1 ? "vida" : "vidas"}`,
+    );
   }
 
   function render() {

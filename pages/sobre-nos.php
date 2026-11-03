@@ -3,25 +3,25 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sobre nós · VORTEX</title>
-    <link rel="stylesheet" href="../css/styles.css?v=gameover-6" />
+    <title>Sobre nós · Beyond the Limits</title>
+    <link rel="stylesheet" href="../css/styles.css?v=brand-hearts-7" />
   </head>
   <body>
     <main class="story">
       <a class="back" href="../index.php">← Voltar ao jogo</a
       ><img
         class="story-logo"
-        src="../assets/brand/vortex.jpg"
-        alt="Logotipo VORTEX"
+        src="../assets/brand/beyond-the-limits.png"
+        alt="Logotipo Beyond the Limits"
       />
       <p class="eyebrow">PEQUENAS IDEIAS, GRANDES AVENTURAS</p>
       <h1>Uma nova jornada.</h1>
-      <h2>A história da VORTEX</h2>
+      <h2>A história da Beyond the Limits</h2>
       <p>
-        A VORTEX é uma empresa fictícia de jogos web criada em 2026 por Rafael
-        Azevedo, fundador fictício apaixonado por aventuras de partidas rápidas.
-        Nosso objetivo é transformar controles simples em experiências
-        envolventes, acessíveis no computador e no celular.
+        A Beyond the Limits é uma empresa fictícia de jogos web criada em 2026
+        por Rafael Azevedo, fundador fictício apaixonado por aventuras de
+        partidas rápidas. Nosso objetivo é transformar controles simples em
+        experiências envolventes, acessíveis no computador e no celular.
       </p>
       <h2>Do Hero Jump ao Beyond Jump</h2>
       <p>
@@ -139,8 +139,8 @@
               <tr>
                 <th scope="row">RF10</th>
                 <td>
-                  Controlar três vidas, colisões, proteção após dano e Game
-                  Over.
+                  Exibir três corações de vida, retirar um a cada dano válido e
+                  encerrar a partida ao perder todos.
                 </td>
                 <td>Funcional</td>
               </tr>
