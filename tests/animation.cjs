@@ -47,10 +47,12 @@ const assert = require("node:assert/strict");
                 ...document.querySelectorAll(
                   ".card-body > img,.character-preview",
                 ),
-              ].map((el) => el.getBoundingClientRect().height),
-              names: [...document.querySelectorAll(".card-body strong")].map(
-                (el) => el.getBoundingClientRect().top,
-              ),
+              ]
+                .filter((el) => el.getClientRects().length)
+                .map((el) => el.getBoundingClientRect().height),
+              names: [...document.querySelectorAll(".card-body strong")]
+                .filter((el) => el.getClientRects().length)
+                .map((el) => el.getBoundingClientRect().top),
             };
           });
           assert(

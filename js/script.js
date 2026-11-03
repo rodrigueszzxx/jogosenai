@@ -8,10 +8,48 @@
   const PIKACHU_IMAGE = "assets/characters/pikachu.gif";
   const SONIC_IMAGE = "assets/characters/sonic.gif";
   const CHARACTERS = {
-    wizard: { name: "Mago", theme: "dungeon", obstacle: "rock" },
-    pikachu: { name: "Pikachu", theme: "pokemon", obstacle: "pokeball" },
-    sonic: { name: "Sonic", theme: "forest", obstacle: "spike" },
-    shadow: { name: "Shadow", theme: "forest", obstacle: "spike" },
+    wizard: {
+      name: "Mago",
+      theme: "dungeon",
+      obstacle: "rock",
+      collectible: "gem",
+      sprite: "hero",
+      scale: 1,
+    },
+    pikachu: {
+      name: "Pikachu",
+      theme: "pokemon",
+      obstacle: "pokeball",
+      collectible: "candy",
+    },
+    sonic: {
+      name: "Sonic",
+      theme: "forest",
+      obstacle: "spike",
+      collectible: "ring",
+    },
+    shadow: {
+      name: "Shadow",
+      theme: "forest",
+      obstacle: "spike",
+      collectible: "ring",
+      sprite: "shadow",
+      scale: 0.92,
+    },
+    ...Object.fromEntries(
+      ["thamires", "pedro", "guedes", "amanda"].map((id) => [
+        id,
+        {
+          name: id[0].toUpperCase() + id.slice(1),
+          theme: "dungeon",
+          obstacle: "rock",
+          collectible: "ring",
+          sprite: id,
+          scale: 0.94,
+          secret: true,
+        },
+      ]),
+    ),
   };
   const RAICHU_IMAGES = [1, 2, 3].map(
     (n) => `assets/characters/raichu/corrida-0${n}.png`,
@@ -62,7 +100,11 @@
     for (const [id, kind] of [
       ["mage-preview", "hero"],
       ["shadow-preview", "shadow"],
+      ...Object.entries(CHARACTERS)
+        .filter(([, c]) => c.secret)
+        .map(([id]) => [`${id}-preview`, id]),
     ]) {
+      if ($(id).closest("[hidden]")) continue;
       const sheet = sprites[kind];
       const sequence = sheet.runSequence;
       const frame =
@@ -89,9 +131,31 @@
   };
   $("player-input").value =
     readStorage("mario_final_player") || readStorage("hero_jump_player");
+  const hasSecretName = () =>
+    $("player-input").value.trim().toUpperCase() === "SENAI";
+  function syncSecretCharacters() {
+    const unlocked = hasSecretName();
+    document.querySelectorAll("[data-secret-character]").forEach((card) => {
+      card.hidden = !unlocked;
+      const input = card.querySelector("input");
+      input.disabled = !unlocked;
+      if (!unlocked && input.checked) {
+        document.querySelector('input[value="wizard"]').checked = true;
+        saveStorage("mario_final_character", "wizard");
+      }
+    });
+    $("secret-unlock-status").hidden = !unlocked;
+    paintSelection();
+  }
+  syncSecretCharacters();
+  $("player-input").addEventListener("input", syncSecretCharacters);
+  $("player-input").addEventListener("change", syncSecretCharacters);
   const savedCharacter = readStorage("mario_final_character");
+  const canSelect = (id) =>
+    Object.hasOwn(CHARACTERS, id) &&
+    (!CHARACTERS[id].secret || hasSecretName());
   const savedRadio = document.querySelector(
-    `input[name="character"][value="${Object.hasOwn(CHARACTERS, savedCharacter) ? savedCharacter : "wizard"}"]`,
+    `input[name="character"][value="${canSelect(savedCharacter) ? savedCharacter : "wizard"}"]`,
   );
   savedRadio.checked = true;
   document
@@ -149,18 +213,23 @@
   function paintHero() {
     const time = state?.time || 0;
     const art = hero.querySelector(".sprite-art");
-    if (!state || ["wizard", "shadow"].includes(state.character)) {
+    if (!state || CHARACTERS[state.character].sprite) {
       art.hidden = false;
       heroImage.hidden = true;
       heroFreeze.hidden = true;
       hero.classList.remove("is-evolved");
-      const kind = state?.character === "shadow" ? "shadow" : "hero";
+      const kind = state ? CHARACTERS[state.character].sprite : "hero";
       const sheet = sprites[kind];
       const sequence = sheet.runSequence;
       const frame = state
         ? sequence[Math.floor((time * 1000) / sheet.frameMs) % sequence.length]
         : 0;
-      paintSprite(hero, kind, heroSize * (kind === "shadow" ? 0.92 : 1), frame);
+      paintSprite(
+        hero,
+        kind,
+        heroSize * (state ? CHARACTERS[state.character].scale : 1),
+        frame,
+      );
       return;
     }
     art.hidden = true;
@@ -212,10 +281,9 @@
     const size = special
       ? Math.max(54, Math.min(72, heroSize * 0.52))
       : Math.max(40, Math.min(56, heroSize * 0.4));
-    if (!special && state.character === "wizard")
-      return makeSprite("gem", size, width + size, heroSize * 0.9 + 20);
-    if (!special && ["sonic", "shadow"].includes(state.character))
-      return makeSprite("ring", size, width + size, heroSize * 0.9 + 20);
+    const collectible = CHARACTERS[state.character].collectible;
+    if (!special && ["gem", "ring"].includes(collectible))
+      return makeSprite(collectible, size, width + size, heroSize * 0.9 + 20);
     const el = document.createElement("span");
     const kind = special ? "stone" : "candy";
     el.className = `actor collectible ${kind}`;
@@ -290,7 +358,7 @@
   function scenePlayback() {
     if (
       state?.status === "playing" &&
-      state.character === "wizard" &&
+      CHARACTERS[state.character].theme === "dungeon" &&
       !document.hidden
     ) {
       video.muted = true;
@@ -309,6 +377,7 @@
       $("player-input").focus();
       return;
     }
+    syncSecretCharacters();
     requestVersion++;
     saveStorage("mario_final_player", name);
     clearObjects();
@@ -442,7 +511,7 @@
       state.spawn -= dt;
       if (state.spawn <= 0) {
         const size =
-          state.character === "wizard"
+          CHARACTERS[state.character].obstacle === "rock"
             ? Math.max(60, Math.min(96, width * 0.105))
             : Math.max(44, Math.min(70, heroSize * 0.48));
         makeSprite("rock", size, width + size, 0);
@@ -471,7 +540,9 @@
         x: o.x + o.size * 0.15,
         y: 0,
         w: o.size * 0.7,
-        h: o.size * (state.character === "wizard" ? 0.46 : 0.65),
+        h:
+          o.size *
+          (CHARACTERS[state.character].obstacle === "rock" ? 0.46 : 0.65),
       };
       if (intersects(heroBox(), box)) hurt(o);
       if (o.x < -o.size) o.dead = true;
@@ -872,7 +943,7 @@
   function setScreen(id) {
     screens.forEach((name) => ($(name).hidden = name !== id));
     document.body.dataset.screen = id || "game";
-    if (id === "start-modal") paintSelection();
+    if (id === "start-modal") syncSecretCharacters();
     board.tabIndex = id ? -1 : 0;
     if (id === "gameover-modal") {
       const result = state?.status === "over";
@@ -1015,6 +1086,7 @@
       PIKACHU_IMAGE,
       SONIC_IMAGE,
       sprites.shadow.image,
+      sprites.thamires.image,
       sprites.pokeball.image,
       sprites.spike.image,
       sprites.ring.image,

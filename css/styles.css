@@ -545,6 +545,21 @@ input:not([type]) {
   padding: 0;
   margin: 24px 0;
 }
+.secret-unlock-status {
+  margin: 14px 0 0;
+  padding: 10px;
+  border: 1px solid #ffd77588;
+  border-radius: 8px;
+  background: #ffd7750d;
+  color: var(--gold);
+  font-size: 12px;
+}
+.character-card[data-secret-character] .card-body {
+  border-color: #b99b62;
+}
+.character-card[data-secret-character] input:checked + .card-body {
+  border-color: var(--gold);
+}
 .character-fieldset legend {
   text-align: left;
 }

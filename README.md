@@ -40,6 +40,16 @@ O ritmo foi ajustado com referência em runners como o Dino: velocidade inicial 
 
 O salto tem ápice de até 110 px e dura aproximadamente 0,53 s em uma área de jogo normal, com gravidade de 2.600 px/s² na subida e 3.900 px/s² na queda. Em telas baixas, a altura é limitada ao espaço disponível. A integração divide o instante do ápice para conservar o mesmo arco em 30, 60 e 120 Hz. Não há salto duplo nem sustentação no ar ao segurar a tecla. O ritmo é igual para os quatro personagens e o Raichu. Os projéteis do boss começam mais lentos e aceleram junto com a partida; a trajetória alta foi elevada para continuar exigindo atenção ao tipo de ataque.
 
+## Easter egg SENAI
+
+No campo de nome, digite **SENAI** para liberar **Thamires, Pedro, Guedes e Amanda**. A verificação ignora diferenças entre maiúsculas e minúsculas e espaços nas extremidades. Os quatro cartões secretos aparecem no início da seleção, com nomes e prévias animadas; nomes comuns continuam exibindo apenas os quatro personagens normais.
+
+Os personagens secretos compartilham o vídeo da masmorra e as pedras do Mago, além das argolas de 30 pontos do Sonic. Cada um possui seis poses de corrida, com recortes próprios, fundo transparente, base alinhada e âncora no corpo. A altura é de aproximadamente 94% do tamanho base do herói, preservando as proporções e o mesmo salto e hitbox. O atlas fica em `assets/characters/senai/running-atlas.png`; os limites e a sequência estão em `assets/sprites/frames.json`.
+
+O desbloqueio vale enquanto o nome for SENAI. Alterar o nome na seleção oculta e desativa os quatro cartões; se algum estava selecionado, o jogo volta ao Mago. Uma preferência salva não libera personagens secretos com outro nome. Com SENAI salvo, a escolha é restaurada normalmente. Os quatro não evoluem para Raichu.
+
+`tests/secrets.cjs` verifica nomes, visibilidade, bloqueio, preferência salva, seis quadros de corrida na seleção e na partida, cenário e obstáculo do Mago, coleta de argolas, pausa e reinício em 1280×900, 390×844, 320×568 e 844×390.
+
 ## Evolução do Pikachu
 
 Somente Pikachu libera a Pedra do Trovão ao atingir **1.500 pontos reais**. Alterar apenas o texto do placar não dispara a evolução. A pedra substitui os itens normais e pode aparecer tanto na travessia quanto no confronto, reaparecendo se passar sem ser coletada.

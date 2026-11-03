@@ -177,5 +177,213 @@
         "h": 1093
       }
     }
+  },
+  "thamires": {
+    "image": "assets/characters/senai/running-atlas.png",
+    "width": 1536,
+    "height": 1024,
+    "cell": 244,
+    "frames": [
+      {
+        "x": 111,
+        "y": 18,
+        "w": 143,
+        "h": 242,
+        "anchorX": 185
+      },
+      {
+        "x": 392,
+        "y": 18,
+        "w": 96,
+        "h": 242,
+        "anchorX": 441
+      },
+      {
+        "x": 621,
+        "y": 18,
+        "w": 96,
+        "h": 242,
+        "anchorX": 667
+      },
+      {
+        "x": 823,
+        "y": 18,
+        "w": 143,
+        "h": 241,
+        "anchorX": 899
+      },
+      {
+        "x": 1072,
+        "y": 17,
+        "w": 116,
+        "h": 244,
+        "anchorX": 1139
+      },
+      {
+        "x": 1300,
+        "y": 17,
+        "w": 140,
+        "h": 242,
+        "anchorX": 1376
+      }
+    ],
+    "runSequence": [0, 1, 2, 3, 4, 5],
+    "frameMs": 90
+  },
+  "pedro": {
+    "image": "assets/characters/senai/running-atlas.png",
+    "width": 1536,
+    "height": 1024,
+    "cell": 218,
+    "frames": [
+      {
+        "x": 90,
+        "y": 286,
+        "w": 164,
+        "h": 217,
+        "anchorX": 177
+      },
+      {
+        "x": 367,
+        "y": 287,
+        "w": 122,
+        "h": 217,
+        "anchorX": 425
+      },
+      {
+        "x": 593,
+        "y": 286,
+        "w": 116,
+        "h": 217,
+        "anchorX": 653
+      },
+      {
+        "x": 812,
+        "y": 287,
+        "w": 149,
+        "h": 216,
+        "anchorX": 888
+      },
+      {
+        "x": 1047,
+        "y": 287,
+        "w": 233,
+        "h": 218,
+        "anchorX": 1114
+      },
+      {
+        "x": 1280,
+        "y": 286,
+        "w": 163,
+        "h": 217,
+        "anchorX": 1361
+      }
+    ],
+    "runSequence": [0, 1, 2, 3, 4, 5],
+    "frameMs": 90
+  },
+  "guedes": {
+    "image": "assets/characters/senai/running-atlas.png",
+    "width": 1536,
+    "height": 1024,
+    "cell": 228,
+    "frames": [
+      {
+        "x": 98,
+        "y": 534,
+        "w": 158,
+        "h": 221,
+        "anchorX": 178
+      },
+      {
+        "x": 372,
+        "y": 534,
+        "w": 103,
+        "h": 221,
+        "anchorX": 421
+      },
+      {
+        "x": 600,
+        "y": 533,
+        "w": 94,
+        "h": 222,
+        "anchorX": 644
+      },
+      {
+        "x": 814,
+        "y": 534,
+        "w": 143,
+        "h": 219,
+        "anchorX": 885
+      },
+      {
+        "x": 1052,
+        "y": 532,
+        "w": 127,
+        "h": 228,
+        "anchorX": 1132
+      },
+      {
+        "x": 1282,
+        "y": 534,
+        "w": 159,
+        "h": 221,
+        "anchorX": 1366
+      }
+    ],
+    "runSequence": [0, 1, 2, 3, 4, 5],
+    "frameMs": 90
+  },
+  "amanda": {
+    "image": "assets/characters/senai/running-atlas.png",
+    "width": 1536,
+    "height": 1024,
+    "cell": 232,
+    "frames": [
+      {
+        "x": 110,
+        "y": 782,
+        "w": 146,
+        "h": 230,
+        "anchorX": 187
+      },
+      {
+        "x": 256,
+        "y": 781,
+        "w": 227,
+        "h": 230,
+        "anchorX": 434
+      },
+      {
+        "x": 594,
+        "y": 781,
+        "w": 113,
+        "h": 230,
+        "anchorX": 660
+      },
+      {
+        "x": 812,
+        "y": 783,
+        "w": 152,
+        "h": 228,
+        "anchorX": 891
+      },
+      {
+        "x": 1060,
+        "y": 783,
+        "w": 119,
+        "h": 232,
+        "anchorX": 1132
+      },
+      {
+        "x": 1297,
+        "y": 782,
+        "w": 147,
+        "h": 229,
+        "anchorX": 1376
+      }
+    ],
+    "runSequence": [0, 1, 2, 3, 4, 5],
+    "frameMs": 90
   }
 }

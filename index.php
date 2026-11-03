@@ -1,7 +1,8 @@
 <?php
 $sprites = file_get_contents(__DIR__ . '/assets/sprites/frames.json');
 $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
-?>
+$secretCharacters = ['thamires' =>
+'THAMIRES', 'pedro' => 'PEDRO', 'guedes' => 'GUEDES', 'amanda' => 'AMANDA']; ?>
 <!doctype html>
 <html lang="pt-BR">
   <head>
@@ -26,9 +27,9 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="css/styles.css?v=balanced-10" />
-    <script src="js/audio.js?v=balanced-10" defer></script>
-    <script src="js/script.js?v=balanced-10" defer></script>
+    <link rel="stylesheet" href="css/styles.css?v=senai-11" />
+    <script src="js/audio.js?v=senai-11" defer></script>
+    <script src="js/script.js?v=senai-11" defer></script>
   </head>
   <body class="game-page">
     <div class="game-tools" aria-label="Controles da partida">
@@ -236,9 +237,32 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
               required
             />
           </div>
+          <p
+            id="secret-unlock-status"
+            class="secret-unlock-status"
+            role="status"
+            hidden
+          >
+            ✨ Easter egg SENAI! Quatro personagens secretos liberados.
+          </p>
           <fieldset class="character-fieldset">
             <legend>ESCOLHA SEU PERSONAGEM</legend>
             <div class="character-select">
+              <?php foreach ($secretCharacters as $id => $name): ?>
+              <label class="character-card" data-secret-character hidden>
+                <input
+                  type="radio"
+                  name="character"
+                  value="<?= $id ?>"
+                  disabled
+                />
+                <span class="card-body"
+                  ><span id="<?= $id ?>-preview" class="character-preview"
+                    ><span class="sprite-art"></span></span
+                  ><strong><?= $name ?></strong></span
+                >
+              </label>
+              <?php endforeach; ?>
               <label class="character-card"
                 ><input
                   type="radio"

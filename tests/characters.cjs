@@ -40,7 +40,10 @@ const hook = `window.__characters={get state(){return state},get objects(){retur
       await page.clock.pauseAt(new Date());
       await page.locator("#btn-splash-play").click();
       await page.locator("#btn-howto-ok").click();
-      assert.equal(await page.locator('input[name="character"]').count(), 4);
+      assert.equal(
+        await page.locator('input[name="character"]:enabled').count(),
+        4,
+      );
       assert.equal(await page.locator(".card-body small").count(), 0);
       await page.locator("#player-input").fill("Personagens");
       for (const character of ["wizard", "pikachu", "sonic", "shadow"]) {
