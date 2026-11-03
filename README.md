@@ -1,11 +1,11 @@
 # VORTEX · Arcane Run
 
-Nova versão do jogo acadêmico, com um mago de barba branca, masmorra em vídeo e fases alternadas de obstáculos e confronto. **Arcane Run é um título provisório.** A publicação continua em `rodrigueszzxx/jogosenai`, conforme solicitado.
+Nova versão do jogo acadêmico, com Mago e Pikachu selecionáveis, masmorra em vídeo e fases alternadas de obstáculos e confronto. **Arcane Run é um título provisório.** A publicação continua em `rodrigueszzxx/jogosenai`, conforme solicitado.
 
 ## Jogar
 
-1. Informe seu nome e entre na masmorra.
-2. Na travessia, pule as pedras e colete cristais de 30 pontos.
+1. Na abertura, clique em Iniciar jogo, leia as instruções e informe seu nome. Escolha Mago ou Pikachu para entrar na masmorra.
+2. Na travessia, pule as pedras e colete gemas com o Mago ou doces com o Pikachu. Cada item vale 30 pontos.
 3. Após 24 segundos ativos, o jogo muda para o confronto. Há um aviso três segundos antes e uma transição sem perigos de 2,4 segundos.
 4. Contra o Rei do Lodo, pule os projéteis baixos e permaneça no chão contra os altos. O brilho do boss e a faixa na trajetória sinalizam os ataques, sem dicas escritas durante a ação.
 5. Sobreviva por **20 segundos ativos** para superar o boss. O jogador não dispara projéteis; não há feitiços, atalhos de ataque ou barra de vida do boss.
@@ -19,9 +19,19 @@ São três vidas por partida e 1,4 segundo de proteção após sofrer dano. O jo
 | Pausar    | P, Esc ou botão Pausar no cabeçalho         | Botão Pausar no cabeçalho |
 | Continuar | Botão Continuar                             | Botão Continuar           |
 
-Durante a partida, somente o cabeçalho (jogador, nível, vidas, pontos, som e pausa) e o jogo ocupam a tela. Não há título acima da área de jogo, indicador de etapa, barra de informações inferior, seção de jornada, ranking abaixo do jogo ou rodapé. A área se adapta à altura da janela, incluindo celular em paisagem. Os avisos escritos aparecem apenas nas trocas de etapa. As instruções ficam na abertura e no Sobre nós. O ranking está recolhido em **Ver ranking**, somente na tela de Game Over.
+Durante a partida, somente o cabeçalho (jogador, nível, vidas, pontos, som e pausa) e o jogo ocupam a tela. Não há título acima da área de jogo, indicador de etapa, barra de informações inferior, seção de jornada, ranking abaixo do jogo ou rodapé. A área se adapta à altura da janela, incluindo celular em paisagem. Os avisos escritos aparecem apenas nas trocas de etapa. As instruções ficam na abertura e no Sobre nós. A estrutura de telas segue o Hero Jump enviado: abertura com marca e recorde → Como jogar → nome e personagem → partida → Game Over com tabela Top 10. O ranking também pode ser consultado antes de iniciar, sem registrar uma pontuação. No resultado há opções de jogar novamente, trocar jogador/personagem e voltar à abertura.
 
 Ao ocultar a aba, o jogo pausa automaticamente. O retorno exige Continuar, evitando uma retomada inesperada. O vídeo e o áudio também suspendem. O áudio começa após uma interação; a preferência de silêncio é salva. A corrida e o vídeo permanecem animados durante a partida, inclusive quando o sistema indica movimento reduzido. Essa preferência reduz apenas efeitos decorativos secundários, como a oscilação do boss e as transições do CSS. A corrida usa os quadros 2 → 3 → 4 → 3, com 100 ms por quadro; as poses paradas foram retiradas do ciclo. Pausa, Game Over e aba oculta interrompem as animações.
+
+## Evolução do Pikachu
+
+Somente Pikachu libera a Pedra do Trovão ao atingir **1.500 pontos reais**. Alterar apenas o texto do placar não dispara a evolução. A pedra substitui os itens normais e pode aparecer tanto na travessia quanto no confronto, reaparecendo se passar sem ser coletada.
+
+Coletar a pedra concede os mesmos 30 pontos de um item e inicia uma pausa de **1,2 segundo** com raios sobre a tela inteira e o som original da transformação. Aos 0,6 segundo, o sprite muda para Raichu. Pontuação, nível, cronômetro do boss, obstáculos, projéteis, itens, pulo e vídeo ficam congelados, retomando do mesmo ponto. A pausa manual ou por aba oculta também interrompe a evolução e exige Continuar para retomar.
+
+Raichu utiliza os três PNGs da referência em sequência 1 → 2 → 3 → 2, com 100 ms por quadro. O tamanho preserva a proporção e os pés, e a hitbox permanece igual à dos outros personagens. Após evoluir, os doces retornam e a pedra deixa de aparecer. Reiniciar volta ao Pikachu, com zero pontos; trocar para Mago mantém sua corrida, gemas e regras anteriores.
+
+Os recursos originais do Hero Jump foram reaproveitados diretamente: GIF do Pikachu, PNGs do Raichu, folhas de doce e pedra, quatro quadros de raios e áudio de evolução. Não foram restaurados Bart, Sasuke, Sonic ou o GIF antigo do Raichu, pois não fazem parte desta seleção.
 
 ## Executar localmente
 
@@ -49,13 +59,17 @@ A estrutura `ranking` é criada automaticamente com `id`, `nome`, `pontos` e `da
 - `assets/sprites/frames.json`: limites de cada sprite. O CSS exibe apenas o retângulo correspondente, com a base alinhada e sem fundos da referência. O novo mago possui âncora horizontal por quadro para evitar deslocamentos laterais entre as poses com e sem cajado.
 - `assets/scenes/dungeon.mp4`: vídeo enviado, com recorte de bordas, codificação H.264 e sem a faixa sonora original. O cenário preenche a área do jogo por `object-fit: cover`, adaptando o enquadramento no celular.
 - `assets/scenes/dungeon-poster.webp`: imagem de espera enquanto o vídeo carrega. O vídeo é pré-carregado, reproduzido sem áudio e repetido continuamente durante a partida.
-- `assets/audio/`: música, coleta e Game Over reaproveitados da base.
+- `assets/characters/`: Pikachu e os três quadros de corrida do Raichu.
+- `assets/collectibles/`: mapeamento e folhas animadas dos doces e da Pedra do Trovão.
+- `assets/effects/`: os quatro JPGs originais dos raios, cujo preto é removido visualmente por mistura de cores no CSS.
+- `assets/scenes/opening.gif`: fundo animado da abertura, reaproveitado do Hero Jump.
+- `assets/audio/`: música, coleta, Game Over e evolução reaproveitados da base.
 - `assets/brand/`: logotipo da empresa fictícia VORTEX.
 - `pages/sobre-nos.php`: história da empresa, história do jogo, instruções e tabela de requisitos atualizada.
 - `php/`: conexão e endpoints de consulta/salvamento do ranking.
-- `tests/`: testes de interface e combate em Chromium.
+- `tests/`: testes de interface, combate, animação e evolução em Chromium.
 
-Os personagens, coletáveis, cenários e obstáculos da versão anterior, além do efeito e do áudio de evolução, foram retirados. A empresa e seu fundador são fictícios. Os sprites desta versão foram preparados a partir das imagens fornecidas com uma ferramenta de edição de imagem; não representam uma extração pixel a pixel das imagens originais.
+A organização mantém `index.php`, `css/`, `js/`, `php/`, `pages/` e `assets/`, seguindo a referência. Foram recuperados apenas os recursos usados pelo Pikachu e sua evolução; os demais personagens antigos permanecem fora desta versão. A empresa e seu fundador são fictícios. Os sprites desta versão foram preparados a partir das imagens fornecidas com uma ferramenta de edição de imagem; não representam uma extração pixel a pixel das imagens originais.
 
 ## Testes
 
@@ -69,24 +83,31 @@ npm test
 
 O endereço padrão é `http://127.0.0.1:8000`; use `ARCANE_TEST_URL` para outro endereço. Opcionalmente, indique um Chromium instalado por `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. O jogo não depende dessas ferramentas para funcionar.
 
-Os testes expõem o estado somente na cópia do JavaScript interceptada pelo Playwright, sem adicionar controles de depuração ao jogo publicado. As respostas do ranking são simuladas nos testes de interface, evitando gravar partidas de teste no banco.
+Os testes expõem o estado somente na cópia do JavaScript interceptada pelo Playwright, sem adicionar controles de depuração ao jogo publicado. As respostas do ranking são simuladas nos testes de interface e evolução, evitando gravar partidas de teste no banco.
 
 Validação realizada em Chromium nas larguras de 1280, 390 e 320 px:
 
-| Caso                                                                     | Resultado |
-| ------------------------------------------------------------------------ | --------- |
-| Carregamento dos atlas, da gema e do vídeo                               | Aprovado  |
-| Apenas cabeçalho e jogo, sem rolagem da página                           | Aprovado  |
-| Pedras, coleta com +30 e pulo com aterrissagem                           | Aprovado  |
-| Avisos de transição e alternância entre obstáculos e boss                | Aprovado  |
-| Boss permanece até completar 20 segundos ativos, sem disparos do jogador | Aprovado  |
-| Sobrevivência por esquiva, +300 pontos e retorno à travessia             | Aprovado  |
-| Veneno baixo evitado com salto e alto evitado permanecendo no chão       | Aprovado  |
-| Três vidas, Game Over e reinício com estado zerado                       | Aprovado  |
-| Pausa manual e ao ocultar a aba, sem avanço de tempo/pontos              | Aprovado  |
-| Corrida e vídeo ativos mesmo com movimento reduzido                      | Aprovado  |
+| Caso                                                                              | Resultado |
+| --------------------------------------------------------------------------------- | --------- |
+| Abertura, instruções, nome, seleção, consulta ao ranking e retorno à tela inicial | Aprovado  |
+| Pikachu coleta doces, libera pedra aos 1.500 pontos e evolui apenas ao coletar    | Aprovado  |
+| Pedra perdida reaparece; Mago não evolui                                          | Aprovado  |
+| Evolução congela boss, nível, pontos, itens e pulo; pausa manual congela os raios | Aprovado  |
+| Raichu anima os três PNGs, reinício volta a Pikachu e troca preserva o Mago       | Aprovado  |
+| Carregamento dos atlas, da gema e do vídeo                                        | Aprovado  |
+| Apenas cabeçalho e jogo, sem rolagem da página                                    | Aprovado  |
+| Pedras, coleta com +30 e pulo com aterrissagem                                    | Aprovado  |
+| Avisos de transição e alternância entre obstáculos e boss                         | Aprovado  |
+| Boss permanece até completar 20 segundos ativos, sem disparos do jogador          | Aprovado  |
+| Sobrevivência por esquiva, +300 pontos e retorno à travessia                      | Aprovado  |
+| Veneno baixo evitado com salto e alto evitado permanecendo no chão                | Aprovado  |
+| Três vidas, Game Over e reinício com estado zerado                                | Aprovado  |
+| Pausa manual e ao ocultar a aba, sem avanço de tempo/pontos                       | Aprovado  |
+| Corrida e vídeo ativos mesmo com movimento reduzido                               | Aprovado  |
 
 O teste `tests/animation.cjs` utiliza o script publicado e o relógio real do vídeo, sem injetar estado: confirma três poses distintas de corrida, avanço do tempo e de quadros decodificados do vídeo, mudança dos pixels do cenário, repetição do vídeo, nova gema e pausa/retomada. Foram verificados os modos normal e reduzido nas três larguras.
+
+O teste `tests/evolution.cjs` verifica o fluxo do Hero Jump e a evolução durante um confronto em 1280, 390 e 320 px. Uma verificação adicional com relógio real confirmou a reprodução do áudio de evolução (4,032 s) e a retomada do vídeo em 1280 × 900, 390 × 844, 320 × 568 e 844 × 390.
 
 A revisão visual também conferiu as telas de 1280 × 800, 390 × 844, 320 × 568 e 844 × 390, com o novo personagem inteiro e o jogo dentro da janela.
 

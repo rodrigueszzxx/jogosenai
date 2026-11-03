@@ -1,5 +1,6 @@
 <?php
 $sprites = file_get_contents(__DIR__ . '/assets/sprites/frames.json');
+$collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
 ?>
 <!doctype html>
 <html lang="pt-BR">
@@ -11,9 +12,9 @@ $sprites = file_get_contents(__DIR__ . '/assets/sprites/frames.json');
     />
     <meta name="theme-color" content="#100e1a" />
     <title>Arcane Run · VORTEX</title>
-    <link rel="stylesheet" href="css/styles.css?v=gem-run-3" />
-    <script src="js/audio.js?v=gem-run-3" defer></script>
-    <script src="js/script.js?v=gem-run-3" defer></script>
+    <link rel="stylesheet" href="css/styles.css?v=hero-structure-4" />
+    <script src="js/audio.js?v=hero-structure-4" defer></script>
+    <script src="js/script.js?v=hero-structure-4" defer></script>
   </head>
   <body class="game-page">
     <header class="site-header">
@@ -22,17 +23,16 @@ $sprites = file_get_contents(__DIR__ . '/assets/sprites/frames.json');
           ><span class="brand-mark">V</span> VORTEX</a
         >
         <nav aria-label="Navegação principal">
-          <a href="pages/sobre-nos.php">Sobre nós</a>
-          <button
+          <a href="pages/sobre-nos.php">Sobre nós</a
+          ><button
             type="button"
             id="audio-toggle"
             class="quiet"
             aria-label="Silenciar áudio"
             aria-pressed="false"
           >
-            Som: ligado
-          </button>
-          <button
+            Som: ligado</button
+          ><button
             type="button"
             id="pause-button"
             class="quiet"
@@ -45,12 +45,15 @@ $sprites = file_get_contents(__DIR__ . '/assets/sprites/frames.json');
       </div>
       <div class="hud" aria-label="Informações da partida">
         <div class="player-info">
-          <span class="label">JOGADOR</span
-          ><strong id="hud-player">Mago</strong>
+          <span class="label">JOGADOR</span><strong id="hud-player">---</strong>
         </div>
         <div>
           <span class="label">NÍVEL</span
           ><strong id="hud-level">1 · Fácil</strong>
+        </div>
+        <div>
+          <span class="label">ITENS</span
+          ><strong id="collect-display">0</strong>
         </div>
         <div>
           <span class="label">VIDAS</span
@@ -84,7 +87,13 @@ $sprites = file_get_contents(__DIR__ . '/assets/sprites/frames.json');
         <div class="floor" aria-hidden="true"></div>
         <div class="world" id="world" aria-hidden="true" hidden>
           <div class="actor hero" id="hero">
-            <span class="sprite-art"></span>
+            <span class="sprite-art"></span
+            ><img
+              id="hero-image"
+              class="character-image"
+              alt=""
+              hidden
+            /><canvas id="hero-freeze" class="character-image" hidden></canvas>
           </div>
           <div class="actor boss" id="boss" hidden>
             <span class="sprite-art"></span>
@@ -98,62 +107,221 @@ $sprites = file_get_contents(__DIR__ . '/assets/sprites/frames.json');
           aria-live="polite"
           hidden
         ></p>
-        <div class="screen" id="menu-screen">
-          <div class="menu-card">
-            <span class="chapter">VORTEX · ARCANE RUN</span>
-            <h1>Aventure-se<br />nas <em>sombras.</em></h1>
-            <p>Salte sobre as ruínas e sobreviva aos ataques do Rei do Lodo.</p>
-            <form id="start-form">
-              <label for="player-name">Como devemos chamar você?</label>
-              <div class="start-row">
-                <input
-                  id="player-name"
-                  name="nome"
-                  maxlength="30"
-                  autocomplete="nickname"
-                  placeholder="Seu nome"
-                  required
-                /><button id="start-button" class="primary" disabled>
-                  Carregando…
-                </button>
-              </div>
-            </form>
-            <p class="menu-help">
-              Espaço, ↑ ou toque no cenário para pular.<br />No boss, pule o
-              veneno baixo e fique no chão contra o alto.<br />Sobreviva por 20
-              segundos para continuar.
-            </p>
-            <p id="asset-status" class="muted" role="status"></p>
-          </div>
-        </div>
-        <div class="screen pause-screen" id="pause-screen" hidden>
-          <div class="dialog">
-            <h2>Partida pausada</h2>
-            <button id="resume-button" class="primary">Continuar</button>
-          </div>
-        </div>
-        <div class="screen" id="over-screen" hidden>
-          <div class="dialog gameover">
-            <h2>Fim da jornada</h2>
-            <strong class="final-score" id="final-score">0</strong>
-            <p id="final-detail"></p>
-            <p id="save-status" role="status"></p>
-            <details id="ranking-details" class="ranking">
-              <summary>Ver ranking</summary>
-              <p id="ranking-status" class="muted" role="status"></p>
-              <ol id="ranking-list"></ol>
-            </details>
-            <div class="actions">
-              <button id="restart-button" class="primary">
-                Tentar novamente</button
-              ><button id="menu-button" class="secondary">Início</button>
-            </div>
-          </div>
-        </div>
       </section>
     </main>
+    <!-- Fluxo de telas do Hero Jump: abertura, instruções, seleção e resultado. -->
+    <section
+      id="splash-screen"
+      class="splash-screen"
+      aria-labelledby="splash-title"
+    >
+      <div class="splash-content">
+        <div class="splash-company">
+          <img src="assets/brand/vortex.jpg" alt="Logotipo VORTEX" /><span
+            >VORTEX <small>APRESENTA</small></span
+          >
+        </div>
+        <h1 id="splash-title" class="splash-title">
+          ARCANE<br /><span>RUN</span>
+        </h1>
+        <p class="splash-record">
+          RECORDE: <strong id="splash-record-text">Consultando…</strong>
+        </p>
+        <button id="btn-splash-play" class="primary">INICIAR JOGO</button
+        ><a class="about-link" href="pages/sobre-nos.php">Sobre nós →</a>
+      </div>
+    </section>
+    <section
+      id="howto-modal"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="howto-title"
+      hidden
+    >
+      <div class="modal-card howto-card">
+        <h2 id="howto-title" class="game-title">COMO JOGAR</h2>
+        <ul class="howto-list">
+          <li>
+            <strong>PULAR</strong
+            ><span>Use Espaço, ↑ ou clique/toque no cenário.</span>
+          </li>
+          <li>
+            <strong>SOBREVIVER</strong
+            ><span
+              >Salte sobre as pedras. Você tem três vidas por partida.</span
+            >
+          </li>
+          <li>
+            <strong>BOSS</strong
+            ><span
+              >Após 24 segundos, enfrente o Rei do Lodo. Pule o veneno baixo e
+              permaneça no chão contra o alto. Sobreviva por 20 segundos para
+              continuar.</span
+            >
+          </li>
+          <li>
+            <strong>COLETAR</strong
+            ><span
+              >Os itens valem 30 pontos. O Mago coleta gemas e o Pikachu coleta
+              doces.</span
+            >
+          </li>
+          <li>
+            <strong>EVOLUIR</strong
+            ><span
+              >Com Pikachu, alcance 1.500 pontos e colete a Pedra do Trovão para
+              evoluir para Raichu. Os raios pausam a partida por 1,2
+              segundo.</span
+            >
+          </li>
+          <li>
+            <strong>NÍVEIS E RANKING</strong
+            ><span
+              >O nível muda aos 20 e 45 segundos ativos. A pontuação é salva no
+              Game Over e os dez melhores aparecem no ranking.</span
+            >
+          </li>
+        </ul>
+        <div class="modal-actions">
+          <button id="btn-howto-ok" class="primary">OK, ENTENDI</button>
+        </div>
+      </div>
+    </section>
+    <section
+      id="start-modal"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="start-title"
+      hidden
+    >
+      <div class="modal-card start-card">
+        <h2 id="start-title" class="game-title">ARCANE RUN</h2>
+        <p class="game-subtitle">Escolha seu herói e atravesse a masmorra.</p>
+        <form id="start-form">
+          <div class="input-group">
+            <label for="player-input">DIGITE SEU NOME</label
+            ><input
+              id="player-input"
+              name="nome"
+              maxlength="30"
+              autocomplete="nickname"
+              placeholder="Ex: Seu nome"
+              required
+            />
+          </div>
+          <fieldset class="character-fieldset">
+            <legend>ESCOLHA SEU PERSONAGEM</legend>
+            <div class="character-select">
+              <label class="character-card"
+                ><input
+                  type="radio"
+                  name="character"
+                  value="wizard"
+                  checked
+                /><span class="card-body"
+                  ><span id="mage-preview" class="character-preview"
+                    ><span class="sprite-art"></span></span
+                  ><strong>MAGO</strong><small>Gemas da masmorra</small></span
+                ></label
+              >
+              <label class="character-card"
+                ><input type="radio" name="character" value="pikachu" /><span
+                  class="card-body"
+                  ><img
+                    src="assets/characters/pikachu.gif"
+                    alt="Pikachu correndo"
+                  /><strong>PIKACHU</strong
+                  ><small>Evolui para Raichu</small></span
+                ></label
+              >
+            </div>
+          </fieldset>
+          <div class="modal-actions">
+            <button id="btn-start-game" class="primary" disabled>
+              CARREGANDO…</button
+            ><button type="button" id="btn-view-ranking" class="secondary">
+              VER RANKING
+            </button>
+          </div>
+        </form>
+        <p id="asset-status" class="muted" role="status"></p>
+        <p id="server-status" class="server-status" role="status">
+          Verificando conexão do ranking…
+        </p>
+      </div>
+    </section>
+    <section
+      id="pause-screen"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pause-title"
+      hidden
+    >
+      <div class="modal-card pause-card">
+        <h2 id="pause-title">Partida pausada</h2>
+        <button id="resume-button" class="primary">Continuar</button>
+      </div>
+    </section>
+    <section
+      id="gameover-modal"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="gameover-title"
+      hidden
+    >
+      <div class="modal-card gameover-card">
+        <h2 id="gameover-title" class="game-title">GAME OVER</h2>
+        <div class="final-score-box">
+          <span class="label">SUA PONTUAÇÃO</span
+          ><strong id="final-score-value" class="final-score">0</strong>
+          <p id="final-detail"></p>
+          <p id="save-status-msg" role="status"></p>
+        </div>
+        <div class="ranking-container">
+          <h3>TOP 10 MELHORES PONTUAÇÕES</h3>
+          <p id="ranking-status" class="muted" role="status"></p>
+          <div class="table-wrapper">
+            <table class="ranking-table">
+              <thead>
+                <tr>
+                  <th scope="col">POS</th>
+                  <th scope="col">JOGADOR</th>
+                  <th scope="col">PONTUAÇÃO</th>
+                </tr>
+              </thead>
+              <tbody id="ranking-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-restart" class="primary">JOGAR NOVAMENTE</button
+          ><button id="btn-change-player" class="secondary">
+            TROCAR JOGADOR</button
+          ><button id="btn-home" class="secondary">TELA INICIAL</button>
+        </div>
+      </div>
+    </section>
+    <div id="raios-evolucao" class="raios-evolucao" hidden aria-hidden="true">
+      <img src="assets/effects/evolution-thunder-1.jpg" alt="" hidden /><img
+        src="assets/effects/evolution-thunder-2.jpg"
+        alt=""
+        hidden
+      /><img src="assets/effects/evolution-thunder-3.jpg" alt="" hidden /><img
+        src="assets/effects/evolution-thunder-4.jpg"
+        alt=""
+        hidden
+      />
+      <p>PIKACHU → RAICHU</p>
+    </div>
     <script id="sprite-data" type="application/json">
       <?= $sprites ?>
+    </script>
+    <script id="collectible-sprites" type="application/json">
+      <?= $collectibles ?>
     </script>
   </body>
 </html>

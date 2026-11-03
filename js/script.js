@@ -3,7 +3,22 @@
   "use strict";
   const $ = (id) => document.getElementById(id);
   const sprites = JSON.parse($("sprite-data").textContent);
+  const collectibleSprites = JSON.parse($("collectible-sprites").textContent);
   const audio = window.ArcaneAudio;
+  const PIKACHU_IMAGE = "assets/characters/pikachu.gif";
+  const RAICHU_IMAGES = [1, 2, 3].map(
+    (n) => `assets/characters/raichu/corrida-0${n}.png`,
+  );
+  const RAICHU_SEQUENCE = [0, 1, 2, 1];
+  const EVOLUTION_SCORE = 1500;
+  const EVOLUTION_DURATION = 1.2;
+  const heroImage = $("hero-image");
+  const heroFreeze = $("hero-freeze");
+  const evolutionOverlay = $("raios-evolucao");
+  const evolutionFrames = [...evolutionOverlay.querySelectorAll("img")];
+  const preloadedImages = new Map();
+  let frozenImageKey = "";
+  let rankingRequest = 0;
   const board = $("game-board");
   const world = $("world");
   const hero = $("hero");
@@ -42,7 +57,20 @@
       /* Optional preference. */
     }
   };
-  $("player-name").value = readStorage("mario_final_player");
+  $("player-input").value =
+    readStorage("mario_final_player") || readStorage("hero_jump_player");
+  const savedCharacter = readStorage("mario_final_character");
+  const savedRadio = document.querySelector(
+    `input[name="character"][value="${savedCharacter === "pikachu" ? "pikachu" : "wizard"}"]`,
+  );
+  savedRadio.checked = true;
+  document
+    .querySelectorAll('input[name="character"]')
+    .forEach((input) =>
+      input.addEventListener("change", () =>
+        saveStorage("mario_final_character", input.value),
+      ),
+    );
 
   function paintSprite(node, kind, size, frame = 0) {
     const sheet =
@@ -85,9 +113,120 @@
     objects.forEach((o) => {
       o.x *= width / oldWidth;
     });
-    paintSprite(hero, "hero", heroSize);
     paintSprite(boss, "boss", bossSize);
     render();
+  }
+
+  function paintHero() {
+    const time = state?.time || 0;
+    const art = hero.querySelector(".sprite-art");
+    if (!state || state.character === "wizard") {
+      art.hidden = false;
+      heroImage.hidden = true;
+      heroFreeze.hidden = true;
+      hero.classList.remove("is-evolved");
+      const sequence = sprites.hero.runSequence;
+      const frame = state
+        ? sequence[
+            Math.floor((time * 1000) / sprites.hero.frameMs) % sequence.length
+          ]
+        : 0;
+      paintSprite(hero, "hero", heroSize, frame);
+      return;
+    }
+    art.hidden = true;
+    hero.style.width = `${heroSize}px`;
+    hero.style.height = `${heroSize}px`;
+    hero.classList.toggle("is-evolved", state.evolved);
+    const src = state.evolved
+      ? RAICHU_IMAGES[
+          RAICHU_SEQUENCE[
+            Math.floor((time - state.raichuStartedAt) / 0.1) %
+              RAICHU_SEQUENCE.length
+          ]
+        ]
+      : PIKACHU_IMAGE;
+    if (heroImage.getAttribute("src") !== src) heroImage.src = src;
+    heroImage.alt = state.evolved ? "Raichu" : "Pikachu";
+    const image = preloadedImages.get(src);
+    if (!image) return;
+    const height = Math.min(
+      heroSize * (state.evolved ? 1.15 : 0.88),
+      board.clientHeight - GROUND - 98,
+    );
+    const drawWidth = (height * image.naturalWidth) / image.naturalHeight;
+    for (const node of [heroImage, heroFreeze]) {
+      node.style.height = `${height}px`;
+      node.style.width = `${drawWidth}px`;
+    }
+    const freeze = state.status !== "playing";
+    heroImage.hidden = freeze;
+    heroFreeze.hidden = !freeze;
+    if (!freeze) frozenImageKey = "";
+    else if (frozenImageKey !== src) {
+      heroFreeze.width = image.naturalWidth;
+      heroFreeze.height = image.naturalHeight;
+      heroFreeze
+        .getContext("2d")
+        .drawImage(
+          heroImage.complete && heroImage.naturalWidth ? heroImage : image,
+          0,
+          0,
+        );
+      frozenImageKey = src;
+    }
+  }
+
+  function makeCollectible(special = false) {
+    const size = special
+      ? Math.max(44, Math.min(60, heroSize * 0.4))
+      : Math.max(30, Math.min(40, heroSize * 0.27));
+    if (!special && state.character === "wizard")
+      return makeSprite("gem", size, width + size, heroSize * 0.9 + 20);
+    const el = document.createElement("span");
+    const kind = special ? "stone" : "candy";
+    el.className = `actor collectible ${kind}`;
+    el.style.width = `${size}px`;
+    el.style.height = `${size}px`;
+    const visual = document.createElement("span");
+    visual.className = "collectible-visual";
+    el.append(visual);
+    world.append(el);
+    const object = {
+      kind,
+      el,
+      visual,
+      size,
+      x: width + size,
+      y: heroSize * 0.9 + 20,
+      dead: false,
+      frame: -1,
+    };
+    objects.push(object);
+    paintCollectible(object);
+    position(el, object.x, object.y);
+    return object;
+  }
+
+  function paintCollectible(object) {
+    if (!object.visual) return;
+    const sheet =
+      collectibleSprites[object.kind === "stone" ? "thunderstone" : "pikachu"];
+    const index =
+      Math.floor((state?.time || 0) * sheet.fps) % sheet.frames.length;
+    if (object.frame === index) return;
+    const frame = sheet.frames[index];
+    const scale = object.size / sheet.maxHeight;
+    const visual = object.visual;
+    visual.style.width = `${frame.w * scale}px`;
+    visual.style.height = `${frame.h * scale}px`;
+    visual.style.left = "50%";
+    visual.style.transform = "translateX(-50%)";
+    visual.style.backgroundImage = `url('${sheet.image}')`;
+    visual.style.backgroundSize = `${sheet.width * scale}px ${sheet.height * scale}px`;
+    visual.style.backgroundPosition = `${-frame.x * scale}px ${-frame.y * scale}px`;
+    visual.style.clipPath = frame.clip;
+    object.frame = index;
   }
 
   function makeSprite(kind, size, x, y) {
@@ -128,9 +267,9 @@
 
   function start() {
     if (!ready) return;
-    const name = $("player-name").value.trim();
+    const name = $("player-input").value.trim();
     if (!name) {
-      $("player-name").focus();
+      $("player-input").focus();
       return;
     }
     requestVersion++;
@@ -141,6 +280,14 @@
       status: "playing",
       mode: "run",
       name,
+      character: document.querySelector('input[name="character"]:checked')
+        .value,
+      evolved: false,
+      raichuStartedAt: 0,
+      stoneUnlocked: false,
+      stoneAt: 0,
+      evolution: null,
+      resumeStatus: "playing",
       score: 0,
       time: 0,
       elapsed: 0,
@@ -159,10 +306,12 @@
       pendingAttack: null,
       transitionTo: null,
     };
+    saveStorage("mario_final_character", state.character);
+    clearEvolution();
+    setScreen(null);
+    frozenImageKey = "";
     $("hud-player").textContent = name;
-    $("menu-screen").hidden = true;
     world.hidden = false;
-    $("over-screen").hidden = true;
     $("pause-screen").hidden = true;
     $("lane-warning").hidden = true;
     boss.hidden = true;
@@ -247,8 +396,7 @@
       }
       state.crystalAt -= dt;
       if (state.crystalAt <= 0) {
-        const size = Math.max(30, Math.min(40, heroSize * 0.27));
-        makeSprite("gem", size, width + size, heroSize * 0.9 + 20);
+        if (!state.stoneUnlocked) makeCollectible();
         state.crystalAt = 2.3 + Math.random() * 0.8;
       }
     }
@@ -263,17 +411,46 @@
       return;
     }
     for (const o of objects) {
+      if (o.kind !== "rock") continue;
       o.x -= Math.max(145, width * 0.31) * speed * dt;
-      if (o.kind === "rock") {
-        const box = {
-          x: o.x + o.size * 0.15,
-          y: 0,
-          w: o.size * 0.7,
-          h: o.size * 0.46,
-        };
-        if (intersects(heroBox(), box)) hurt(o);
-      } else if (
-        o.kind === "gem" &&
+      const box = {
+        x: o.x + o.size * 0.15,
+        y: 0,
+        w: o.size * 0.7,
+        h: o.size * 0.46,
+      };
+      if (intersects(heroBox(), box)) hurt(o);
+      if (o.x < -o.size) o.dead = true;
+      if (state.status !== "playing") return;
+    }
+  }
+
+  function updateCollectibles(dt) {
+    if (state.mode === "transition") return;
+    if (
+      state.character === "pikachu" &&
+      !state.evolved &&
+      !state.stoneUnlocked &&
+      state.score >= EVOLUTION_SCORE
+    ) {
+      state.stoneUnlocked = true;
+      state.stoneAt = 0;
+      objects.forEach((o) => {
+        if (["gem", "candy"].includes(o.kind)) o.dead = true;
+      });
+    }
+    if (
+      state.stoneUnlocked &&
+      !objects.some((o) => o.kind === "stone" && !o.dead)
+    ) {
+      state.stoneAt -= dt;
+      if (state.stoneAt <= 0) makeCollectible(true);
+    }
+    const speed = LEVELS[levelIndex()].speed;
+    for (const o of objects) {
+      if (o.dead || !["gem", "candy", "stone"].includes(o.kind)) continue;
+      o.x -= Math.max(145, width * 0.31) * speed * dt;
+      if (
         intersects(heroBox(), {
           x: o.x + o.size * 0.15,
           y: o.y + o.size * 0.08,
@@ -285,10 +462,60 @@
         state.crystals++;
         o.dead = true;
         audio?.tocar("coleta");
+        if (o.kind === "stone") {
+          startEvolution();
+          return;
+        }
+      } else if (o.x < -o.size) {
+        o.dead = true;
+        if (o.kind === "stone") state.stoneAt = 0.8;
       }
-      if (o.x < -o.size) o.dead = true;
-      if (state.status !== "playing") break;
     }
+  }
+
+  function clearEvolution() {
+    evolutionOverlay.hidden = true;
+    evolutionFrames.forEach((frame) => (frame.hidden = true));
+  }
+
+  function startEvolution() {
+    if (state.character !== "pikachu" || state.evolved) return;
+    state.status = "evolving";
+    state.evolution = { elapsed: 0 };
+    state.stoneUnlocked = false;
+    frozenImageKey = "";
+    scenePlayback();
+    audio?.tocar("evolucao");
+    renderEvolution();
+  }
+
+  function renderEvolution() {
+    if (!state?.evolution || state.status === "paused") {
+      evolutionOverlay.hidden = true;
+      return;
+    }
+    const elapsed = state.evolution.elapsed;
+    const index = motion.matches ? 0 : Math.min(3, Math.floor(elapsed / 0.21));
+    evolutionFrames.forEach((frame, i) => (frame.hidden = i !== index));
+    evolutionOverlay.hidden = false;
+    evolutionOverlay.style.opacity = String(
+      Math.min(1, elapsed / 0.1, (EVOLUTION_DURATION - elapsed) / 0.24),
+    );
+  }
+
+  function updateEvolution(dt) {
+    state.evolution.elapsed += dt;
+    if (!state.evolved && state.evolution.elapsed >= 0.6) {
+      state.evolved = true;
+      state.raichuStartedAt = state.time;
+      frozenImageKey = "";
+    }
+    if (state.evolution.elapsed >= EVOLUTION_DURATION) {
+      state.status = "playing";
+      state.evolution = null;
+      clearEvolution();
+      scenePlayback();
+    } else renderEvolution();
   }
 
   function updateBoss(dt) {
@@ -316,6 +543,7 @@
       boss.classList.remove("charging");
     }
     for (const o of objects) {
+      if (o.kind !== "poison projectile") continue;
       o.x -= Math.max(145, width * 0.3) * dt;
       const hit = {
         x: o.x + o.size * 0.12,
@@ -336,7 +564,12 @@
       return;
     }
     const threat = objects
-      .filter((o) => !o.dead && o.x + o.size > heroBox().x)
+      .filter(
+        (o) =>
+          o.kind === "poison projectile" &&
+          !o.dead &&
+          o.x + o.size > heroBox().x,
+      )
       .sort((a, b) => a.x - b.x)[0];
     const attack = threat || state.pendingAttack;
     $("lane-warning").hidden = !attack;
@@ -346,7 +579,11 @@
   }
 
   function levelIndex() {
-    return state.elapsed >= 45 ? 2 : state.elapsed >= 20 ? 1 : 0;
+    let index = 0;
+    LEVELS.forEach((level, i) => {
+      if (state.elapsed >= level.start) index = i;
+    });
+    return index;
   }
 
   function update(dt) {
@@ -364,6 +601,7 @@
     if (state.mode === "run") updateRun(dt);
     else if (state.mode === "boss") updateBoss(dt);
     else if (state.phaseTime >= TRANSITION_DURATION) finishTransition();
+    if (state.status === "playing") updateCollectibles(dt);
     objects = objects.filter((o) => {
       if (o.dead) o.el.remove();
       return !o.dead;
@@ -382,40 +620,45 @@
       "◆ ".repeat(Math.max(0, state.lives)) +
       "◇ ".repeat(3 - Math.max(0, state.lives));
     $("hud-lives").setAttribute("aria-label", `${state.lives} vidas`);
+    $("collect-display").textContent = state.crystals;
   }
 
   function render() {
     const time = state?.time || 0;
-    const sequence = sprites.hero.runSequence;
-    const frame = state
-      ? sequence[
-          Math.floor((time * 1000) / sprites.hero.frameMs) % sequence.length
-        ]
-      : 0;
-    paintSprite(hero, "hero", heroSize, frame);
+    paintHero();
     position(hero, heroX, state?.y || 0);
     hero.classList.toggle(
       "hurt",
       !!state && time < state.hurtUntil && Math.floor(time * 8) % 2 === 0,
     );
     position(boss, bossX, motion.matches ? 0 : Math.sin(time * 3) * 3 + 3);
-    objects.forEach((o) => position(o.el, o.x, o.y));
+    objects.forEach((o) => {
+      paintCollectible(o);
+      position(o.el, o.x, o.y);
+    });
+    renderEvolution();
   }
 
   function pause() {
-    if (state?.status !== "playing") return;
+    if (!["playing", "evolving"].includes(state?.status)) return;
+    state.resumeStatus = state.status;
     state.status = "paused";
+    document.body.dataset.screen = "pause";
     $("pause-screen").hidden = false;
     audio?.pararEfeitos();
     scenePlayback();
+    render();
     $("resume-button").focus();
   }
   function resume() {
     if (state?.status !== "paused" || document.hidden) return;
-    state.status = "playing";
+    state.status = state.resumeStatus;
+    document.body.dataset.screen = "game";
     previous = performance.now();
     $("pause-screen").hidden = true;
+    board.focus({ preventScroll: true });
     updateHud();
+    render();
     scenePlayback();
   }
 
@@ -424,12 +667,14 @@
     audio?.pararEfeitos();
     audio?.tocar("gameover");
     scenePlayback();
-    $("over-screen").hidden = false;
+    clearEvolution();
+    setScreen("gameover-modal");
+    render();
     $("pause-button").disabled = true;
-    $("final-score").textContent = Math.floor(state.score);
+    $("final-score-value").textContent = Math.floor(state.score);
     $("final-detail").textContent =
       `${state.crystals} cristais · ${state.bosses} confrontos superados · Sala ${state.round}`;
-    $("save-status").textContent = "Registrando pontuação…";
+    $("save-status-msg").textContent = "Registrando pontuação…";
     const version = ++requestVersion;
     try {
       const res = await fetch("php/salvar-ranking.php", {
@@ -443,70 +688,163 @@
       const data = await res.json();
       if (version !== requestVersion) return;
       if (!res.ok || data.status !== "success") throw Error("save");
-      $("save-status").textContent = "Pontuação registrada!";
+      $("save-status-msg").textContent = "Pontuação registrada!";
       renderRanking(data.ranking || []);
     } catch (_) {
       if (version === requestVersion)
-        $("save-status").textContent =
+        $("save-status-msg").textContent =
           "Não foi possível salvar. Confira a conexão com o banco.";
     }
   }
 
   function renderRanking(items) {
-    $("ranking-list").replaceChildren();
+    $("ranking-body").replaceChildren();
     $("ranking-status").textContent = items.length
-      ? "As melhores jornadas da masmorra."
-      : "Seja o primeiro a registrar uma jornada.";
-    items.forEach((item) => {
-      const li = document.createElement("li");
-      const name = document.createElement("span");
-      name.textContent = item.nome;
-      const points = document.createElement("b");
-      points.textContent = `${Number(item.pontos)} pts`;
-      li.append(name, points);
-      $("ranking-list").append(li);
+      ? ""
+      : "Nenhuma pontuação registrada ainda.";
+    $("splash-record-text").textContent = items.length
+      ? `${items[0].nome} — ${Number(items[0].pontos)} PTS`
+      : "Seja o primeiro!";
+    items.forEach((item, index) => {
+      const tr = document.createElement("tr");
+      for (const text of [
+        `${index + 1}º`,
+        item.nome,
+        `${Number(item.pontos)} pts`,
+      ]) {
+        const td = document.createElement("td");
+        td.textContent = text;
+        tr.append(td);
+      }
+      $("ranking-body").append(tr);
     });
   }
+
   async function loadRanking() {
+    const version = ++rankingRequest;
     $("ranking-status").textContent = "Consultando ranking…";
     try {
       const res = await fetch("php/obter-ranking.php");
       const data = await res.json();
+      if (version !== rankingRequest) return;
       if (!res.ok || data.status !== "success") throw Error("ranking");
       renderRanking(data.ranking || []);
+      $("server-status").textContent = "Conectado ao banco do ranking";
     } catch (_) {
-      $("ranking-status").textContent =
-        "Ranking indisponível. Você pode jogar normalmente.";
+      if (version !== rankingRequest) return;
+      $("ranking-status").textContent = "Ranking indisponível no momento.";
+      $("splash-record-text").textContent = "Indisponível";
+      $("server-status").textContent =
+        "Banco indisponível. Você pode jogar normalmente.";
     }
   }
 
+  const screens = [
+    "splash-screen",
+    "howto-modal",
+    "start-modal",
+    "gameover-modal",
+  ];
+  function setScreen(id) {
+    screens.forEach((name) => ($(name).hidden = name !== id));
+    document.body.dataset.screen = id || "game";
+    board.tabIndex = id ? -1 : 0;
+    if (id === "gameover-modal") {
+      const result = state?.status === "over";
+      document.querySelector(".final-score-box").hidden = !result;
+      $("btn-restart").hidden = !result;
+      $("gameover-title").textContent = result ? "GAME OVER" : "RANKING";
+    }
+  }
+
+  function resetForMenu() {
+    requestVersion++;
+    clearObjects();
+    clearEvolution();
+    state = null;
+    world.hidden = true;
+    boss.hidden = true;
+    boss.classList.remove("charging");
+    $("notice").hidden = true;
+    $("lane-warning").hidden = true;
+    $("pause-screen").hidden = true;
+    $("pause-button").disabled = true;
+    scenePlayback();
+    audio?.pararEfeitos();
+  }
+  function openSelection() {
+    resetForMenu();
+    setScreen("start-modal");
+    $("player-input").focus();
+  }
+  function openHome() {
+    resetForMenu();
+    setScreen("splash-screen");
+    loadRanking();
+    $("btn-splash-play").focus();
+  }
+  $("btn-splash-play").addEventListener("click", () => {
+    setScreen("howto-modal");
+    $("btn-howto-ok").focus();
+  });
+  $("btn-howto-ok").addEventListener("click", openSelection);
+  $("btn-howto-ok").addEventListener("keydown", (e) => {
+    if (e.repeat) e.preventDefault();
+  });
   $("start-form").addEventListener("submit", (e) => {
     e.preventDefault();
     start();
   });
-  $("restart-button").addEventListener("click", start);
-  $("menu-button").addEventListener("click", () => {
-    requestVersion++;
-    clearObjects();
-    state = null;
-    boss.hidden = true;
-    $("notice").hidden = true;
-    $("lane-warning").hidden = true;
-    $("over-screen").hidden = true;
-    $("menu-screen").hidden = false;
-    world.hidden = true;
-    audio?.pararEfeitos();
-    render();
+  $("btn-restart").addEventListener("click", start);
+  $("btn-change-player").addEventListener("click", openSelection);
+  $("btn-home").addEventListener("click", openHome);
+  $("btn-view-ranking").addEventListener("click", () => {
+    setScreen("gameover-modal");
+    loadRanking();
   });
   $("pause-button").addEventListener("click", pause);
   $("resume-button").addEventListener("click", resume);
-  $("ranking-details").addEventListener("toggle", () => {
-    if ($("ranking-details").open) loadRanking();
-  });
   board.addEventListener("pointerdown", (e) => {
-    if (!e.target.closest("button,input,a,form,.screen")) jump();
+    if (!e.target.closest("button,input,a,form,.modal-overlay")) jump();
   });
   document.addEventListener("keydown", (e) => {
+    const visible = !$("pause-screen").hidden
+      ? $("pause-screen")
+      : screens.map((id) => $(id)).find((node) => !node.hidden);
+    if (visible) {
+      if (
+        visible.id === "pause-screen" &&
+        ["Escape", "KeyP"].includes(e.code)
+      ) {
+        e.preventDefault();
+        resume();
+        return;
+      }
+      if (
+        visible.id === "splash-screen" &&
+        !e.repeat &&
+        ["Enter", "Space"].includes(e.code) &&
+        !e.target.closest("button,a,input")
+      ) {
+        e.preventDefault();
+        $("btn-splash-play").click();
+        return;
+      }
+      if (e.key === "Tab") {
+        const controls = [
+          ...visible.querySelectorAll(
+            "button:not(:disabled):not([hidden]),a[href],input:not(:disabled)",
+          ),
+        ].filter((node) => node.getClientRects().length);
+        controls.push($("audio-toggle"));
+        const index = controls.indexOf(document.activeElement);
+        e.preventDefault();
+        controls[
+          (index + (e.shiftKey ? -1 : 1) + controls.length) % controls.length
+        ]?.focus();
+      }
+      return;
+    }
     if (
       e.target.closest("input,textarea,select,button,a") ||
       e.ctrlKey ||
@@ -515,8 +853,7 @@
     )
       return;
     if (e.code === "Escape" || e.code === "KeyP") {
-      if (state?.status === "paused") resume();
-      else pause();
+      pause();
     } else if (
       ["Space", "ArrowUp"].includes(e.code) &&
       state?.status === "playing"
@@ -539,12 +876,29 @@
   );
   new ResizeObserver(resize).observe(board);
   resize();
+  paintSprite($("mage-preview"), "hero", 110, 0);
+  setScreen("splash-screen");
+  loadRanking();
+  heroImage.addEventListener("load", () => {
+    if (state && state.status !== "playing") paintHero();
+  });
   Promise.all(
-    [sprites.hero.image, sprites.world.image, sprites.gem.image].map(
+    [
+      sprites.hero.image,
+      sprites.world.image,
+      sprites.gem.image,
+      PIKACHU_IMAGE,
+      ...RAICHU_IMAGES,
+      ...Object.values(collectibleSprites).map((sheet) => sheet.image),
+      ...evolutionFrames.map((image) => image.getAttribute("src")),
+    ].map(
       (src) =>
         new Promise((resolve, reject) => {
           const image = new Image();
-          image.onload = resolve;
+          image.onload = () => {
+            preloadedImages.set(src, image);
+            resolve();
+          };
           image.onerror = reject;
           image.src = src;
         }),
@@ -552,8 +906,8 @@
   )
     .then(() => {
       ready = true;
-      $("start-button").disabled = false;
-      $("start-button").textContent = "Entrar →";
+      $("btn-start-game").disabled = false;
+      $("btn-start-game").textContent = "INICIAR JOGO";
     })
     .catch(() => {
       $("asset-status").textContent =
@@ -562,10 +916,9 @@
   function loop(now) {
     const dt = Math.min(0.032, Math.max(0, (now - previous) / 1000));
     previous = now;
-    if (state?.status === "playing") {
-      update(dt);
-      render();
-    }
+    if (state?.status === "playing") update(dt);
+    else if (state?.status === "evolving") updateEvolution(dt);
+    if (["playing", "evolving"].includes(state?.status)) render();
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);

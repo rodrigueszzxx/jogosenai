@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sobre nós · VORTEX</title>
-    <link rel="stylesheet" href="../css/styles.css?v=gem-run-3" />
+    <link rel="stylesheet" href="../css/styles.css?v=hero-structure-4" />
   </head>
   <body>
     <main class="story">
@@ -26,10 +26,11 @@
       <h2>Do Hero Jump ao Arcane Run</h2>
       <p>
         O projeto começou com uma corrida de obstáculos. Nesta nova versão do
-        grupo, um mago de barba branca explora uma masmorra e alterna entre
-        saltar ruínas e enfrentar o Rei do Lodo. Os avisos de transição e de
-        ataques fazem parte do desafio: observar o cenário é tão importante
-        quanto reagir.
+        grupo, o Mago e o Pikachu exploram uma masmorra e alternam entre saltar
+        ruínas e enfrentar o Rei do Lodo. A estrutura de abertura, instruções,
+        seleção de personagem e ranking foi retomada do Hero Jump. Os avisos de
+        transição e de ataques fazem parte do desafio: observar o cenário é tão
+        importante quanto reagir.
       </p>
       <p>
         Arcane Run é o título provisório desta adaptação. O projeto está no
@@ -41,8 +42,11 @@
       <p>
         Pule com Espaço, seta para cima ou toque no cenário. Durante o
         confronto, sobreviva por 20 segundos aos ataques do boss. Salte sobre o
-        veneno baixo e permaneça no chão para evitar o alto. Os cristais valem
-        30 pontos e cada confronto superado concede 300 pontos.
+        veneno baixo e permaneça no chão para evitar o alto. Os itens valem 30
+        pontos e cada confronto superado concede 300 pontos. O Mago coleta
+        gemas, enquanto o Pikachu coleta doces. Aos 1.500 pontos, surge a Pedra
+        do Trovão: coletá-la transforma Pikachu em Raichu, com raios, som e uma
+        pausa de 1,2 segundo que preserva o pulo e os ataques.
       </p>
       <p>
         O jogo oferece três vidas por partida, pausa manual e pausa automática
@@ -67,14 +71,17 @@
             <tbody>
               <tr>
                 <th scope="row">RF01</th>
-                <td>Solicitar o nome do jogador antes da partida.</td>
+                <td>
+                  Apresentar abertura e instruções, solicitar nome e permitir
+                  selecionar Mago ou Pikachu.
+                </td>
                 <td>Funcional</td>
               </tr>
               <tr>
                 <th scope="row">RF02</th>
                 <td>
-                  Animar os quadros de corrida do mago com transparência e pés
-                  alinhados.
+                  Animar a corrida do Mago, do Pikachu e do Raichu com
+                  proporções preservadas.
                 </td>
                 <td>Funcional</td>
               </tr>
@@ -88,8 +95,8 @@
               <tr>
                 <th scope="row">RF04</th>
                 <td>
-                  Coletar gemas roxas, removê-las e acrescentar 30 pontos por
-                  unidade.
+                  Coletar itens temáticos do personagem e acrescentar 30 pontos
+                  por unidade.
                 </td>
                 <td>Funcional</td>
               </tr>
@@ -194,6 +201,22 @@
                   Organizar sprites, vídeo, áudio e testes em pastas próprias.
                 </td>
                 <td>Não funcional</td>
+              </tr>
+              <tr>
+                <th scope="row">RF15</th>
+                <td>
+                  Liberar a Pedra do Trovão aos 1.500 pontos somente para
+                  Pikachu e evoluir para Raichu ao coletá-la, com raios e som.
+                </td>
+                <td>Funcional</td>
+              </tr>
+              <tr>
+                <th scope="row">RF16</th>
+                <td>
+                  Pausar pontos, ataques, itens, pulo, cenário e tempo de nível
+                  por 1,2 segundo durante a evolução, retomando do mesmo ponto.
+                </td>
+                <td>Funcional</td>
               </tr>
             </tbody>
           </table>

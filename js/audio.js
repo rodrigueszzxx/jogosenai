@@ -4,6 +4,7 @@
     musica: { caminho: "assets/audio/background.mp3", volume: 0.25 },
     coleta: { caminho: "assets/audio/collect.mp3", volume: 0.6 },
     gameover: { caminho: "assets/audio/game-over.mp3", volume: 0.8 },
+    evolucao: { caminho: "assets/audio/evolution.mp3", volume: 0.8 },
   };
   const botao = document.getElementById("audio-toggle");
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -68,7 +69,9 @@
 
   function atualizarVolumeMusica() {
     if (!volumeMusica) return;
-    const destaque = [...efeitos.values()].some((tipo) => tipo === "gameover");
+    const destaque = [...efeitos.values()].some(
+      (tipo) => tipo === "gameover" || tipo === "evolucao",
+    );
     const volume = destaque ? 0.06 : arquivos.musica.volume;
     volumeMusica.gain.setTargetAtTime(volume, contexto.currentTime, 0.08);
   }

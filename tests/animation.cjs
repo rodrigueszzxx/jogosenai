@@ -23,10 +23,12 @@ const assert = require("node:assert/strict");
             process.env.ARCANE_TEST_URL || "http://127.0.0.1:8000",
           );
           await page.waitForFunction(
-            () => !document.getElementById("start-button").disabled,
+            () => !document.getElementById("btn-start-game").disabled,
           );
-          await page.locator("#player-name").fill("Animação");
-          await page.locator("#start-button").click();
+          await page.locator("#btn-splash-play").click();
+          await page.locator("#btn-howto-ok").click();
+          await page.locator("#player-input").fill("Animação");
+          await page.locator("#btn-start-game").click();
           await page.waitForFunction(
             () => document.getElementById("scene-video").currentTime > 0.05,
           );

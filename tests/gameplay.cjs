@@ -36,13 +36,15 @@ const hook = `window.__arcane={get state(){return state},get objects(){return ob
     );
     await page.goto(process.env.ARCANE_TEST_URL || "http://127.0.0.1:8000");
     await page.waitForFunction(
-      () => !document.getElementById("start-button").disabled,
+      () => !document.getElementById("btn-start-game").disabled,
     );
     await page.clock.install();
     await page.clock.pauseAt(new Date());
 
-    await page.locator("#player-name").fill("Teste");
-    await page.locator("#start-button").click();
+    await page.locator("#btn-splash-play").click();
+    await page.locator("#btn-howto-ok").click();
+    await page.locator("#player-input").fill("Teste");
+    await page.locator("#btn-start-game").click();
     const result = await page.evaluate(() => {
       const t = window.__arcane;
       const ok = (x, msg) => {
