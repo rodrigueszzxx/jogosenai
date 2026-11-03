@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sobre nós · VORTEX</title>
-    <link rel="stylesheet" href="../css/styles.css?v=hero-structure-4" />
+    <link rel="stylesheet" href="../css/styles.css?v=beyond-jump-5" />
   </head>
   <body>
     <main class="story">
@@ -23,7 +23,7 @@
         Nosso objetivo é transformar controles simples em experiências
         envolventes, acessíveis no computador e no celular.
       </p>
-      <h2>Do Hero Jump ao Arcane Run</h2>
+      <h2>Do Hero Jump ao Beyond Jump</h2>
       <p>
         O projeto começou com uma corrida de obstáculos. Nesta nova versão do
         grupo, o Mago e o Pikachu exploram uma masmorra e alternam entre saltar
@@ -33,10 +33,9 @@
         importante quanto reagir.
       </p>
       <p>
-        Arcane Run é o título provisório desta adaptação. O projeto está no
-        repositório jogosenai e utiliza HTML, CSS, JavaScript, PHP e MySQL. A
-        empresa e sua história são fictícias e fazem parte de um trabalho
-        acadêmico.
+        Beyond Jump é o nome desta nova aventura. O projeto está no repositório
+        jogosenai e utiliza HTML, CSS, JavaScript, PHP e MySQL. A empresa e sua
+        história são fictícias e fazem parte de um trabalho acadêmico.
       </p>
       <h2>Como jogar</h2>
       <p>
@@ -59,7 +58,7 @@
         <div class="requirements-wrap">
           <table>
             <caption>
-              Requisitos da versão Arcane Run
+              Requisitos da versão Beyond Jump
             </caption>
             <thead>
               <tr>

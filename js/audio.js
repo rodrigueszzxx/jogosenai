@@ -1,4 +1,4 @@
-/** Áudio do Arcane Run. Carregado apenas na página do jogo. */
+/** Áudio do Beyond Jump. Carregado apenas na página do jogo. */
 (() => {
   const arquivos = {
     musica: { caminho: "assets/audio/background.mp3", volume: 0.25 },
@@ -205,5 +205,5 @@
   } else {
     atualizarBotao();
   }
-  window.ArcaneAudio = { tocar, pararEfeitos };
+  window.BeyondJumpAudio = { tocar, pararEfeitos };
 })();

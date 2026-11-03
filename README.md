@@ -1,6 +1,6 @@
-# VORTEX · Arcane Run
+# VORTEX · Beyond Jump
 
-Nova versão do jogo acadêmico, com Mago e Pikachu selecionáveis, masmorra em vídeo e fases alternadas de obstáculos e confronto. **Arcane Run é um título provisório.** A publicação continua em `rodrigueszzxx/jogosenai`, conforme solicitado.
+Nova versão do jogo acadêmico, com Mago e Pikachu selecionáveis, masmorra em vídeo e fases alternadas de obstáculos e confronto. O nome oficial do jogo é **Beyond Jump**. A publicação continua em `rodrigueszzxx/jogosenai`, conforme solicitado.
 
 ## Jogar
 
@@ -19,7 +19,7 @@ São três vidas por partida e 1,4 segundo de proteção após sofrer dano. O jo
 | Pausar    | P, Esc ou botão Pausar no cabeçalho         | Botão Pausar no cabeçalho |
 | Continuar | Botão Continuar                             | Botão Continuar           |
 
-Durante a partida, somente o cabeçalho (jogador, nível, vidas, pontos, som e pausa) e o jogo ocupam a tela. Não há título acima da área de jogo, indicador de etapa, barra de informações inferior, seção de jornada, ranking abaixo do jogo ou rodapé. A área se adapta à altura da janela, incluindo celular em paisagem. Os avisos escritos aparecem apenas nas trocas de etapa. As instruções ficam na abertura e no Sobre nós. A estrutura de telas segue o Hero Jump enviado: abertura com marca e recorde → Como jogar → nome e personagem → partida → Game Over com tabela Top 10. O ranking também pode ser consultado antes de iniciar, sem registrar uma pontuação. No resultado há opções de jogar novamente, trocar jogador/personagem e voltar à abertura.
+Durante a partida, o cabeçalho compacto mostra jogador, nível, itens, vidas e pontos em uma barra como no Hero Jump. Os controles de som e pausa ficam discretos no canto superior. Não há título acima da área de jogo, indicador de etapa, barra de informações inferior, seção de jornada, ranking abaixo do jogo ou rodapé. O tabuleiro fica centralizado, com largura máxima de 900 px e altura de 420 px no computador ou 340 px no celular, limitada pela altura disponível na janela, incluindo paisagem. Os avisos escritos aparecem apenas nas trocas de etapa. As instruções ficam na abertura e no Sobre nós. A estrutura de telas segue o Hero Jump enviado: abertura com marca e recorde → Como jogar → nome e personagem → partida → Game Over com tabela Top 10. O ranking também pode ser consultado antes de iniciar, sem registrar uma pontuação. No resultado há opções de jogar novamente, trocar jogador/personagem e voltar à abertura.
 
 Ao ocultar a aba, o jogo pausa automaticamente. O retorno exige Continuar, evitando uma retomada inesperada. O vídeo e o áudio também suspendem. O áudio começa após uma interação; a preferência de silêncio é salva. A corrida e o vídeo permanecem animados durante a partida, inclusive quando o sistema indica movimento reduzido. Essa preferência reduz apenas efeitos decorativos secundários, como a oscilação do boss e as transições do CSS. A corrida usa os quadros 2 → 3 → 4 → 3, com 100 ms por quadro; as poses paradas foram retiradas do ciclo. Pausa, Game Over e aba oculta interrompem as animações.
 
@@ -52,7 +52,8 @@ A estrutura `ranking` é criada automaticamente com `id`, `nome`, `pontos` e `da
 - `index.php`: interface, controles, vídeo, HUD, telas e metadados dos sprites.
 - `js/script.js`: relógio da partida, estados de travessia/boss/transição/pausa, física, colisões, animações, ataques, pontos e ranking.
 - `js/audio.js`: música, efeitos e preferência de silêncio.
-- `css/styles.css`: interface responsiva e exibição dos recortes.
+- `css/styles.css`: interface responsiva, cabeçalho compacto do Hero Jump e exibição dos recortes.
+- `assets/fonts/`: fontes locais Poppins (400, 600 e 700) e Press Start 2P (400), iguais às da referência. As licenças SIL Open Font License estão junto aos arquivos; o site não depende de pedidos ao Google Fonts.
 - `assets/sprites/wizard-atlas.png`: folha transparente do mago, com recortes individuais definidos em `frames.json`. Somente as poses de corrida compõem a animação durante a partida.
 - `assets/sprites/purple-gem.png`: nova gema roxa com transparência; seu recorte e tamanho são calculados pelos limites do sprite. Ela substitui o cristal desenhado por CSS, mede aproximadamente 30 px no celular e 40 px no computador e mantém o valor de 30 pontos.
 - `assets/sprites/world-atlas.png`: folha reutilizada apenas nos recortes da pedra, boss e veneno. Os antigos quadros do mago roxo e de magia não possuem mais mapeamento nem uso no jogo.
@@ -62,7 +63,7 @@ A estrutura `ranking` é criada automaticamente com `id`, `nome`, `pontos` e `da
 - `assets/characters/`: Pikachu e os três quadros de corrida do Raichu.
 - `assets/collectibles/`: mapeamento e folhas animadas dos doces e da Pedra do Trovão.
 - `assets/effects/`: os quatro JPGs originais dos raios, cujo preto é removido visualmente por mistura de cores no CSS.
-- `assets/scenes/opening.gif`: fundo animado da abertura, reaproveitado do Hero Jump.
+- `assets/scenes/opening.gif`: GIF azul enviado para a abertura, igual ao original do Hero Jump. O fundo aparece sem o escurecimento forte da versão anterior; também é usado com baixa opacidade ao redor do tabuleiro.
 - `assets/audio/`: música, coleta, Game Over e evolução reaproveitados da base.
 - `assets/brand/`: logotipo da empresa fictícia VORTEX.
 - `pages/sobre-nos.php`: história da empresa, história do jogo, instruções e tabela de requisitos atualizada.

@@ -1,3 +1,32 @@
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/poppins-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/poppins-latin-600-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/poppins-latin-700-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Press Start 2P";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/press-start-2p-latin-400-normal.woff2")
+    format("woff2");
+}
 :root {
   color-scheme: dark;
   --bg: #100e1a;
@@ -7,6 +36,8 @@
   --gold: #ffc976;
   --line: #343044;
   --green: #b2ed70;
+  --font-ui: "Poppins", "Segoe UI", Tahoma, sans-serif;
+  --font-game: "Press Start 2P", "Courier New", monospace;
 }
 * {
   box-sizing: border-box;
@@ -15,11 +46,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: #f4efff;
-  font:
-    15px/1.6 system-ui,
-    -apple-system,
-    Segoe UI,
-    sans-serif;
+  font: 400 14px/1.6 var(--font-ui);
 }
 button,
 input,
@@ -56,121 +83,141 @@ a {
   display: none !important;
 }
 .game-page {
-  height: 100vh;
-  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-}
-.site-header {
-  width: 100%;
-  flex-shrink: 0;
-  padding: 14px max(20px, env(safe-area-inset-left)) 12px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
-}
-.header-top {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  max-width: 1440px;
+  justify-content: center;
+  padding: 64px 10px 24px;
+  overflow-x: hidden;
+  background: #0c1022;
+  isolation: isolate;
+}
+.game-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: url("../assets/scenes/opening.gif") center/cover no-repeat;
+  opacity: 0.18;
+  pointer-events: none;
+}
+.game-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 900px;
   margin: auto;
 }
-.brand {
+.game-tools {
+  position: fixed;
+  top: 12px;
+  right: 12px;
   display: flex;
-  gap: 10px;
-  align-items: center;
-  font-weight: 850;
-  letter-spacing: 3px;
+  gap: 8px;
+  z-index: 1500;
 }
-.brand-mark {
-  background: var(--purple);
-  color: #171021;
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  font-size: 22px;
-  transform: skew(-12deg);
+.game-tools button {
+  min-height: 36px;
+  background: #0c1022ed;
 }
-nav {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  font-size: 12px;
+.game-page:not([data-screen="game"]) #pause-button {
+  display: none;
 }
-nav a {
-  color: var(--muted);
+body[data-screen="pause"] .game-tools {
+  z-index: 21000;
 }
 .quiet {
-  border: 1px solid var(--line);
+  border: 1px solid #849bff80;
   background: transparent;
-  border-radius: 6px;
-  padding: 6px 11px;
-  font-size: 12px;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font: 600 11px var(--font-ui);
 }
 .quiet:hover {
-  border-color: var(--purple);
+  border-color: #b8a3ff;
 }
-.hud {
+.hud-bar {
+  width: 100%;
   display: flex;
-  gap: 36px;
-  max-width: 1440px;
-  margin: 14px auto 0;
+  flex-wrap: wrap;
+  justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  padding: 11px 18px;
+  background: linear-gradient(180deg, #202641, #0c1022);
+  border: 3px solid #849bff;
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 4px 15px #0006;
 }
-.hud > div {
+.hud-bar > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
 }
 .label {
-  display: block;
-  font: 9px/1.3 monospace;
-  letter-spacing: 2px;
-  color: var(--muted);
-  margin-bottom: 4px;
+  font: 400 11px/1.6 var(--font-game);
+  letter-spacing: 0;
+  color: #b8a3ff;
 }
-.hud strong {
-  font-size: 12px;
+.hud-bar strong {
+  font: 400 13px/1.7 var(--font-game);
+  color: #e8ecff;
   white-space: nowrap;
+  text-shadow: 2px 2px #000;
 }
-.hud #hud-player {
-  display: block;
-  max-width: 180px;
+#hud-player {
+  max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.hud .score {
-  margin-left: auto;
-  text-align: right;
+#hud-level {
+  font-size: 8px;
+  padding: 6px 7px;
+  border: 1px solid #9de4c4;
+  border-radius: 7px;
+  color: #9de4c4;
+  background: #0c1022;
 }
-.hud .score strong {
-  font: 24px/1 monospace;
-  letter-spacing: 2px;
-  color: var(--gold);
+#hud-level[data-level="2"] {
+  border-color: #ffe09a;
+  color: #ffe09a;
+}
+#hud-level[data-level="3"] {
+  border-color: #ffabab;
+  color: #ffabab;
+}
+#hud-score {
+  font-size: 14px;
+  color: #b8a3ff;
 }
 #hud-lives {
-  color: var(--purple);
-  letter-spacing: 3px;
+  color: #b8a3ff;
+  letter-spacing: 1px;
 }
 .game-shell {
-  flex: 1;
-  min-height: 0;
   width: 100%;
-  display: flex;
-  padding: 12px;
+  padding: 0;
 }
 .game-board {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
+  height: 420px;
+  max-height: calc(100dvh - 140px);
+  min-height: 200px;
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 7px;
+  border: 4px solid #202641;
+  border-bottom-width: 12px;
+  border-radius: 0 0 12px 12px;
   background: var(--panel);
+  box-shadow: 0 10px 30px #0008;
   touch-action: manipulation;
   user-select: none;
+  cursor: pointer;
 }
 .scene-video,
 .scene-shade,
@@ -303,14 +350,14 @@ nav a {
   z-index: 1000;
   display: grid;
   place-items: center;
-  padding: 22px;
+  padding: 60px 22px 22px;
   overflow-y: auto;
   background: #0a0716df;
 }
 .modal-card {
   width: 100%;
   max-width: 610px;
-  max-height: calc(100dvh - 44px);
+  max-height: calc(100dvh - 82px);
   overflow-y: auto;
   background: linear-gradient(145deg, #221b35, #171325);
   border: 1px solid #7d5bab88;
@@ -329,9 +376,9 @@ nav a {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(#130e2699, #100b1cdd),
-    url("../assets/scenes/opening.gif") center/cover;
-  opacity: 0.65;
+    radial-gradient(ellipse at center, #0c102200 35%, #0c10225c 100%),
+    url("../assets/scenes/opening.gif") center/cover no-repeat;
+  opacity: 1;
 }
 .splash-content {
   text-align: center;
@@ -360,16 +407,18 @@ nav a {
   margin-top: 5px;
 }
 .splash-title {
-  font: 900 clamp(56px, 9vw, 100px) / 1.05 monospace;
-  letter-spacing: 6px;
+  font: 400 clamp(32px, 7vw, 64px) / 1.4 var(--font-game);
+  letter-spacing: 2px;
   margin: 20px 0;
-  text-shadow: 5px 5px #58387c;
+  text-shadow:
+    4px 4px #6c63b5,
+    8px 8px #000;
 }
 .splash-title span {
   color: var(--purple);
 }
 .splash-record {
-  font: 12px/1.8 monospace;
+  font: 12px/1.8 var(--font-game);
   color: var(--gold);
   max-width: 500px;
   overflow-wrap: anywhere;
@@ -389,7 +438,7 @@ h2 {
   line-height: 1.2;
 }
 .game-title {
-  font: 800 24px/1.4 monospace;
+  font: 400 20px/1.6 var(--font-game);
   letter-spacing: 2px;
   color: var(--purple);
   margin: 0 0 18px;
@@ -416,7 +465,7 @@ h2 {
 }
 .howto-list strong {
   color: var(--gold);
-  font: 700 10px/1.7 monospace;
+  font: 400 9px/1.8 var(--font-game);
   letter-spacing: 1px;
 }
 .input-group {
@@ -427,7 +476,7 @@ h2 {
 .character-fieldset legend {
   display: block;
   color: var(--muted);
-  font: 10px/1.5 monospace;
+  font: 400 9px/1.8 var(--font-game);
   letter-spacing: 1px;
   margin-bottom: 9px;
 }
@@ -440,6 +489,8 @@ input:not([type]) {
   background: #100d1b;
   padding: 12px 14px;
   color: white;
+  font-size: 16px;
+  font-weight: 600;
 }
 .character-fieldset {
   border: 0;
@@ -487,7 +538,7 @@ input:not([type]) {
   outline-offset: 3px;
 }
 .card-body strong {
-  font: 700 12px monospace;
+  font: 400 10px/1.8 var(--font-game);
   color: var(--purple);
 }
 .card-body small {
@@ -551,7 +602,7 @@ input:not([type]) {
 }
 .final-score {
   display: block;
-  font: 44px monospace;
+  font: 400 34px/1.6 var(--font-game);
   color: var(--gold);
   margin: 10px 0;
 }
@@ -564,7 +615,7 @@ input:not([type]) {
   text-align: left;
 }
 .ranking-container h3 {
-  font: 700 12px monospace;
+  font: 400 10px/1.8 var(--font-game);
   color: var(--gold);
 }
 .table-wrapper {
@@ -601,12 +652,6 @@ input:not([type]) {
 .pause-card {
   max-width: 400px;
 }
-body:not([data-screen="game"]) #audio-toggle {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 1500;
-}
 .raios-evolucao {
   position: fixed;
   inset: 0;
@@ -629,7 +674,7 @@ body:not([data-screen="game"]) #audio-toggle {
   margin: 0;
   color: #ffeaa0;
   text-align: center;
-  font: 800 clamp(16px, 3vw, 26px) monospace;
+  font: 400 clamp(10px, 2vw, 18px) / 1.8 var(--font-game);
   letter-spacing: 2px;
   text-shadow: 0 0 12px #ffaa00;
 }
@@ -639,10 +684,16 @@ body:not([data-screen="game"]) #audio-toggle {
   padding: 0 24px;
 }
 .story h1 {
-  font-size: 40px;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: clamp(28px, 4vw, 42px);
 }
 .story h2 {
+  font-family: var(--font-ui);
+  font-weight: 700;
   margin-top: 38px;
+  font-size: 25px;
+  line-height: 1.4;
 }
 .story p {
   color: #c5bccf;
@@ -690,74 +741,119 @@ body:not([data-screen="game"]) #audio-toggle {
   margin-bottom: 12px;
 }
 
-@media (max-width: 540px) {
-  .site-header {
-    padding: 10px 12px;
+h1,
+h2,
+h3,
+.primary,
+.secondary {
+  font-family: var(--font-game);
+  font-weight: 400;
+}
+.primary,
+.secondary {
+  font-size: 10px;
+  line-height: 1.8;
+}
+.splash-content {
+  width: 100%;
+  max-width: 640px;
+}
+.splash-company {
+  font-weight: 400;
+  font-family: var(--font-game);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.splash-company small {
+  font-family: var(--font-ui);
+}
+.ranking-table thead {
+  font-family: var(--font-game);
+  font-weight: 400;
+  font-size: 8px;
+}
+.requirements-wrap tbody th {
+  font-family: var(--font-game);
+  font-weight: 400;
+  font-size: 8px;
+}
+@media (max-width: 600px) {
+  .game-page {
+    padding: 60px 8px 20px;
   }
-  .brand {
-    font-size: 11px;
-    gap: 7px;
-    letter-spacing: 2px;
+  .hud-bar {
+    display: grid;
+    grid-template-columns: 1.45fr 0.65fr 0.9fr 1fr;
+    gap: 9px 8px;
+    padding: 10px;
+    border-width: 3px;
   }
-  .brand-mark {
-    width: 25px;
-    height: 25px;
-    font-size: 18px;
+  .hud-bar > div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
-  nav {
+  .hud-bar .player-info {
+    grid-column: 1/-1;
+    flex-direction: row;
+    align-items: center;
     gap: 8px;
-    font-size: 10px;
   }
-  .quiet {
-    padding: 6px 8px;
-    font-size: 10px;
-  }
-  .hud {
-    gap: 14px;
-    margin-top: 12px;
-  }
-  .hud strong {
-    font-size: 10px;
+  .hud-bar strong {
+    font-size: 8px;
+    line-height: 1.5;
   }
   .label {
-    font-size: 8px;
-    letter-spacing: 1px;
+    font-size: 7px;
+    line-height: 1.5;
   }
-  .hud #hud-player {
-    max-width: 70px;
+  #hud-player {
+    max-width: 210px;
   }
-  .hud .score strong {
-    font-size: 20px;
+  #hud-level {
+    font-size: 7px;
+    padding: 4px;
+  }
+  #hud-score {
+    font-size: 9px;
   }
   #hud-lives {
-    font-size: 12px;
-    letter-spacing: 1px;
-  }
-  .game-shell {
-    padding: 0;
+    font-size: 10px;
+    letter-spacing: 0;
   }
   .game-board {
-    border-radius: 0;
-    border: 0;
+    height: 340px;
+    border-width: 3px;
+    border-bottom-width: 10px;
+  }
+  .game-tools {
+    top: 10px;
+    right: 10px;
+    gap: 6px;
+  }
+  .quiet {
+    padding: 7px 10px;
+    font-size: 10px;
   }
   .transition-banner {
     font-size: 10px;
     padding: 8px 12px;
   }
   .modal-overlay {
-    padding: 12px;
+    padding: 60px 12px 12px;
   }
   .modal-card {
     padding: 24px 18px;
-    max-height: calc(100dvh - 24px);
+    max-height: calc(100dvh - 72px);
     border-radius: 12px;
   }
   .game-title {
-    font-size: 21px;
+    font-size: 16px;
+    letter-spacing: 0;
   }
   .howto-list li {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 7px;
     padding: 11px 0;
   }
   .howto-list {
@@ -774,16 +870,24 @@ body:not([data-screen="game"]) #audio-toggle {
     width: 100px;
     height: 100px;
   }
+  .card-body strong {
+    font-size: 9px;
+  }
   .splash-title {
-    font-size: 66px;
-    letter-spacing: 3px;
+    font-size: clamp(28px, 8vw, 42px);
+    letter-spacing: 1px;
+    line-height: 1.5;
+  }
+  .splash-company {
+    font-size: 10px;
   }
   .splash-company img {
     width: 58px;
     height: 58px;
   }
   .splash-record {
-    font-size: 10px;
+    font-size: 9px;
+    line-height: 1.9;
     padding: 0 12px;
   }
   .ranking-table {
@@ -793,64 +897,66 @@ body:not([data-screen="game"]) #audio-toggle {
   .ranking-table td {
     padding: 9px 5px;
   }
+  .ranking-table thead {
+    font-size: 7px;
+  }
   .table-wrapper {
     max-height: 190px;
+  }
+  .primary,
+  .secondary {
+    font-size: 9px;
+    padding: 11px 12px;
   }
   .story {
     margin-top: 36px;
   }
   .story h1 {
-    font-size: 30px;
+    font-size: 28px;
+    line-height: 1.4;
+  }
+  .story h2 {
+    font-size: 22px;
+  }
+  .story-logo {
+    float: none;
+    display: block;
+    margin: 0 0 24px;
   }
 }
 @media (max-width: 360px) {
-  .brand {
-    letter-spacing: 1px;
-  }
-  .hud {
-    gap: 12px;
-  }
-  .player-info {
-    display: none;
-  }
-  nav {
-    gap: 6px;
-  }
-  .quiet {
-    padding: 6px;
-  }
-  .header-top {
-    gap: 8px;
-  }
   .modal-actions {
     gap: 8px;
   }
-  .primary {
-    padding: 11px 14px;
+  .primary,
+  .secondary {
+    padding: 11px 10px;
+  }
+  .hud-bar {
+    grid-template-columns: 1.45fr 0.65fr 0.9fr 1fr;
+    gap: 8px 6px;
   }
 }
-@media (max-height: 480px) and (min-width: 541px) {
-  .site-header {
-    padding: 7px 14px;
+@media (max-height: 480px) and (min-width: 601px) {
+  .game-page {
+    padding: 58px 8px 12px;
   }
-  .hud {
-    margin-top: 7px;
-    gap: 24px;
+  .hud-bar {
+    padding: 8px 12px;
+    gap: 8px;
   }
-  .label {
-    font-size: 8px;
+  .hud-bar .label {
+    font-size: 7px;
   }
-  .hud strong {
-    font-size: 10px;
+  .hud-bar strong {
+    font-size: 9px;
   }
-  .hud .score strong {
-    font-size: 19px;
-  }
-  .game-shell {
-    padding: 6px;
+  #hud-level {
+    font-size: 7px;
+    padding: 4px;
   }
   .splash-title {
-    font-size: 48px;
+    font-size: 36px;
     margin: 12px 0;
   }
   .splash-company {
@@ -869,6 +975,7 @@ body:not([data-screen="game"]) #audio-toggle {
   }
   .splash-record {
     margin: 8px 0;
+    font-size: 9px;
   }
   .about-link {
     margin-top: 6px;
@@ -883,10 +990,5 @@ body:not([data-screen="game"]) #audio-toggle {
   }
   .sprite-art {
     filter: none;
-  }
-  .splash-screen::before {
-    background-image:
-      linear-gradient(#130e2699, #100b1cdd),
-      url("../assets/scenes/dungeon-poster.webp");
   }
 }

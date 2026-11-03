@@ -11,39 +11,47 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="theme-color" content="#100e1a" />
-    <title>Arcane Run · VORTEX</title>
-    <link rel="stylesheet" href="css/styles.css?v=hero-structure-4" />
-    <script src="js/audio.js?v=hero-structure-4" defer></script>
-    <script src="js/script.js?v=hero-structure-4" defer></script>
+    <title>Beyond Jump · VORTEX</title>
+    <link
+      rel="preload"
+      href="assets/fonts/press-start-2p-latin-400-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/poppins-latin-400-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="css/styles.css?v=beyond-jump-5" />
+    <script src="js/audio.js?v=beyond-jump-5" defer></script>
+    <script src="js/script.js?v=beyond-jump-5" defer></script>
   </head>
   <body class="game-page">
-    <header class="site-header">
-      <div class="header-top">
-        <a class="brand" href="index.php" aria-label="VORTEX, início"
-          ><span class="brand-mark">V</span> VORTEX</a
-        >
-        <nav aria-label="Navegação principal">
-          <a href="pages/sobre-nos.php">Sobre nós</a
-          ><button
-            type="button"
-            id="audio-toggle"
-            class="quiet"
-            aria-label="Silenciar áudio"
-            aria-pressed="false"
-          >
-            Som: ligado</button
-          ><button
-            type="button"
-            id="pause-button"
-            class="quiet"
-            disabled
-            aria-label="Pausar partida"
-          >
-            Ⅱ Pausar
-          </button>
-        </nav>
-      </div>
-      <div class="hud" aria-label="Informações da partida">
+    <div class="game-tools" aria-label="Controles da partida">
+      <button
+        type="button"
+        id="audio-toggle"
+        class="quiet"
+        aria-label="Silenciar áudio"
+        aria-pressed="false"
+      >
+        Som: ligado</button
+      ><button
+        type="button"
+        id="pause-button"
+        class="quiet"
+        disabled
+        aria-label="Pausar partida"
+      >
+        Ⅱ Pausar
+      </button>
+    </div>
+    <div class="game-container">
+      <header class="hud-bar" aria-label="Informações da partida">
         <div class="player-info">
           <span class="label">JOGADOR</span><strong id="hud-player">---</strong>
         </div>
@@ -62,53 +70,57 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
         <div class="score">
           <span class="label">PONTOS</span><strong id="hud-score">00000</strong>
         </div>
-      </div>
-    </header>
-    <main class="game-shell">
-      <section
-        class="game-board"
-        id="game-board"
-        tabindex="0"
-        aria-label="Partida; toque ou pressione Espaço para pular"
-      >
-        <video
-          id="scene-video"
-          class="scene-video"
-          muted
-          loop
-          playsinline
-          preload="auto"
-          poster="assets/scenes/dungeon-poster.webp"
-          aria-hidden="true"
+      </header>
+      <main class="game-shell">
+        <section
+          class="game-board"
+          id="game-board"
+          tabindex="0"
+          aria-label="Partida; toque ou pressione Espaço para pular"
         >
-          <source src="assets/scenes/dungeon.mp4" type="video/mp4" />
-        </video>
-        <div class="scene-shade" aria-hidden="true"></div>
-        <div class="floor" aria-hidden="true"></div>
-        <div class="world" id="world" aria-hidden="true" hidden>
-          <div class="actor hero" id="hero">
-            <span class="sprite-art"></span
-            ><img
-              id="hero-image"
-              class="character-image"
-              alt=""
-              hidden
-            /><canvas id="hero-freeze" class="character-image" hidden></canvas>
+          <video
+            id="scene-video"
+            class="scene-video"
+            muted
+            loop
+            playsinline
+            preload="auto"
+            poster="assets/scenes/dungeon-poster.webp"
+            aria-hidden="true"
+          >
+            <source src="assets/scenes/dungeon.mp4" type="video/mp4" />
+          </video>
+          <div class="scene-shade" aria-hidden="true"></div>
+          <div class="floor" aria-hidden="true"></div>
+          <div class="world" id="world" aria-hidden="true" hidden>
+            <div class="actor hero" id="hero">
+              <span class="sprite-art"></span
+              ><img
+                id="hero-image"
+                class="character-image"
+                alt=""
+                hidden
+              /><canvas
+                id="hero-freeze"
+                class="character-image"
+                hidden
+              ></canvas>
+            </div>
+            <div class="actor boss" id="boss" hidden>
+              <span class="sprite-art"></span>
+            </div>
+            <div class="lane-warning" id="lane-warning" hidden></div>
           </div>
-          <div class="actor boss" id="boss" hidden>
-            <span class="sprite-art"></span>
-          </div>
-          <div class="lane-warning" id="lane-warning" hidden></div>
-        </div>
-        <p
-          class="transition-banner"
-          id="notice"
-          role="status"
-          aria-live="polite"
-          hidden
-        ></p>
-      </section>
-    </main>
+          <p
+            class="transition-banner"
+            id="notice"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></p>
+        </section>
+      </main>
+    </div>
     <!-- Fluxo de telas do Hero Jump: abertura, instruções, seleção e resultado. -->
     <section
       id="splash-screen"
@@ -122,7 +134,7 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
           >
         </div>
         <h1 id="splash-title" class="splash-title">
-          ARCANE<br /><span>RUN</span>
+          BEYOND<br /><span>JUMP</span>
         </h1>
         <p class="splash-record">
           RECORDE: <strong id="splash-record-text">Consultando…</strong>
@@ -197,7 +209,7 @@ $collectibles = file_get_contents(__DIR__ . '/assets/collectibles/frames.json');
       hidden
     >
       <div class="modal-card start-card">
-        <h2 id="start-title" class="game-title">ARCANE RUN</h2>
+        <h2 id="start-title" class="game-title">BEYOND JUMP</h2>
         <p class="game-subtitle">Escolha seu herói e atravesse a masmorra.</p>
         <form id="start-form">
           <div class="input-group">

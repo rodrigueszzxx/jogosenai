@@ -1,5 +1,5 @@
 {
-  "name": "arcane-run-vortex",
+  "name": "beyond-jump-vortex",
   "private": true,
   "scripts": {
     "test": "node tests/gameplay.cjs && node tests/combat.cjs && node tests/animation.cjs && node tests/evolution.cjs"

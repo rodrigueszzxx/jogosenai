@@ -1,10 +1,10 @@
-/** Arcane Run: one animation clock controls movement, battles, score and pauses. */
+/** Beyond Jump: one animation clock controls movement, battles, score and pauses. */
 (() => {
   "use strict";
   const $ = (id) => document.getElementById(id);
   const sprites = JSON.parse($("sprite-data").textContent);
   const collectibleSprites = JSON.parse($("collectible-sprites").textContent);
-  const audio = window.ArcaneAudio;
+  const audio = window.BeyondJumpAudio;
   const PIKACHU_IMAGE = "assets/characters/pikachu.gif";
   const RAICHU_IMAGES = [1, 2, 3].map(
     (n) => `assets/characters/raichu/corrida-0${n}.png`,
@@ -102,7 +102,7 @@
     width = board.clientWidth;
     heroSize = Math.max(
       88,
-      Math.min(170, Math.max(112, width * 0.18), board.clientHeight * 0.4),
+      Math.min(148, Math.max(104, width * 0.16), board.clientHeight * 0.32),
     );
     bossSize = Math.max(
       130,
@@ -613,6 +613,7 @@
   function updateHud() {
     const index = levelIndex();
     $("hud-level").textContent = `${index + 1} · ${LEVELS[index].name}`;
+    $("hud-level").dataset.level = String(index + 1);
     $("hud-score").textContent = Math.floor(state.score)
       .toString()
       .padStart(5, "0");
