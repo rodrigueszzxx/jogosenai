@@ -97,7 +97,7 @@ A estrutura `ranking` é criada automaticamente com `id`, `nome`, `pontos` e `da
 - `assets/audio/`: música, coleta, Game Over e evolução reaproveitados da base.
 - `assets/brand/beyond-the-limits.png`: nova logo da empresa Beyond the Limits, preparada com transparência a partir da imagem enviada.
 - `assets/ui/heart.png`: coração vermelho sem fundo nem linhas-guia; o CSS recorta a margem transparente para exibir o ícone nítido no HUD.
-- `pages/sobre-nos.php`: texto institucional da Beyond The Limits fornecido pela equipe, história do jogo e instruções, sem tabela de requisitos.
+- `pages/sobre-nos.php`: apresentação da marca, história e missão da empresa, história do jogo e guia de controles organizados em capítulos, com atalhos de navegação e sem tabela de requisitos.
 - `php/`: conexão e endpoints de consulta/salvamento do ranking.
 - `tests/`: testes de interface, combate, animação e evolução em Chromium.
 
@@ -146,3 +146,13 @@ A revisão visual também conferiu as telas de 1280 × 800, 390 × 844, 320 × 5
 A verificação de sintaxe foi feita com PHP e Node. Também foi executada uma partida no navegador sem interceptar o JavaScript ou o ranking: as três colisões encerraram a rodada, a pontuação foi salva no MariaDB, apareceu no ranking e o reinício funcionou. O registro exclusivo de teste foi removido depois. Confira suas credenciais ao configurar o banco no computador de apresentação.
 
 O teste `tests/characters.cjs` valida os quatro personagens em computador, celular e paisagem: cenários, itens, coleta de 30 pontos, perda de coração, animação do Shadow, pausa da rolagem, preferência salva e saltos possíveis nos quatro marcos de velocidade do runner. Também compara o arco em 30/60/120 Hz, impede salto duplo e confirma aterrissagem antes de 0,6 s.
+
+## Apresentação das telas
+
+As telas Como jogar, ranking, recorde e Sobre nós retomam o visual do Hero Jump: painéis azul-escuros, contornos lilás, detalhes dourados, fontes locais e teclas desenhadas. O guia usa seis blocos numerados em duas colunas no computador e uma no celular.
+
+Na abertura, o recorde é um botão com nome e pontuação separados que abre diretamente o ranking. O ranking destaca o líder e as três primeiras posições, mantém a marcação da rodada atual e oferece uma ação principal para escolher personagem quando consultado antes de jogar. O Game Over mantém o resultado e o botão Jogar novamente. Todos os dados continuam vindo dos endpoints existentes, incluindo as mensagens para ranking vazio ou indisponível.
+
+O Sobre nós preserva os cinco parágrafos institucionais enviados pela equipe. A página organiza empresa, jogo e controles em três capítulos, com missão em destaque, marca maior e links de retorno. Não inclui tabela de requisitos, equipe, contatos ou catálogo de jogos. A página continua sem áudio.
+
+`tests/interface.cjs` verifica o acesso ao ranking pelo recorde, lista preenchida/vazia/indisponível, destaque da rodada no Game Over, ausência de gravação ao apenas consultar, navegação e adaptação em 1280×900, 390×844, 320×568 e 844×390.

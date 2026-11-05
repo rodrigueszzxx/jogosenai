@@ -27,9 +27,9 @@ $secretCharacters = ['thamires' =>
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="css/styles.css?v=about-12" />
-    <script src="js/audio.js?v=about-12" defer></script>
-    <script src="js/script.js?v=about-12" defer></script>
+    <link rel="stylesheet" href="css/styles.css?v=arcade-13" />
+    <script src="js/audio.js?v=arcade-13" defer></script>
+    <script src="js/script.js?v=arcade-13" defer></script>
   </head>
   <body class="game-page">
     <div class="game-tools" aria-label="Controles da partida">
@@ -150,9 +150,30 @@ $secretCharacters = ['thamires' =>
         <h1 id="splash-title" class="splash-title">
           BEYOND<br /><span>JUMP</span>
         </h1>
-        <p class="splash-record">
-          RECORDE: <strong id="splash-record-text">Consultando…</strong>
-        </p>
+        <button
+          id="btn-splash-ranking"
+          class="splash-record"
+          type="button"
+          aria-label="Ver recorde e ranking"
+        >
+          <span class="record-emblem" aria-hidden="true">🏆</span>
+          <span class="record-content"
+            ><span class="screen-kicker">RECORDE DO BEYOND JUMP</span
+            ><span id="splash-record-text">Consultando…</span></span
+          >
+          <svg
+            class="record-arrow"
+            aria-hidden="true"
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path d="M6 18 18 6M6 6h12v12" />
+          </svg>
+        </button>
         <button id="btn-splash-play" class="primary">INICIAR JOGO</button
         ><a class="about-link" href="pages/sobre-nos.php">Sobre nós →</a>
       </div>
@@ -166,51 +187,86 @@ $secretCharacters = ['thamires' =>
       hidden
     >
       <div class="modal-card howto-card">
-        <h2 id="howto-title" class="game-title">COMO JOGAR</h2>
-        <ul class="howto-list">
+        <div class="screen-heading">
+          <p class="screen-kicker">SEU PRÓXIMO DESAFIO</p>
+          <h2 id="howto-title" class="game-title">COMO JOGAR</h2>
+          <p class="screen-intro">
+            Um salto de cada vez. Vá além do seu recorde.
+          </p>
+        </div>
+        <div class="control-strip" aria-label="Controles">
+          <span><kbd>ESPAÇO</kbd> ou <kbd>↑</kbd> para pular</span
+          ><span>Toque no cenário pelo celular</span>
+        </div>
+        <ol class="howto-list">
           <li>
-            <strong>PULAR</strong
-            ><span>Use Espaço, ↑ ou clique/toque no cenário.</span>
+            <span class="step-number" aria-hidden="true">01</span>
+            <div>
+              <strong>PULE E DESVIE</strong>
+              <p>
+                Salte sobre os obstáculos. Você começa com <b>3 vidas</b>; cada
+                dano retira um coração.
+              </p>
+            </div>
           </li>
           <li>
-            <strong>SOBREVIVER</strong
-            ><span
-              >Salte sobre os obstáculos. Você tem três vidas por partida.</span
-            >
+            <span class="step-number" aria-hidden="true">02</span>
+            <div>
+              <strong>COLETE E PONTUE</strong>
+              <p>
+                Gemas, doces ou argolas: cada item vale <b>+30 pontos</b>.
+                Sobreviver também aumenta sua pontuação.
+              </p>
+            </div>
           </li>
           <li>
-            <strong>BOSS</strong
-            ><span
-              >Após 24 segundos, enfrente o Rei do Lodo. Pule o veneno baixo e
-              permaneça no chão contra o alto. Sobreviva por 20 segundos para
-              continuar.</span
-            >
+            <span class="step-number" aria-hidden="true">03</span>
+            <div>
+              <strong>ENCARE O BOSS</strong>
+              <p>
+                Após <b>24 segundos</b>, o Rei do Lodo aparece. Pule o veneno
+                baixo e fique no chão contra o alto. Sobreviva por
+                <b>20 segundos</b> e ganhe <b>+300 pontos</b>.
+              </p>
+            </div>
           </li>
           <li>
-            <strong>COLETAR</strong
-            ><span
-              >Os itens valem 30 pontos. O Mago coleta gemas, o Pikachu coleta
-              doces e Sonic e Shadow coletam argolas.</span
-            >
+            <span class="step-number" aria-hidden="true">04</span>
+            <div>
+              <strong>DESCUBRA A EVOLUÇÃO</strong>
+              <p>
+                Com Pikachu, alcance <b>1.500 pontos</b> e colete a Pedra do
+                Trovão. A partida pausa por um instante para a transformação em
+                Raichu.
+              </p>
+            </div>
           </li>
           <li>
-            <strong>EVOLUIR</strong
-            ><span
-              >Com Pikachu, alcance 1.500 pontos e colete a Pedra do Trovão para
-              evoluir para Raichu. Os raios pausam a partida por 1,2
-              segundo.</span
-            >
+            <span class="step-number" aria-hidden="true">05</span>
+            <div>
+              <strong>SUPERE OS NÍVEIS</strong>
+              <p>
+                O desafio cresce aos <b>20 e 45 segundos</b> de partida. O ritmo
+                aumenta aos poucos: observe e escolha a hora do salto.
+              </p>
+            </div>
           </li>
           <li>
-            <strong>NÍVEIS E RANKING</strong
-            ><span
-              >O nível muda aos 20 e 45 segundos ativos. A pontuação é salva no
-              Game Over e os dez melhores aparecem no ranking.</span
-            >
+            <span class="step-number" aria-hidden="true">06</span>
+            <div>
+              <strong>CONQUISTE O TOP 10</strong>
+              <p>
+                Seu resultado vai para o ranking no Game Over. Para fazer uma
+                pausa, use <kbd>P</kbd>, <kbd>ESC</kbd> ou o botão Pausar.
+              </p>
+            </div>
           </li>
-        </ul>
-        <div class="modal-actions">
-          <button id="btn-howto-ok" class="primary">OK, ENTENDI</button>
+        </ol>
+        <div class="howto-footer">
+          <span>Pronto para o primeiro salto?</span
+          ><button id="btn-howto-ok" class="primary">
+            OK, ENTENDI <span aria-hidden="true">→</span>
+          </button>
         </div>
       </div>
     </section>
@@ -345,7 +401,11 @@ $secretCharacters = ['thamires' =>
     >
       <div class="modal-card gameover-card">
         <div class="modal-header">
+          <p class="screen-kicker">HALL DA FAMA</p>
           <h2 id="gameover-title" class="gameover-title">GAME OVER</h2>
+          <p id="ranking-description" class="screen-intro">
+            Cada salto conta. Este foi o seu resultado.
+          </p>
           <div class="final-score-box">
             <div class="final-score-label">SUA PONTUAÇÃO</div>
             <div id="final-score-value" class="final-score-num">0</div>
@@ -353,6 +413,14 @@ $secretCharacters = ['thamires' =>
           </div>
         </div>
         <div class="ranking-container">
+          <div id="ranking-leader" class="ranking-leader" hidden>
+            <span class="leader-emblem" aria-hidden="true">🏆</span>
+            <div>
+              <span class="screen-kicker">NO TOPO DO JOGO</span
+              ><strong id="ranking-leader-name"></strong>
+            </div>
+            <span id="ranking-leader-score" class="leader-score"></span>
+          </div>
           <h3 class="ranking-title">
             <span aria-hidden="true">🏆</span> TOP 10 MELHORES PONTUAÇÕES
           </h3>

@@ -874,9 +874,21 @@
   function renderRanking(items) {
     $("ranking-body").replaceChildren();
     $("ranking-status").textContent = "";
-    $("splash-record-text").textContent = items.length
-      ? `${items[0].nome} — ${Number(items[0].pontos)} PTS`
-      : "Seja o primeiro!";
+    const leader = items[0];
+    const record = $("splash-record-text");
+    record.replaceChildren();
+    $("ranking-leader").hidden = !leader;
+    if (leader) {
+      const name = document.createElement("span");
+      name.className = "record-player";
+      name.textContent = leader.nome;
+      const points = document.createElement("span");
+      points.className = "record-points";
+      points.textContent = `${Number(leader.pontos)} PTS`;
+      record.append(name, points);
+      $("ranking-leader-name").textContent = leader.nome;
+      $("ranking-leader-score").textContent = points.textContent;
+    } else record.textContent = "Seja o primeiro!";
     if (!items.length) {
       const row = document.createElement("tr");
       const cell = document.createElement("td");
@@ -891,6 +903,7 @@
     let highlighted = false;
     items.forEach((item, index) => {
       const row = document.createElement("tr");
+      if (index < 3) row.classList.add(`rank-${index + 1}`);
       const current =
         !highlighted &&
         state?.status === "over" &&
@@ -950,6 +963,14 @@
       document.querySelector(".final-score-box").hidden = !result;
       $("btn-restart").hidden = !result;
       $("gameover-title").textContent = result ? "GAME OVER" : "RANKING";
+      $("ranking-description").textContent = result
+        ? "Cada salto conta. Este foi o seu resultado."
+        : "Os dez melhores resultados. O próximo pode ser seu.";
+      $("btn-change-player").textContent = result
+        ? "TROCAR JOGADOR"
+        : "ESCOLHER PERSONAGEM";
+      $("btn-change-player").classList.toggle("primary", !result);
+      $("btn-change-player").classList.toggle("secondary", result);
     }
   }
 
@@ -995,10 +1016,13 @@
   $("btn-change-player").addEventListener("click", openSelection);
   $("btn-home").addEventListener("click", openHome);
   $("btn-pause-home").addEventListener("click", openHome);
-  $("btn-view-ranking").addEventListener("click", () => {
+  function openRanking() {
     setScreen("gameover-modal");
     loadRanking();
-  });
+    $("btn-change-player").focus();
+  }
+  $("btn-view-ranking").addEventListener("click", openRanking);
+  $("btn-splash-ranking").addEventListener("click", openRanking);
   $("pause-button").addEventListener("click", pause);
   $("resume-button").addEventListener("click", resume);
   board.addEventListener("pointerdown", (e) => {
